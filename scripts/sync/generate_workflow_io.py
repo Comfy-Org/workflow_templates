@@ -20,6 +20,8 @@ INPUT_NODE_TYPES = [
     "VHS_LoadVideo",
     "LoadVideo",
     "Load3DModel",
+    "Load3D",
+    "Load3DAdvanced",
     "LoadImageMask"
 ]
 
@@ -30,6 +32,8 @@ OUTPUT_NODE_TYPES = [
     "SaveAudio",
     "VHS_SaveVideo",
     "Save3DModel",
+    "SaveGLB",
+    "SaveImageAdvanced",
     "Preview3D",
     "PreviewAudio"
     # Note: PreviewImage is excluded as it's for debugging only
@@ -59,7 +63,7 @@ def get_media_type_from_node_type(node_type: str) -> str:
         return 'video'
     elif 'audio' in node_type_lower:
         return 'audio'
-    elif '3d' in node_type_lower or 'model' in node_type_lower:
+    elif any(k in node_type_lower for k in ('3d', 'model', 'glb', 'gltf')):
         return '3d'
     else:
         return 'image'  # Default fallback
@@ -80,7 +84,7 @@ def get_media_type_from_filename(filename: str) -> str:
     image_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tiff'}
     video_exts = {'.mp4', '.mov', '.avi', '.mkv', '.webm'}
     audio_exts = {'.mp3', '.wav', '.ogg', '.flac', '.aac'}
-    model_3d_exts = {'.obj', '.fbx', '.glb', '.gltf', '.stl', '.ply'}
+    model_3d_exts = {'.obj', '.fbx', '.glb', '.gltf', '.stl', '.ply', '.spz', '.splat', '.ksplat', '.usdz'}
 
     if ext in image_exts:
         return 'image'
@@ -139,6 +143,14 @@ def extract_input_nodes(workflow_file: Path, input_dir: Path) -> List[Dict]:
                 filename = widgets_values.get("image") or widgets_values.get("video") or widgets_values.get("audio")
 
             if filename and filename.strip():
+                # Skip 3D loader "none"/"null" sentinels (no real asset selected)
+                if (
+                    node_type in {"Load3D", "Load3DAdvanced", "Load3DModel"}
+                    and isinstance(filename, str)
+                    and filename.strip().lower() in {"none", "null", ""}
+                ):
+                    continue
+
                 # Check if file exists in input directory
                 file_path = input_dir / filename
                 file_exists = file_path.exists()

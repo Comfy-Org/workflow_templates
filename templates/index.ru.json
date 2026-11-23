@@ -120,6 +120,48 @@
         "size": 66571993088
       },
       {
+        "name": "image_minimax_h3_image_character_swap",
+        "title": "MiniMax-H3-Image: замена персонажа",
+        "description": "Замените человека на фотографии персонажем с референсного изображения. Адаптер читает фотографию как <Picture 1>, а персонажа как <Picture 2>, сохраняет позу, кадрирование и освещение снимка и переносит лицо, костюм и материалы референсного персонажа. Работает на MiniMax-H3-Image с LoRA h3_image_character_swap_v1 (сила 1.0).",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["Изображение","Редактирование изображения","Замена персонажа"],
+        "models": ["MiniMax H3 Image"],
+        "minComfyUIVersion": "0.45.0",
+        "date": "2026-11-22",
+        "openSource": true,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 45,
+              "nodeType": "LoadImage",
+              "file": "h3_char_swap_source.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 64,
+              "nodeType": "LoadImage",
+              "file": "h3_char_swap_reference.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 9,
+              "nodeType": "SaveImage",
+              "file": "image_minimax_h3_image_character_swap.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "size": 66679367270,
+        "thumbnailVariant": "compareSlider",
+        "thumbnail": ["input/h3_char_swap_source.png","output/image_minimax_h3_image_character_swap.png"]
+      },
+      {
         "name": "image_minimax_h3_image_t2i",
         "title": "MiniMax-H3-Image: из текста в изображение",
         "description": "Создавайте фотореалистичное или графическое изображение по текстовому запросу с MiniMax-H3-Image — моделью с открытыми весами, единственный чекпоинт которой работает и для генерации, и для редактирования. Семплирование дистиллировано до 6 шагов без CFG и по умолчанию даёт около 16 Мп; дополнительный расширитель промпта превращает короткий запрос в подробное описание, которое модель читает лучше всего.",
@@ -7448,7 +7490,8 @@
             }
           ]
         },
-        "minComfyUIVersion": "0.46.0"
+        "minComfyUIVersion": "0.46.0",
+        "thumbnail": ["input/withered_hydrangeas_still_life_vintage_lit.png","output/utility_rmbg3_remove_background.png"]
       },
       {
         "name": "template_qwen_multiangle.app",
@@ -10450,7 +10493,8 @@
               "mediaType": "video"
             }
           ]
-        }
+        },
+        "thumbnail": ["output/api_heygen_avatar_6_i2v.mp4"]
       },
       {
         "name": "api_heygen_avatar_6_id2v",
@@ -21051,7 +21095,17 @@
         "usage": 17,
         "searchRank": 0,
         "username": "ComfyUI",
-        "minComfyUIVersion": "0.16.4"
+        "minComfyUIVersion": "0.16.4",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 1,
+              "nodeType": "Load3D",
+              "file": "toy.glb",
+              "mediaType": "3d"
+            }
+          ]
+        }
       },
       {
         "name": "templates_shane_single_image_to_3d_model",
@@ -21650,7 +21704,17 @@
         "usage": 12,
         "searchRank": 0,
         "username": "shane",
-        "minComfyUIVersion": "0.16.4"
+        "minComfyUIVersion": "0.16.4",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 265,
+              "nodeType": "Load3D",
+              "file": "toy.glb",
+              "mediaType": "3d"
+            }
+          ]
+        }
       },
       {
         "name": "api_hunyuan3d_text_to_model",
@@ -21685,7 +21749,17 @@
         "usage": 12,
         "searchRank": 0,
         "username": "ComfyUI",
-        "minComfyUIVersion": "0.14.0"
+        "minComfyUIVersion": "0.14.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 36,
+              "nodeType": "Load3D",
+              "file": "motor_cycle.fbx",
+              "mediaType": "3d"
+            }
+          ]
+        }
       },
       {
         "name": "api_hunyuan3d_model2uv",
@@ -21708,7 +21782,17 @@
         "searchRank": 0,
         "username": "ComfyUI",
         "thumbnail": ["thumbnail/api_hunyuan3d_model2uv-1.png","thumbnail/api_hunyuan3d_model2uv-2.png"],
-        "minComfyUIVersion": "0.14.0"
+        "minComfyUIVersion": "0.14.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 13,
+              "nodeType": "Load3D",
+              "file": "toy.glb",
+              "mediaType": "3d"
+            }
+          ]
+        }
       },
       {
         "name": "api_tripo_p1_text_to_model",
@@ -21846,6 +21930,66 @@
         },
         "thumbnail": ["output/api_patina_material_extract.png"],
         "minComfyUIVersion": "0.43.1"
+      },
+      {
+        "name": "3d_ultratex_texture_3d_model",
+        "title": "UltraTex: Текстурирование 3D-модели",
+        "description": "Наносит PBR-текстуру на модель без текстуры по одному референсному изображению. UltraTex рендерит меш в шесть видов мировых нормалей, создаёт альбедо и металличность/шероховатость двумя проходами LoRA UltraTex поверх FLUX.2 Klein 9B, запекает результат в UV-развёртку и экспортирует PBR GLB с PNG-картами.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["3D","3D-текстурирование"],
+        "models": ["UltraTex","FLUX.2 Klein"],
+        "date": "2026-11-22",
+        "openSource": true,
+        "size": 13207024435,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 14,
+              "nodeType": "LoadImage",
+              "file": "sir_frog.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 234,
+              "nodeType": "Load3DAdvanced",
+              "file": "sir_frog.obj",
+              "mediaType": "3d"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 81,
+              "nodeType": "SaveGLB",
+              "file": "3d/ultratex_texture_3d_model.glb",
+              "mediaType": "3d"
+            },
+            {
+              "nodeId": 228,
+              "nodeType": "SaveImageAdvanced",
+              "file": "3d/ultratex_texture_3d_model_albedo.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 230,
+              "nodeType": "SaveImageAdvanced",
+              "file": "3d/ultratex_texture_3d_model_roughness.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 231,
+              "nodeType": "SaveImageAdvanced",
+              "file": "3d/ultratex_texture_3d_model_metallic.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.46.0",
+        "thumbnailVariant": "compareSlider",
+        "thumbnail": ["thumbnail/3d_ultratex_texture_3d_model-1.mp4","thumbnail/3d_ultratex_texture_3d_model-2.mp4"]
       }
     ]
   },
