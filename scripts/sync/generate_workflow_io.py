@@ -84,7 +84,7 @@ def get_media_type_from_filename(filename: str) -> str:
     image_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tiff'}
     video_exts = {'.mp4', '.mov', '.avi', '.mkv', '.webm'}
     audio_exts = {'.mp3', '.wav', '.ogg', '.flac', '.aac'}
-    model_3d_exts = {'.obj', '.fbx', '.glb', '.gltf', '.stl', '.ply'}
+    model_3d_exts = {'.obj', '.fbx', '.glb', '.gltf', '.stl', '.ply', '.spz', '.splat', '.ksplat', '.usdz'}
 
     if ext in image_exts:
         return 'image'
@@ -143,6 +143,14 @@ def extract_input_nodes(workflow_file: Path, input_dir: Path) -> List[Dict]:
                 filename = widgets_values.get("image") or widgets_values.get("video") or widgets_values.get("audio")
 
             if filename and filename.strip():
+                # Skip 3D loader "none"/"null" sentinels (no real asset selected)
+                if (
+                    node_type in {"Load3D", "Load3DAdvanced", "Load3DModel"}
+                    and isinstance(filename, str)
+                    and filename.strip().lower() in {"none", "null", ""}
+                ):
+                    continue
+
                 # Check if file exists in input directory
                 file_path = input_dir / filename
                 file_exists = file_path.exists()
