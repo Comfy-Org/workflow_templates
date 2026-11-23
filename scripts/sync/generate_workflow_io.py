@@ -31,6 +31,7 @@ OUTPUT_NODE_TYPES = [
     "VHS_SaveVideo",
     "Save3DModel",
     "Preview3D",
+    "Preview3DAdvanced",
     "PreviewAudio"
     # Note: PreviewImage is excluded as it's for debugging only
 ]
