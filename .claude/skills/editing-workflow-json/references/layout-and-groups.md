@@ -7,17 +7,55 @@ pixel numbers the user has signed off on. Load this before laying out or re-grou
 
 Shipped `api_*` audio templates (`api_fishaudio_voice_clone_tts`, `api_elevenlabs_v4_text_to_speech`) plus the user's corrections — "it runs" is not reviewable.
 
-**Colors**
+**Colors — a spotlight, not a legend**
+
+The palette is closed. `LGraphCanvas.node_colors` maps nine names to a title/body/frame triple; nothing else is a
+colour you may write.
+
+| name | node `color` / `bgcolor` | group `color` |
+|---|---|---|
+| black | `#222` / `#000` | `#444` |
+| pale_blue | `#2a363b` / `#3f5159` | `#3f789e` |
+| red | `#322` / `#533` | `#A88` |
+| yellow | `#432` / `#653` | `#b58b2a` |
+| green | `#232` / `#353` | `#8A8` |
+| blue | `#223` / `#335` | `#88A` |
+| cyan | `#233` / `#355` | `#8AA` |
+| purple | `#323` / `#535` | `#a1309b` |
+| brown | `#332922` / `#593930` | `#b06634` |
+
+How much colour a template may spend — **the default is none**, colour is only spent to point at one thing:
 
 | element | value | why |
 |---|---|---|
-| group, main path | `#3f789e` | default blue |
-| group, secondary/optional (bypassed) | `#444` | grey = off |
-| `MarkdownNote` | `color: "#222"`, `bgcolor: "#000"` | convention |
-| hero node, "look here first" | `color: "#432"`, `bgcolor: "#653"` | red, one node only |
-| other node accent | palette only: green `#232/#353`, blue `#223/#335`, purple `#323/#535`, brown `#332/#553`, cyan `#233/#355`, grey `#222/#000` | only frontend colours |
+| group, ordinary module | omit `color` (renders `#335`) or `#3f789e`; `#444` when a frame must sit quieter than the core one | one visual weight for the whole graph |
+| group, the one core group users must find first | `#A88` red — at most one per graph | a single focal frame |
+| group, bypassed / optional path | `#444` + `mode: 4` on its nodes | "off", not a second accent |
+| `Note` / `MarkdownNote` | `color "#222"`, `bgcolor "#000"` | see below — never yellow |
+| node inside a group | no `color` / `bgcolor` keys at all | a tinted node pulls the eye out of its module |
+| one hero node, genuinely complex graph only | `#322` / `#533` red — at most one | the graph is too big to read at a glance |
 
-**Never invent a hex value.** `#a1309b`-style accents and one-off group colours are the trap — frames `#3f789e` / `#444`, accents from the palette, red for one hero node.
+- **Never one colour per group.** Not per module, not per row, not green/purple/cyan frames to "separate" stages:
+  separators are gaps and titles. Varied frames give the eye nothing to land on and compete with the wires the user
+  is trying to follow; readers scan a template for *where do I start*, which one bright frame answers and nine tinted
+  ones do not. The user's words: "在组里面不要使用不同的颜色 … 只给核心组添加一些比较显眼的颜色，对于其他组保持黑色或默认颜色".
+  Exactly two exceptions exist: the core group (red, one only) and bypassed paths (grey).
+- **Red is for the core group, and sparingly.** A second red frame demotes both to decoration. Red reads as the
+  entry point, so it belongs where the user actually starts (the prompt / the single sampler), never on a stage that
+  merely looks important.
+- **Notes are black, never yellow.** `Note` and `MarkdownNote` are constructed with the **yellow** pair
+  (`src/extensions/core/noteNode.ts`), and `litegraphService.ts` gives every `api_node` the same yellow — *"Mark API
+  Nodes yellow by default to distinguish with other nodes"*. A yellow note therefore reads as a partner/API node, i.e.
+  "this step costs credits". Write `color: "#222", bgcolor: "#000"` on every note; a note with no colour keys is yellow.
+- **Node colour is off unless the graph is genuinely complex.** Only then, and only for the node the user must find
+  first (the prompt box, the one sampler), use red `#322`/`#533`. Two coloured nodes is already one too many; a
+  coloured `VAELoader`/`CLIPTextEncode` per module is clutter, not structure.
+- **Never invent a hex value**, and never use `#432`/`#653` as an accent — it *is* the api_node pair, so a
+  "highlighted" local node looks like a partner node. One-off frames (`#a1309b`, `#A88` on five groups) are the other trap.
+- **Audit, don't eyeball:** `scripts/check_wf_colors.py <wf.json|dir> [--strict]` fails on a non-black note, two red
+  groups, two accent colours among frames, two red hero nodes, and non-palette hexes; `--strict` also fails on a lone
+  decorative accent or any coloured node. Run it on the file you touched — the repo still ships older graphs that
+  predate the rule, so a directory-wide failure count is not a gate.
 
 **Geometry**
 

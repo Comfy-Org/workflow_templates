@@ -29,16 +29,18 @@ task instead of guessing.**
   (the type badge already says IMAGE/MASK), don't mix naming styles, and drop outputs that nothing consumes.
 - **Model-intrinsic widgets stay at their default.** Fixed training resolution (`TextEncodeFibo2` `width/height`)
   and a model's fixed prompt are not user parameters — exposing them only lets the user break the template.
-- **Colours come from the palette, never invented.** Group frames `#3f789e` (main) / `#444` (bypassed, optional);
-  notes `color #222` + `bgcolor #000`; node accents only LiteGraph pairs (`#432/#653` red for the one hero node,
-  `#232/#353`, `#223/#335`, `#323/#535`, `#332/#553`, `#233/#355`, `#222/#000`). Table and rationale:
-  `references/layout-and-groups.md`.
+- **Colour is a spotlight, not a legend.** Every group keeps the default frame (omit `color`, or `#3f789e`);
+  at most the one core group a newcomer must find first may be red `#A88`, and `#444` marks a bypassed path.
+  Never one colour per module — varied frames scatter attention instead of aiming it. Notes are black
+  `#222`/`#000`, never yellow (`#432`/`#653` **is** the api_node pair, so a yellow note reads as a partner
+  node). Node accents are off unless the graph is genuinely complex, then at most one hero node in red
+  `#322`/`#533`. Palette names, table and rationale: `references/layout-and-groups.md`.
 
 ## Routing table
 
 | task | load |
 |---|---|
-| lay out or re-group a graph: module frames, row grids, gaps, node sizes, first-view fit | `references/layout-and-groups.md` |
+| lay out or re-group a graph: module frames, row grids, gaps, node sizes, first-view fit, colour restraint | `references/layout-and-groups.md` |
 | a template broke after an edit — links, ids, slots, socket names, hidden presentation links | `references/link-integrity.md` |
 | UUID-typed nodes, promoted subgraph inputs, wrapping a chain into a subgraph | `references/subgraphs.md` |
 | gcd ratio with core nodes, filename-prefix tokens, core text/JSON limits, loop + array pitfalls, model download metadata | `references/editing-recipes.md` |
@@ -46,6 +48,7 @@ task instead of guessing.**
 
 Scripts (run them, don't eyeball):
 `scripts/check_wf_links.py` (links/slots of one workflow, exits non-zero on a broken invariant),
+`scripts/check_wf_colors.py` (colour restraint: notes, group frames, node accents; `--strict` also fails on warnings),
 `scripts/layout_grid.py` (deterministic grid layout for a whole graph),
 `scripts/audit_links.py` (structural scan across a directory of workflows),
 `scripts/validate_model_links.py` (model download metadata: HF URL ↔ `properties.models` ↔ loader widget),
