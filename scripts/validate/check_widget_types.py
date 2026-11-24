@@ -98,12 +98,32 @@ WIDGET_TYPES = frozenset(
     }
 )
 DYNAMIC_COMBO = "COMFY_DYNAMICCOMBO_V3"
+DYNAMIC_GROUP = "COMFY_DYNAMICGROUP_V3"
 CONTROL_VALUES = frozenset({"fixed", "increment", "increment-wrap", "decrement", "randomize"})
 UPLOAD_FLAGS = ("image_upload", "video_upload", "audio_upload")
 UPLOAD_VALUES = frozenset({"image", "video", "audio"})
 # Buttons load3d.ts adds right before a LOAD_3D widget; their values are saved.
 LOAD_3D_BUTTON_VALUES = frozenset({"upload3dmodel", "uploadExtraResources", "clear"})
 PRIMITIVE_NODE = "PrimitiveNode"
+# Widget types the frontend creates with ``serialize = false``: a workflow it saves
+# has no slot for them, so a missing one is not drift (useImageCompareWidget.ts).
+UNSERIALIZED_WIDGET_TYPES = frozenset({"IMAGECOMPARE"})
+# Nodes the frontend gives UI-only widgets (text preview, audio player, 3D viewer)
+# that older frontends saved as null or "" after the input widgets.
+UI_ONLY_WIDGET_NODES = frozenset(
+    {
+        "PreviewAny",
+        "LoadAudio",
+        "RecordAudio",
+        "SaveAudio",
+        "SaveAudioMP3",
+        "SaveAudioOpus",
+        "SaveAudioAdvanced",
+        "PreviewAudio",
+        "SaveGLB",
+        "Preview3D",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -203,6 +223,28 @@ def _walk_positional(
                 _ordered_inputs(branch), values, index + 1, full + ".", out, controls_present
             )
             continue
+        # DynamicGroup: count byte first, then rows × template fields, mirroring
+        # the named keys <group>, <group>.<i>.<field>. Not a WIDGET_TYPES entry
+        # and must not be treated as forceInput / skipped as a socket.
+        if widget_type == DYNAMIC_GROUP:
+            fields = _ordered_inputs(meta.get("template"))
+            max_rows = meta.get("max", 20)
+            if not isinstance(max_rows, int) or isinstance(max_rows, bool):
+                max_rows = 20
+            n = values[index]
+            # bool is not an int here (isinstance(True, int) is True in Python).
+            if (
+                type(n) is int
+                and 0 <= n <= max_rows
+                and index + 1 + n * len(fields) <= len(values)
+            ):
+                out[full] = (n, spec)
+                index += 1
+                for i in range(n):
+                    for field_name, field_spec in fields:
+                        out[f"{full}.{i}.{field_name}"] = (values[index], field_spec)
+                        index += 1
+            continue
         if not _is_widget(spec):
             continue
         if widget_type in ("LOAD_3D", "LOAD_3D_ADVANCED"):
@@ -217,7 +259,9 @@ def _walk_positional(
         out[full] = (values[index], spec)
         index += 1
         if widget_type == "INT" and "control_after_generate" not in meta:
-            has_control = name in ("seed", "noise_seed")
+            # useIntWidget matches the full input name, and a dynamic-combo branch
+            # input is named `<combo>.seed`, so only a top-level seed gets one.
+            has_control = not prefix and name in ("seed", "noise_seed")
         else:
             has_control = bool(meta.get("control_after_generate"))
         if has_control and controls_present is not None:
@@ -569,9 +613,40 @@ def _linked_input_names(node: dict[str, Any]) -> set[str]:
     return names
 
 
-def _is_ignorable_tail(value: Any) -> bool:
+def _is_ignorable_tail(value: Any, node_type: str = "") -> bool:
+    # None and "" are what older frontends saved for UI-only widgets (PreviewAny's
+    # text preview, the audio player, the 3D viewer). The frontend restores only
+    # its serializable widgets, in order, so an empty value past them is never read.
+    if (value is None or value == "") and node_type in UI_ONLY_WIDGET_NODES:
+        return True
+    # PreviewAny's Markdown/Plain text toggle (textPreviewWidgets.ts) is UI-only too.
+    if node_type == "PreviewAny" and isinstance(value, bool):
+        return True
     return isinstance(value, str) and (
         value in CONTROL_VALUES or value in UPLOAD_VALUES or value in LOAD_3D_BUTTON_VALUES
+    )
+
+
+def _is_legacy_bounding_box_fields(mapped: dict[str, tuple[Any, Any]], tail: list[Any]) -> bool:
+    """Older frontends saved the x/y/width/height number widgets drawn under a
+    BOUNDING_BOX right after it; the current one marks them unserialized."""
+    if len(tail) != 4 or not mapped:
+        return False
+    _, last_spec = list(mapped.values())[-1]
+    return _widget_type(last_spec) == "BOUNDING_BOX" and all(
+        type(item) in (int, float) for item in tail
+    )
+
+
+def _is_custom_combo_tail(tail: list[Any], node_type: str) -> bool:
+    """CustomCombo (customWidgets.ts) adds a hidden ``index`` widget and one text
+    widget per option after ``choice``; the last option widget is always empty."""
+    return (
+        node_type == "CustomCombo"
+        and len(tail) >= 2
+        and type(tail[0]) is int
+        and all(isinstance(item, str) for item in tail[1:])
+        and tail[-1] == ""
     )
 
 
@@ -591,6 +666,8 @@ def _missing_required_widget_findings(
         return findings
     for name, spec in required.items():
         if name in linked or not _is_widget(spec):
+            continue
+        if _widget_type(spec) in UNSERIALIZED_WIDGET_TYPES:
             continue
         if name in present_keys or any(key.startswith(f"{name}.") for key in present_keys):
             continue
@@ -685,7 +762,9 @@ def slot_schema_findings(
 
     if consumed < len(values):
         tail = values[consumed:]
-        if tail and not all(_is_ignorable_tail(item) for item in tail):
+        if _is_legacy_bounding_box_fields(mapped, tail) or _is_custom_combo_tail(tail, node_type):
+            tail = []
+        if tail and not all(_is_ignorable_tail(item, node_type) for item in tail):
             findings.append(
                 Finding(
                     path=str(path),

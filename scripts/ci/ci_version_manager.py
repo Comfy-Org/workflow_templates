@@ -23,6 +23,7 @@ ALL_PACKAGE_IDS = (
     "media_other",
     "media_assets_01",
     "media_assets_02",
+    "media_assets_03",
     "blueprints",
     "meta",
 )
@@ -55,6 +56,7 @@ BUNDLE_PACKAGE_MAP = {
     "media-other": "media_other",
     "media-assets-01": "media_assets_01",
     "media-assets-02": "media_assets_02",
+    "media-assets-03": "media_assets_03",
 }
 
 
@@ -515,6 +517,7 @@ def update_dependencies(changed_packages: Set[str]) -> None:
         "media_other": "packages/media_other/pyproject.toml",
         "media_assets_01": "packages/media_assets_01/pyproject.toml",
         "media_assets_02": "packages/media_assets_02/pyproject.toml",
+        "media_assets_03": "packages/media_assets_03/pyproject.toml",
     }
 
     frozen = get_frozen_packages()

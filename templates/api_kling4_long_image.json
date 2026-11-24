@@ -1,0 +1,158 @@
+{
+  "id": "1d2eb835-be47-4af4-99ab-0e29f80aba2a",
+  "revision": 0,
+  "last_node_id": 5,
+  "last_link_id": 1,
+  "nodes": [
+    {
+      "id": 3,
+      "type": "Kling4LongImageNode",
+      "pos": [
+        -400.325377808198,
+        -27.68547439054348
+      ],
+      "size": [
+        411.0436933570008,
+        291.52466844903205
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "skill.style_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "skill.subject_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Kling4LongImageNode"
+      },
+      "widgets_values": [
+        "webpage",
+        "A tall vertical marketing landing page for a warm modern interior and homeware brand, in English, laid out as seven stacked bands from top to bottom. This is a brand homepage, not a shop: no search field, no filter chips, no category tabs, no long product grid. Band 1: a thin white header, one small wordmark at the left, three text links in the centre, a thin hairline rule under it. Band 2: one full-bleed edge-to-edge photograph of a sunlit living room with a linen sofa, warm oak table, a ceramic vase and sheer curtains, with a single short headline in large serif type and one line of smaller subcopy beneath it. Band 3: exactly three product cards side by side, each a square photo of one homeware item on a light plain background with a short product name and a price below. Band 4: an editorial split, a large lifestyle photo filling the left half and a short two-sentence paragraph with a small text link on the right half. Band 5: a material swatch strip of four fabric swatches in a single row, each labelled with a one-word fabric name. Band 6: one testimonial band, a short quote in italic and a customer name. Band 7: a three-column footer on a deep terracotta background, one large wordmark on the left, two short link columns, and a copyright line at the bottom. Palette of oatmeal, terracotta, sage and soft cream on warm cream paper, soft daylight photography, generous white space, restrained modern typography. All copy in English, no Chinese characters anywhere, no notice banner or promo strip, no sidebar, no cookie banner, no watermark.",
+        "1K",
+        42,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "skill": "webpage",
+        "skill.prompt": "A tall vertical marketing landing page for a warm modern interior and homeware brand, in English, laid out as seven stacked bands from top to bottom. This is a brand homepage, not a shop: no search field, no filter chips, no category tabs, no long product grid. Band 1: a thin white header, one small wordmark at the left, three text links in the centre, a thin hairline rule under it. Band 2: one full-bleed edge-to-edge photograph of a sunlit living room with a linen sofa, warm oak table, a ceramic vase and sheer curtains, with a single short headline in large serif type and one line of smaller subcopy beneath it. Band 3: exactly three product cards side by side, each a square photo of one homeware item on a light plain background with a short product name and a price below. Band 4: an editorial split, a large lifestyle photo filling the left half and a short two-sentence paragraph with a small text link on the right half. Band 5: a material swatch strip of four fabric swatches in a single row, each labelled with a one-word fabric name. Band 6: one testimonial band, a short quote in italic and a customer name. Band 7: a three-column footer on a deep terracotta background, one large wordmark on the left, two short link columns, and a copyright line at the bottom. Palette of oatmeal, terracotta, sage and soft cream on warm cream paper, soft daylight photography, generous white space, restrained modern typography. All copy in English, no Chinese characters anywhere, no notice banner or promo strip, no sidebar, no cookie banner, no watermark.",
+        "skill.resolution": "1K",
+        "skill.seed": 42,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        78.74387145481082,
+        -27.685474390543476
+      ],
+      "size": [
+        673.5390371410158,
+        513.0859100058844
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "ComfyUI",
+        "png",
+        "8-bit",
+        "sRGB",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "ComfyUI",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB",
+        "format.channels": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "MarkdownNote",
+      "pos": [
+        -1061.3056083665806,
+        -27.68547439054348
+      ],
+      "size": [
+        460,
+        760
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Kling 4.0: Long Image (webpage)\n\nGenerates **one extremely tall image** (roughly 1:10) that reads as a finished web page, in a single pass — header, hero, content bands and footer laid out together rather than stitched from separate generations.\n\n### How the node works\n\n- `skill` picks the layout template. **`webpage`** (this workflow) designs a page from text; `ecommerce` instead takes 1–3 product photos and produces a product detail page.\n- `prompt` is the art direction **and** the structure: describe the page band by band, top to bottom, and say explicitly what must not appear (e.g. *no search field, no filter chips, no product grid*). Without that, the model drifts toward a generic shop or corporate site.\n- Optional inputs on `webpage`: `style_image` (referenced as `@Image1`, supplies look and layout language) and `subject_image` (`@Image2`, a subject the page is built around). You can run it fully text-only.\n- `resolution` is `1K` or `2K` only — there is no aspect-ratio control, the page shape is derived by the endpoint.\n- `length` exists only for `ecommerce` (short / medium / long); the webpage skill ignores it.\n\n### What a long image is like\n\n- Output is enormous and thin: expect something like **2048 × 16500** at 2K, up to ~50k pixels tall at the longest ecommerce length. Open the file in an image viewer, never assume it fits a screen.\n- The layout is coherent — one grid, consistent type scale, real negative space — which is what makes it useful as a design artifact rather than a collage.\n- **Text inside the image is rendered by the model**: short display type and prices usually come out clean, long body copy and CJK paragraphs do not. Treat all copy as placeholder art, not as content to ship.\n- The ecommerce skill is a fixed vendor script (hero → benefits → fabric detail → specs → care). It tends *not* to render prices, size tables or a footer even when asked; the webpage skill follows a described structure more loosely than a literal list.\n- Generation is slow for an image model — 1–5 minutes per page, the 2K long ecommerce case being the slowest.\n\n### When to use it\n\n- **Landing-page and site design drafts** — several directions to compare before anything is coded; hand the winner to a designer or an agent as a layout reference.\n- **Brand and campaign pages** — a full visual narrative in one artifact instead of a folder of slices.\n- **E-commerce PD page mockups** — feed product photos, get the skeleton of a detail page.\n- **App or onboarding flow sketches** — one tall canvas where each band is a screen.\n\n### Tips\n\n- Ask for the band order explicitly, and state the language (*\"All visible text must be in English only\"*) — it otherwise defaults to Chinese.\n- Keep the page copy short in the prompt; describe imagery and layout, not paragraphs.\n- Crop the top 2000 px for a quick look instead of opening a 20k-pixel file.\n"
+      ],
+      "widgets_values_named": {
+        "text": "Note hre"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      1,
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.4014119795212231,
+      "offset": [
+        2426.4252563579107,
+        637.6379852429687
+      ]
+    },
+    "frontendVersion": "1.59.1"
+  },
+  "version": 0.4
+}

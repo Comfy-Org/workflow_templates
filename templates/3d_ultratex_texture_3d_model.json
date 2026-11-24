@@ -1,0 +1,2864 @@
+{
+  "id": "6e0dda86-3c92-4fef-ab07-a99eb5e60563",
+  "revision": 0,
+  "last_node_id": 245,
+  "last_link_id": 517,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        -1195,
+        1020
+      ],
+      "size": [
+        420,
+        90
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "flux-2-klein-base-9b_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/diffusion_models/flux-2-klein-base-9b_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "flux-2-klein-base-9b_int8_convrot.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "flux-2-klein-base-9b_int8_convrot.safetensors",
+        "weight_dtype": "default"
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 3,
+      "type": "BlockSparseAttention",
+      "pos": [
+        -1195,
+        1190
+      ],
+      "size": [
+        340,
+        280
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "showAdvanced": false,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            8,
+            156
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BlockSparseAttention"
+      },
+      "widgets_values": [
+        "sla",
+        20,
+        0,
+        1,
+        "",
+        12288,
+        256,
+        "exact_kv_and_rows",
+        false
+      ],
+      "widgets_values_named": {
+        "selection": "sla",
+        "selection.keep_percent": 20,
+        "start_percent": 0,
+        "end_percent": 1,
+        "dense_blocks": "",
+        "min_tokens": 12288,
+        "extra_tokens": 256,
+        "sink_conditioning": "exact_kv_and_rows",
+        "verbose": false
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 4,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -715,
+        1190
+      ],
+      "size": [
+        480,
+        100
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            296
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "models": [
+          {
+            "name": "ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors",
+            "directory": "loras"
+          }
+        ]
+      },
+      "widgets_values": [
+        "ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors",
+        "strength_model": 1
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 5,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -715,
+        1360
+      ],
+      "size": [
+        480,
+        100
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            295
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "models": [
+          {
+            "name": "ultratex_flux2_klein_9b_metallic_roughness_lora_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/ultratex_flux2_klein_9b_metallic_roughness_lora_bf16.safetensors",
+            "directory": "loras"
+          }
+        ]
+      },
+      "widgets_values": [
+        "ultratex_flux2_klein_9b_metallic_roughness_lora_bf16.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "ultratex_flux2_klein_9b_metallic_roughness_lora_bf16.safetensors",
+        "strength_model": 1
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 7,
+      "type": "ConditioningLoader",
+      "pos": [
+        -95,
+        1360
+      ],
+      "size": [
+        350,
+        70
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            239
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningLoader",
+        "models": [
+          {
+            "name": "flux-2-klein-9b_empty_prompt.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/embeddings/flux-2-klein-9b_empty_prompt.safetensors",
+            "directory": "embeddings"
+          }
+        ]
+      },
+      "widgets_values": [
+        "flux-2-klein-9b_empty_prompt.safetensors"
+      ],
+      "widgets_values_named": {
+        "conditioning_name": "flux-2-klein-9b_empty_prompt.safetensors"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 8,
+      "type": "VAELoader",
+      "pos": [
+        -95,
+        1020
+      ],
+      "size": [
+        280,
+        60
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            231,
+            232,
+            257
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "ultratex_flux2_vae_fp32.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/vae/ultratex_flux2_vae_fp32.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "ultratex_flux2_vae_fp32.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "ultratex_flux2_vae_fp32.safetensors"
+      },
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 11,
+      "type": "Get3DComponents",
+      "pos": [
+        370,
+        -110
+      ],
+      "size": [
+        180,
+        30
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_3d",
+          "type": "FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_STL,FILE_3D",
+          "link": 499
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "type": "MESH",
+          "links": [
+            259,
+            274,
+            276,
+            316
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Get3DComponents"
+      }
+    },
+    {
+      "id": 18,
+      "type": "CreateCameraOrbit",
+      "pos": [
+        370,
+        10
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "camera_info",
+          "type": "LOAD3D_CAMERA",
+          "link": 513
+        }
+      ],
+      "outputs": [
+        {
+          "name": "camera_info",
+          "type": "LOAD3D_CAMERA",
+          "links": [
+            284,
+            288,
+            339
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateCameraOrbit"
+      },
+      "widgets_values": [
+        4,
+        360,
+        0,
+        "top and bottom"
+      ],
+      "widgets_values_named": {
+        "count": 4,
+        "yaw": 360,
+        "pitch": 0,
+        "poles": "top and bottom"
+      }
+    },
+    {
+      "id": 13,
+      "type": "RenderMesh",
+      "pos": [
+        680,
+        -110
+      ],
+      "size": [
+        210,
+        190
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mesh",
+          "type": "MESH",
+          "link": 316
+        },
+        {
+          "name": "model_3d_info",
+          "shape": 7,
+          "type": "LOAD3D_MODEL_INFO",
+          "link": null
+        },
+        {
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": 339
+        },
+        {
+          "name": "texture",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 412
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 413
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            317
+          ]
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            319
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RenderMesh"
+      },
+      "widgets_values": [
+        "world normal",
+        2048,
+        2048,
+        "#ffffff"
+      ],
+      "widgets_values_named": {
+        "mode": "world normal",
+        "width": 2048,
+        "height": 2048,
+        "background": "#ffffff"
+      }
+    },
+    {
+      "id": 14,
+      "type": "LoadImage",
+      "pos": [
+        -1195,
+        -90
+      ],
+      "size": [
+        480,
+        670
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            466
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "sir_frog.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "sir_frog.png",
+        "upload": "image"
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 16,
+      "type": "UltraTexConditioning",
+      "pos": [
+        1280,
+        -110
+      ],
+      "size": [
+        230,
+        160
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 239
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 257
+        },
+        {
+          "name": "normals",
+          "type": "IMAGE",
+          "link": 318
+        },
+        {
+          "name": "masks",
+          "type": "MASK",
+          "link": 320
+        },
+        {
+          "name": "reference",
+          "type": "IMAGE",
+          "link": 472
+        },
+        {
+          "name": "reference_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 312
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            508,
+            509,
+            510,
+            511
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UltraTexConditioning"
+      },
+      "widgets_values": [
+        "off"
+      ],
+      "widgets_values_named": {
+        "extra_views": "off"
+      }
+    },
+    {
+      "id": 17,
+      "type": "EmptyFlux2LatentImage",
+      "pos": [
+        1580,
+        -110
+      ],
+      "size": [
+        210,
+        110
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 446
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 447
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            444,
+            512
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyFlux2LatentImage"
+      },
+      "widgets_values": [
+        2048,
+        2048,
+        6
+      ],
+      "widgets_values_named": {
+        "width": 2048,
+        "height": 2048,
+        "batch_size": 6
+      }
+    },
+    {
+      "id": 20,
+      "type": "KSampler",
+      "pos": [
+        1850,
+        -110
+      ],
+      "size": [
+        210,
+        270
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 296
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 508
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 509
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 444
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        1,
+        "fixed",
+        4,
+        1,
+        "euler",
+        "simple",
+        1
+      ],
+      "widgets_values_named": {
+        "seed": 1,
+        "control_after_generate": "fixed",
+        "steps": 4,
+        "cfg": 1,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1
+      }
+    },
+    {
+      "id": 21,
+      "type": "VAEDecode",
+      "pos": [
+        2150,
+        -110
+      ],
+      "size": [
+        230,
+        60
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 29
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 231
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            32
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 22,
+      "type": "BakeTextureFromViews",
+      "pos": [
+        2420,
+        -110
+      ],
+      "size": [
+        210,
+        170
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mesh",
+          "type": "MESH",
+          "link": 259
+        },
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 32
+        },
+        {
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": 284
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "resolution",
+          "type": "INT",
+          "widget": {
+            "name": "resolution"
+          },
+          "link": 414
+        }
+      ],
+      "outputs": [
+        {
+          "name": "base_color",
+          "type": "IMAGE",
+          "links": [
+            505
+          ]
+        },
+        {
+          "name": "confidence",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BakeTextureFromViews"
+      },
+      "widgets_values": [
+        4096,
+        4,
+        true
+      ],
+      "widgets_values_named": {
+        "resolution": 4096,
+        "blend_exponent": 4,
+        "fill_unseen": true
+      }
+    },
+    {
+      "id": 60,
+      "type": "KSampler",
+      "pos": [
+        1580,
+        370
+      ],
+      "size": [
+        210,
+        270
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 295
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 510
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 511
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 512
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            108
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        4,
+        "fixed",
+        8,
+        1,
+        "euler",
+        "simple",
+        1
+      ],
+      "widgets_values_named": {
+        "seed": 4,
+        "control_after_generate": "fixed",
+        "steps": 8,
+        "cfg": 1,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1
+      }
+    },
+    {
+      "id": 61,
+      "type": "VAEDecode",
+      "pos": [
+        1860,
+        370
+      ],
+      "size": [
+        140,
+        50
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 108
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 232
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            111
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 62,
+      "type": "BakeTextureFromViews",
+      "pos": [
+        2140,
+        370
+      ],
+      "size": [
+        210,
+        170
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mesh",
+          "type": "MESH",
+          "link": 274
+        },
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 111
+        },
+        {
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": 288
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "resolution",
+          "type": "INT",
+          "widget": {
+            "name": "resolution"
+          },
+          "link": 416
+        }
+      ],
+      "outputs": [
+        {
+          "name": "base_color",
+          "type": "IMAGE",
+          "links": [
+            507
+          ]
+        },
+        {
+          "name": "confidence",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BakeTextureFromViews"
+      },
+      "widgets_values": [
+        4096,
+        4,
+        true
+      ],
+      "widgets_values_named": {
+        "resolution": 4096,
+        "blend_exponent": 4,
+        "fill_unseen": true
+      }
+    },
+    {
+      "id": 80,
+      "type": "ApplyTextureToMesh",
+      "pos": [
+        3430,
+        -110
+      ],
+      "size": [
+        190,
+        130
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mesh",
+          "type": "MESH",
+          "link": 276
+        },
+        {
+          "name": "base_color",
+          "type": "IMAGE",
+          "link": 390
+        },
+        {
+          "name": "metallic",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 397
+        },
+        {
+          "name": "roughness",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 395
+        },
+        {
+          "name": "occlusion",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "normal_map",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "type": "MESH",
+          "links": [
+            497
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ApplyTextureToMesh"
+      }
+    },
+    {
+      "id": 81,
+      "type": "SaveGLB",
+      "pos": [
+        3430,
+        120
+      ],
+      "size": [
+        790,
+        900
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mesh",
+          "type": "MESH,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_FBX,FILE_3D_STL,FILE_3D_USDZ,FILE_3D_PLY,FILE_3D_SPLAT,FILE_3D_SPZ,FILE_3D_KSPLAT,FILE_3D_SPLAT_ANY,FILE_3D_POINT_CLOUD_ANY,FILE_3D",
+          "link": 497
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveGLB",
+        "Last Time Model File": "3d/ultratex_00007_.glb",
+        "Last Time Model Folder": "output",
+        "Camera Config": {
+          "cameraType": "perspective",
+          "fov": 35,
+          "state": {
+            "position": {
+              "x": 1.2518710644323308,
+              "y": 1.2528434221969906,
+              "z": 3.085151370472915
+            },
+            "target": {
+              "x": -0.07251783317859523,
+              "y": 0.6153239147835186,
+              "z": 0.08604133670316635
+            },
+            "zoom": 1,
+            "cameraType": "perspective",
+            "quaternion": {
+              "x": -0.0938158800508988,
+              "y": 0.2054748452193426,
+              "z": 0.019792308420581033,
+              "w": 0.9739542767295326
+            },
+            "fov": 35,
+            "aspect": 0.8497942386831275,
+            "near": 0.01,
+            "far": 10000,
+            "frustum": {
+              "left": -5,
+              "right": 5,
+              "top": 5,
+              "bottom": -5
+            }
+          }
+        },
+        "Light Config": {
+          "intensity": 2.4000000000000004,
+          "hdri": {
+            "enabled": false,
+            "hdriPath": "",
+            "showAsBackground": false,
+            "intensity": 1
+          }
+        },
+        "Scene Config": {
+          "showGrid": false,
+          "backgroundColor": "#282828",
+          "backgroundImage": "",
+          "backgroundRenderMode": "tiled",
+          "models": [
+            {
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "quaternion": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          ]
+        },
+        "Model Config": {
+          "upDirection": "original",
+          "materialMode": "original",
+          "showSkeleton": false,
+          "gizmo": {
+            "enabled": false,
+            "mode": "translate",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        }
+      },
+      "widgets_values": [
+        "3d/ultratex_texture_3d_model",
+        ""
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "3d/ultratex_texture_3d_model",
+        "image": ""
+      }
+    },
+    {
+      "id": 105,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -715,
+        1020
+      ],
+      "size": [
+        490,
+        100
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 156
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "models": [
+          {
+            "name": "flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors",
+            "directory": "loras"
+          }
+        ]
+      },
+      "widgets_values": [
+        "flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors",
+        0.5
+      ],
+      "widgets_values_named": {
+        "lora_name": "flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors",
+        "strength_model": 0.5
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 200,
+      "type": "RemoveBackground",
+      "pos": [
+        870,
+        650
+      ],
+      "size": [
+        190,
+        50
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "bg_removal_model",
+          "type": "BACKGROUND_REMOVAL",
+          "link": 313
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 471
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            310
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RemoveBackground"
+      }
+    },
+    {
+      "id": 201,
+      "type": "LoadBackgroundRemovalModel",
+      "pos": [
+        480,
+        650
+      ],
+      "size": [
+        330,
+        60
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "bg_model",
+          "type": "BACKGROUND_REMOVAL",
+          "links": [
+            313
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadBackgroundRemovalModel",
+        "models": [
+          {
+            "name": "birefnet.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors",
+            "directory": "background_removal"
+          }
+        ]
+      },
+      "widgets_values": [
+        "birefnet.safetensors"
+      ],
+      "widgets_values_named": {
+        "bg_removal_name": "birefnet.safetensors"
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 202,
+      "type": "MaskPreview",
+      "pos": [
+        1150,
+        650
+      ],
+      "size": [
+        225,
+        270
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 310
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            312
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskPreview"
+      }
+    },
+    {
+      "id": 209,
+      "type": "PreviewImage",
+      "pos": [
+        680,
+        170
+      ],
+      "size": [
+        140,
+        250
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 317
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            318
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 210,
+      "type": "MaskPreview",
+      "pos": [
+        950,
+        -100
+      ],
+      "size": [
+        225,
+        289.9565561208951
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 319
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            320
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskPreview"
+      }
+    },
+    {
+      "id": 223,
+      "type": "SplitImageChannels",
+      "pos": [
+        2410,
+        370
+      ],
+      "size": [
+        180,
+        90
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 507
+        }
+      ],
+      "outputs": [
+        {
+          "name": "red",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "green",
+          "type": "IMAGE",
+          "links": [
+            394
+          ]
+        },
+        {
+          "name": "blue",
+          "type": "IMAGE",
+          "links": [
+            396
+          ]
+        },
+        {
+          "name": "alpha",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SplitImageChannels"
+      }
+    },
+    {
+      "id": 228,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        2770,
+        -110
+      ],
+      "size": [
+        270,
+        160
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 505
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            390
+          ]
+        }
+      ],
+      "title": "Save Albedo",
+      "properties": {},
+      "widgets_values": [
+        "3d/ultratex_texture_3d_model_albedo",
+        "png",
+        "8-bit",
+        "sRGB",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "3d/ultratex_texture_3d_model_albedo",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB",
+        "format.channels": "auto"
+      }
+    },
+    {
+      "id": 230,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        3100,
+        -110
+      ],
+      "size": [
+        270,
+        160
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 394
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            395
+          ]
+        }
+      ],
+      "title": "Save Roughness",
+      "properties": {},
+      "widgets_values": [
+        "3d/ultratex_texture_3d_model_roughness",
+        "png",
+        "8-bit",
+        "sRGB",
+        "grayscale (1 channel)"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "3d/ultratex_texture_3d_model_roughness",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB",
+        "format.channels": "grayscale (1 channel)"
+      }
+    },
+    {
+      "id": 231,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        2770,
+        440
+      ],
+      "size": [
+        270,
+        160
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 396
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            397
+          ]
+        }
+      ],
+      "title": "Save Metallic",
+      "properties": {},
+      "widgets_values": [
+        "3d/ultratex_texture_3d_model_metallic",
+        "png",
+        "8-bit",
+        "sRGB",
+        "grayscale (1 channel)"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "3d/ultratex_texture_3d_model_metallic",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB",
+        "format.channels": "grayscale (1 channel)"
+      }
+    },
+    {
+      "id": 233,
+      "type": "b6610733-f2f0-4f83-9281-42e1aa892a5a",
+      "pos": [
+        -1195,
+        650
+      ],
+      "size": [
+        340,
+        140
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Rendered Mesh Resolution",
+          "name": "value_3",
+          "type": "INT",
+          "widget": {
+            "name": "value_3"
+          },
+          "link": null
+        },
+        {
+          "label": "Texture Resolution",
+          "name": "value_4",
+          "type": "INT",
+          "widget": {
+            "name": "value_4"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "label": "Rendered Mesh Resolution",
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            412,
+            413,
+            446,
+            447,
+            514,
+            515,
+            516,
+            517
+          ]
+        },
+        {
+          "label": "Texture Resolution",
+          "name": "INT_1",
+          "type": "INT",
+          "links": [
+            414,
+            416
+          ]
+        }
+      ],
+      "properties": {
+        "previewExposures": []
+      },
+      "widgets_values": [
+        1024,
+        4096
+      ],
+      "widgets_values_named": {
+        "value_3": 1024,
+        "value_4": 4096
+      }
+    },
+    {
+      "id": 234,
+      "type": "Load3DAdvanced",
+      "pos": [
+        -240,
+        -90
+      ],
+      "size": [
+        480,
+        660
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 514
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 515
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model_3d",
+          "type": "FILE_3D",
+          "links": [
+            499
+          ]
+        },
+        {
+          "name": "model_3d_info",
+          "type": "LOAD3D_MODEL_INFO",
+          "links": []
+        },
+        {
+          "name": "camera_info",
+          "type": "LOAD3D_CAMERA",
+          "links": [
+            513
+          ]
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "title": "First Camera Rig",
+      "properties": {
+        "Node name for S&R": "Load3DAdvanced",
+        "Camera Config": {
+          "cameraType": "perspective",
+          "fov": 35,
+          "state": {
+            "position": {
+              "x": 1.8886093311141159,
+              "y": 1.6736524065870175,
+              "z": 2.234329383345603
+            },
+            "target": {
+              "x": 0.1365300605853634,
+              "y": 0.6243428138867507,
+              "z": 0.2204535165903053
+            },
+            "zoom": 1,
+            "cameraType": "perspective",
+            "quaternion": {
+              "x": -0.17437333708089187,
+              "y": 0.3442722585218311,
+              "z": 0.06523608449824608,
+              "w": 0.9202254096724828
+            },
+            "fov": 35,
+            "aspect": 1,
+            "near": 0.01,
+            "far": 10000,
+            "frustum": {
+              "left": -5,
+              "right": 5,
+              "top": 5,
+              "bottom": -5
+            }
+          }
+        },
+        "Light Config": {
+          "intensity": 1.5360000000000005,
+          "hdri": {
+            "enabled": false,
+            "hdriPath": "",
+            "showAsBackground": false,
+            "intensity": 1
+          }
+        },
+        "Scene Config": {
+          "showGrid": true,
+          "backgroundColor": "#282828",
+          "backgroundImage": "",
+          "backgroundRenderMode": "tiled",
+          "models": [
+            {
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "quaternion": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          ]
+        },
+        "Model Config": {
+          "upDirection": "original",
+          "materialMode": "original",
+          "showSkeleton": false,
+          "gizmo": {
+            "enabled": false,
+            "mode": "translate",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        }
+      },
+      "widgets_values": [
+        "sir_frog.obj",
+        "",
+        1024,
+        1024
+      ],
+      "widgets_values_named": {
+        "model_file": "sir_frog.obj",
+        "viewport_state": "",
+        "width": 1024,
+        "height": 1024
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 242,
+      "type": "ResizeAndPadImage",
+      "pos": [
+        -620,
+        -90
+      ],
+      "size": [
+        270,
+        130
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 466
+        },
+        {
+          "name": "target_width",
+          "type": "INT",
+          "widget": {
+            "name": "target_width"
+          },
+          "link": 516
+        },
+        {
+          "name": "target_height",
+          "type": "INT",
+          "widget": {
+            "name": "target_height"
+          },
+          "link": 517
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            471,
+            472
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ResizeAndPadImage"
+      },
+      "widgets_values": [
+        512,
+        512,
+        "white",
+        "area"
+      ],
+      "widgets_values_named": {
+        "target_width": 512,
+        "target_height": 512,
+        "padding_color": "white",
+        "interpolation": "area"
+      }
+    },
+    {
+      "id": 244,
+      "type": "MarkdownNote",
+      "pos": [
+        -2710,
+        -140
+      ],
+      "size": [
+        630,
+        1105.859327336376
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Model Links",
+      "properties": {},
+      "widgets_values": [
+        "**Paper:** [UltraTex on arXiv](https://arxiv.org/abs/2609.23169) · [Code and project page](https://github.com/yiboz2001/UltraTex)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/UltraTex](https://huggingface.co/Comfy-Org/UltraTex)\n- [Hugging Face:Comfy-Org/BiRefNet](https://huggingface.co/Comfy-Org/BiRefNet) (background removal of the reference image)\n- License: [FLUX Non-Commercial License](https://huggingface.co/black-forest-labs/FLUX.2-klein-9B/blob/main/LICENSE.md)\n\nUltraTex (SIGGRAPH Asia 2026) is a 2K multi-view texturing framework. This graph runs it on the FLUX.2 Klein base 9B backbone: the UltraTex LoRAs repaint that model into a texture generator, and the UltraTex VAE is the foreground-aware decoder that keeps the 2K views clean.\n\n### Alternative Repos\n\n- [ModelScope:Comfy-Org/UltraTex](https://modelscope.cn/models/Comfy-Org/UltraTex)\n- [ModelScope:Comfy-Org/BiRefNet](https://modelscope.cn/models/Comfy-Org/BiRefNet)\n\n**diffusion_models**\n\n- [flux-2-klein-base-9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/diffusion_models/flux-2-klein-base-9b_int8_convrot.safetensors) - 9.44 GB, the checkpoint this graph loads\n- [flux-2-klein-base-9b_bf16.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/diffusion_models/flux-2-klein-base-9b_bf16.safetensors) - 18.16 GB, full precision\n\n**loras**\n\n- [flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors) - 1.96 GB, distillation LoRA, `LoraLoaderModelOnly` at strength 0.5\n- [ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors) - 478 MB, albedo LoRA, strength 1.0, stacked on the distillation LoRA\n- [ultratex_flux2_klein_9b_metallic_roughness_lora_bf16.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/ultratex_flux2_klein_9b_metallic_roughness_lora_bf16.safetensors) - 478 MB, metallic/roughness LoRA, strength 1.0, applied to the base model without the distillation LoRA\n\n**embeddings**\n\n- [flux-2-klein-9b_empty_prompt.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/embeddings/flux-2-klein-9b_empty_prompt.safetensors) - 25 MB, pre-encoded empty prompt read by `Load Conditioning`; the graph loads no text encoder\n\n**vae**\n\n- [ultratex_flux2_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/vae/ultratex_flux2_vae_fp32.safetensors) - 336 MB, the UltraTex VAE: encodes the normal views and the reference, and decodes the generated views\n\n**background_removal**\n\n- [birefnet.safetensors](https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors) - 444 MB, masks the reference image\n\n**Disk footprint**: the graph as shipped needs **13.16 GB**. Swapping the checkpoint to `bf16` brings it to **21.87 GB**.\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── flux-2-klein-base-9b_int8_convrot.safetensors                      9.44 GB\n│   ├── 📂 loras/\n│   │   ├── flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors         1.96 GB\n│   │   ├── ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors               478 MB\n│   │   └── ultratex_flux2_klein_9b_metallic_roughness_lora_bf16.safetensors   478 MB\n│   ├── 📂 embeddings/\n│   │   └── flux-2-klein-9b_empty_prompt.safetensors                           25 MB\n│   ├── 📂 vae/\n│   │   └── ultratex_flux2_vae_fp32.safetensors                                336 MB\n│   └── 📂 background_removal/\n│       └── birefnet.safetensors                                               444 MB\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)"
+      ],
+      "widgets_values_named": {
+        "text": "**Paper:** [UltraTex on arXiv](https://arxiv.org/abs/2609.23169) · [Code and project page](https://github.com/yiboz2001/UltraTex)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/UltraTex](https://huggingface.co/Comfy-Org/UltraTex)\n- [Hugging Face:Comfy-Org/BiRefNet](https://huggingface.co/Comfy-Org/BiRefNet) (background removal of the reference image)\n- License: [FLUX Non-Commercial License](https://huggingface.co/black-forest-labs/FLUX.2-klein-9B/blob/main/LICENSE.md)\n\nUltraTex (SIGGRAPH Asia 2026) is a 2K multi-view texturing framework. This graph runs it on the FLUX.2 Klein base 9B backbone: the UltraTex LoRAs repaint that model into a texture generator, and the UltraTex VAE is the foreground-aware decoder that keeps the 2K views clean.\n\n### Alternative Repos\n\n- [ModelScope:Comfy-Org/UltraTex](https://modelscope.cn/models/Comfy-Org/UltraTex)\n- [ModelScope:Comfy-Org/BiRefNet](https://modelscope.cn/models/Comfy-Org/BiRefNet)\n\n**diffusion_models**\n\n- [flux-2-klein-base-9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/diffusion_models/flux-2-klein-base-9b_int8_convrot.safetensors) - 9.44 GB, the checkpoint this graph loads\n- [flux-2-klein-base-9b_bf16.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/diffusion_models/flux-2-klein-base-9b_bf16.safetensors) - 18.16 GB, full precision\n\n**loras**\n\n- [flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors) - 1.96 GB, distillation LoRA, `LoraLoaderModelOnly` at strength 0.5\n- [ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors) - 478 MB, albedo LoRA, strength 1.0, stacked on the distillation LoRA\n- [ultratex_flux2_klein_9b_metallic_roughness_lora_bf16.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/ultratex_flux2_klein_9b_metallic_roughness_lora_bf16.safetensors) - 478 MB, metallic/roughness LoRA, strength 1.0, applied to the base model without the distillation LoRA\n\n**embeddings**\n\n- [flux-2-klein-9b_empty_prompt.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/embeddings/flux-2-klein-9b_empty_prompt.safetensors) - 25 MB, pre-encoded empty prompt read by `Load Conditioning`; the graph loads no text encoder\n\n**vae**\n\n- [ultratex_flux2_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/UltraTex/resolve/main/vae/ultratex_flux2_vae_fp32.safetensors) - 336 MB, the UltraTex VAE: encodes the normal views and the reference, and decodes the generated views\n\n**background_removal**\n\n- [birefnet.safetensors](https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors) - 444 MB, masks the reference image\n\n**Disk footprint**: the graph as shipped needs **13.16 GB**. Swapping the checkpoint to `bf16` brings it to **21.87 GB**.\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── flux-2-klein-base-9b_int8_convrot.safetensors                      9.44 GB\n│   ├── 📂 loras/\n│   │   ├── flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors         1.96 GB\n│   │   ├── ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors               478 MB\n│   │   └── ultratex_flux2_klein_9b_metallic_roughness_lora_bf16.safetensors   478 MB\n│   ├── 📂 embeddings/\n│   │   └── flux-2-klein-9b_empty_prompt.safetensors                           25 MB\n│   ├── 📂 vae/\n│   │   └── ultratex_flux2_vae_fp32.safetensors                                336 MB\n│   └── 📂 background_removal/\n│       └── birefnet.safetensors                                               444 MB\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 245,
+      "type": "MarkdownNote",
+      "pos": [
+        -1970,
+        -140
+      ],
+      "size": [
+        630,
+        1105.859327336376
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: UltraTex",
+      "properties": {},
+      "widgets_values": [
+        "## UltraTex\n\nTexture an untextured mesh from one reference image. The mesh is rendered as six world-normal views, a FLUX.2 Klein 9B model wearing the UltraTex LoRAs turns those views plus the reference into 1024 × 1024 texture views, and the views are baked onto the mesh UVs: albedo in one pass, packed metallic/roughness in another. Output: a PBR GLB plus the PNG maps.\n\n**Input Assets**\n- [sir_frog.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/sir_frog.png): the reference, i.e. how the object should look\n- [sir_frog.obj](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/sir_frog.obj): the mesh, opened in **Load 3D (Advanced)**\n\n### Chain\n\n`Load 3D (Advanced)` -> `Create Camera Orbit` -> `Render Mesh` (world normal, 6 views) -> `UltraTex Conditioning` -> `KSampler` albedo / `KSampler` metallic and roughness -> `Bake Texture From Views` -> `Apply Texture to Mesh` -> `Save 3D Model`. The reference side is `Load Image` -> `Resize And Pad Image` (1024, white) -> `Remove Background`.\n\n### What to change\n\n- **Load 3D (Advanced)**: your mesh and the camera the front view is taken from; the bake reuses that rig.\n- **Load Image**: the reference seen from that camera's side. It lands on the front view, so keep one object in one orientation.\n- `Rendered Mesh Resolution` (1024) sizes the renders and the latent; `Texture Resolution` (4096) sizes the baked maps.\n- Albedo pass: 4 steps, seed 1, distillation LoRA 0.5 under albedo LoRA 1.0. Metallic/roughness pass: 8 steps, seed 4, no distillation LoRA.\n- `fill_unseen` on grows colour into texels no view saw; off keeps the mesh's own texture there.\n- `Create Camera Orbit` is pinned to four side views plus top and bottom: six views, which is the batch `EmptyFlux2LatentImage` is set to. Changing the rig means changing that batch size to match.\n\n### Before you queue\n\n- The mesh needs UVs already: bake and apply reuse them, there is no unwrap step.\n- Seeds change surface detail only; the silhouette comes from the mesh."
+      ],
+      "widgets_values_named": {
+        "text": "## UltraTex\n\nTexture an untextured mesh from one reference image. The mesh is rendered as six world-normal views, a FLUX.2 Klein 9B model wearing the UltraTex LoRAs turns those views plus the reference into 1024 × 1024 texture views, and the views are baked onto the mesh UVs: albedo in one pass, packed metallic/roughness in another. Output: a PBR GLB plus the PNG maps.\n\n**Input Assets**\n- [sir_frog.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/sir_frog.png): the reference, i.e. how the object should look\n- [sir_frog.obj](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/sir_frog.obj): the mesh, opened in **Load 3D (Advanced)**\n\n### Chain\n\n`Load 3D (Advanced)` -> `Create Camera Orbit` -> `Render Mesh` (world normal, 6 views) -> `UltraTex Conditioning` -> `KSampler` albedo / `KSampler` metallic and roughness -> `Bake Texture From Views` -> `Apply Texture to Mesh` -> `Save 3D Model`. The reference side is `Load Image` -> `Resize And Pad Image` (1024, white) -> `Remove Background`.\n\n### What to change\n\n- **Load 3D (Advanced)**: your mesh and the camera the front view is taken from; the bake reuses that rig.\n- **Load Image**: the reference seen from that camera's side. It lands on the front view, so keep one object in one orientation.\n- `Rendered Mesh Resolution` (1024) sizes the renders and the latent; `Texture Resolution` (4096) sizes the baked maps.\n- Albedo pass: 4 steps, seed 1, distillation LoRA 0.5 under albedo LoRA 1.0. Metallic/roughness pass: 8 steps, seed 4, no distillation LoRA.\n- `fill_unseen` on grows colour into texels no view saw; off keeps the mesh's own texture there.\n- `Create Camera Orbit` is pinned to four side views plus top and bottom: six views, which is the batch `EmptyFlux2LatentImage` is set to. Changing the rig means changing that batch size to match.\n\n### Before you queue\n\n- The mesh needs UVs already: bake and apply reuse them, there is no unwrap step.\n- Seeds change surface detail only; the silhouette comes from the mesh."
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      7,
+      105,
+      0,
+      4,
+      0,
+      "MODEL"
+    ],
+    [
+      8,
+      3,
+      0,
+      5,
+      0,
+      "MODEL"
+    ],
+    [
+      29,
+      20,
+      0,
+      21,
+      0,
+      "LATENT"
+    ],
+    [
+      32,
+      21,
+      0,
+      22,
+      1,
+      "IMAGE"
+    ],
+    [
+      108,
+      60,
+      0,
+      61,
+      0,
+      "LATENT"
+    ],
+    [
+      111,
+      61,
+      0,
+      62,
+      1,
+      "IMAGE"
+    ],
+    [
+      156,
+      3,
+      0,
+      105,
+      0,
+      "MODEL"
+    ],
+    [
+      231,
+      8,
+      0,
+      21,
+      1,
+      "VAE"
+    ],
+    [
+      232,
+      8,
+      0,
+      61,
+      1,
+      "VAE"
+    ],
+    [
+      259,
+      11,
+      0,
+      22,
+      0,
+      "MESH"
+    ],
+    [
+      274,
+      11,
+      0,
+      62,
+      0,
+      "MESH"
+    ],
+    [
+      276,
+      11,
+      0,
+      80,
+      0,
+      "MESH"
+    ],
+    [
+      295,
+      5,
+      0,
+      60,
+      0,
+      "MODEL"
+    ],
+    [
+      296,
+      4,
+      0,
+      20,
+      0,
+      "MODEL"
+    ],
+    [
+      310,
+      200,
+      0,
+      202,
+      0,
+      "MASK"
+    ],
+    [
+      313,
+      201,
+      0,
+      200,
+      0,
+      "BACKGROUND_REMOVAL"
+    ],
+    [
+      316,
+      11,
+      0,
+      13,
+      0,
+      "MESH"
+    ],
+    [
+      317,
+      13,
+      0,
+      209,
+      0,
+      "IMAGE"
+    ],
+    [
+      319,
+      13,
+      1,
+      210,
+      0,
+      "MASK"
+    ],
+    [
+      339,
+      18,
+      0,
+      13,
+      2,
+      "LOAD3D_CAMERA"
+    ],
+    [
+      284,
+      18,
+      0,
+      22,
+      2,
+      "LOAD3D_CAMERA"
+    ],
+    [
+      288,
+      18,
+      0,
+      62,
+      2,
+      "LOAD3D_CAMERA"
+    ],
+    [
+      390,
+      228,
+      0,
+      80,
+      1,
+      "IMAGE"
+    ],
+    [
+      395,
+      230,
+      0,
+      80,
+      3,
+      "IMAGE"
+    ],
+    [
+      397,
+      231,
+      0,
+      80,
+      2,
+      "IMAGE"
+    ],
+    [
+      444,
+      17,
+      0,
+      20,
+      3,
+      "LATENT"
+    ],
+    [
+      466,
+      14,
+      0,
+      242,
+      0,
+      "IMAGE"
+    ],
+    [
+      471,
+      242,
+      0,
+      200,
+      1,
+      "IMAGE"
+    ],
+    [
+      497,
+      80,
+      0,
+      81,
+      0,
+      "MESH"
+    ],
+    [
+      499,
+      234,
+      0,
+      11,
+      0,
+      "FILE_3D"
+    ],
+    [
+      446,
+      233,
+      0,
+      17,
+      0,
+      "INT"
+    ],
+    [
+      447,
+      233,
+      0,
+      17,
+      1,
+      "INT"
+    ],
+    [
+      414,
+      233,
+      1,
+      22,
+      4,
+      "INT"
+    ],
+    [
+      416,
+      233,
+      1,
+      62,
+      4,
+      "INT"
+    ],
+    [
+      507,
+      62,
+      0,
+      223,
+      0,
+      "IMAGE"
+    ],
+    [
+      508,
+      16,
+      0,
+      20,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      509,
+      16,
+      0,
+      20,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      510,
+      16,
+      0,
+      60,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      511,
+      16,
+      0,
+      60,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      512,
+      17,
+      0,
+      60,
+      3,
+      "LATENT"
+    ],
+    [
+      513,
+      234,
+      2,
+      18,
+      0,
+      "LOAD3D_CAMERA"
+    ],
+    [
+      3,
+      1,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      239,
+      7,
+      0,
+      16,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      257,
+      8,
+      0,
+      16,
+      1,
+      "VAE"
+    ],
+    [
+      318,
+      209,
+      0,
+      16,
+      2,
+      "IMAGE"
+    ],
+    [
+      320,
+      210,
+      0,
+      16,
+      3,
+      "MASK"
+    ],
+    [
+      472,
+      242,
+      0,
+      16,
+      4,
+      "IMAGE"
+    ],
+    [
+      312,
+      202,
+      0,
+      16,
+      5,
+      "MASK"
+    ],
+    [
+      505,
+      22,
+      0,
+      228,
+      0,
+      "IMAGE"
+    ],
+    [
+      394,
+      223,
+      1,
+      230,
+      0,
+      "IMAGE"
+    ],
+    [
+      396,
+      223,
+      2,
+      231,
+      0,
+      "IMAGE"
+    ],
+    [
+      412,
+      233,
+      0,
+      13,
+      4,
+      "INT"
+    ],
+    [
+      413,
+      233,
+      0,
+      13,
+      5,
+      "INT"
+    ],
+    [
+      514,
+      233,
+      0,
+      234,
+      0,
+      "INT"
+    ],
+    [
+      515,
+      233,
+      0,
+      234,
+      1,
+      "INT"
+    ],
+    [
+      516,
+      233,
+      0,
+      242,
+      1,
+      "INT"
+    ],
+    [
+      517,
+      233,
+      0,
+      242,
+      2,
+      "INT"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Control Settings",
+      "bounding": [
+        -1240,
+        -180,
+        1540,
+        1050
+      ],
+      "color": "#A88",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Models",
+      "bounding": [
+        -1240,
+        920,
+        1540,
+        610
+      ],
+      "color": "#A88",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Generate Albedo",
+      "bounding": [
+        1570,
+        -180,
+        1100,
+        450
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Generate Metallic and Roughness",
+      "bounding": [
+        1570,
+        300,
+        1100,
+        490
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "Output",
+      "bounding": [
+        2730,
+        -180,
+        1520,
+        1230
+      ],
+      "color": "#444",
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "Remove Background of Reference Image",
+      "bounding": [
+        360,
+        540,
+        1155,
+        450
+      ],
+      "color": "#444",
+      "flags": {}
+    },
+    {
+      "id": 9,
+      "title": "Render Mesh Views For Conditioning, From First Camera Rig",
+      "bounding": [
+        360,
+        -180,
+        1155,
+        676
+      ],
+      "color": "#444",
+      "flags": {}
+    }
+  ],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "b6610733-f2f0-4f83-9281-42e1aa892a5a",
+        "version": 1,
+        "state": {
+          "lastGroupId": 9,
+          "lastNodeId": 245,
+          "lastLinkId": 517,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Control Settings",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            133.16008856088564,
+            -338.3241190651909,
+            199.845703125,
+            88
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            750,
+            -343,
+            199.845703125,
+            88
+          ]
+        },
+        "inputs": [
+          {
+            "id": "cdabb403-129a-454b-bcb8-913b5823ecbb",
+            "name": "value_3",
+            "type": "INT",
+            "linkIds": [
+              422
+            ],
+            "label": "Rendered Mesh Resolution",
+            "pos": [
+              309.00579168588564,
+              -314.3241190651909
+            ]
+          },
+          {
+            "id": "c81f9312-1756-4321-921b-5a753c06047b",
+            "name": "value_4",
+            "type": "INT",
+            "linkIds": [
+              423
+            ],
+            "label": "Texture Resolution",
+            "pos": [
+              309.00579168588564,
+              -294.3241190651909
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "86675dc3-4025-4f22-87a5-427abdde4b0e",
+            "name": "INT",
+            "type": "INT",
+            "linkIds": [
+              427
+            ],
+            "localized_name": "INT",
+            "label": "Rendered Mesh Resolution",
+            "pos": [
+              774,
+              -319
+            ]
+          },
+          {
+            "id": "0c8adb05-26da-4152-8f62-f52752b5f7c5",
+            "name": "INT_1",
+            "type": "INT",
+            "linkIds": [
+              428
+            ],
+            "localized_name": "INT_1",
+            "label": "Texture Resolution",
+            "pos": [
+              774,
+              -299
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 90,
+            "type": "PrimitiveInt",
+            "pos": [
+              410,
+              -390
+            ],
+            "size": [
+              280,
+              90
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "value",
+                "name": "value",
+                "type": "INT",
+                "widget": {
+                  "name": "value"
+                },
+                "link": 422
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "INT",
+                "name": "INT",
+                "type": "INT",
+                "links": [
+                  427
+                ]
+              }
+            ],
+            "title": "Rendered Mesh Resolution",
+            "properties": {
+              "Node name for S&R": "PrimitiveInt"
+            },
+            "widgets_values": [
+              1024,
+              "fixed"
+            ],
+            "widgets_values_named": {
+              "value": 1024,
+              "control_after_generate": "fixed"
+            }
+          },
+          {
+            "id": 93,
+            "type": "PrimitiveInt",
+            "pos": [
+              410,
+              -240
+            ],
+            "size": [
+              280,
+              90
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "value",
+                "name": "value",
+                "type": "INT",
+                "widget": {
+                  "name": "value"
+                },
+                "link": 423
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "INT",
+                "name": "INT",
+                "type": "INT",
+                "links": [
+                  428
+                ]
+              }
+            ],
+            "title": "Texture Resolution",
+            "properties": {
+              "Node name for S&R": "PrimitiveInt"
+            },
+            "widgets_values": [
+              4096,
+              "fixed"
+            ],
+            "widgets_values_named": {
+              "value": 4096,
+              "control_after_generate": "fixed"
+            }
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 422,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 90,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 423,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 93,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 427,
+            "origin_id": 90,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 428,
+            "origin_id": 93,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "INT"
+          }
+        ],
+        "extra": {
+          "pixaromaGroups": []
+        }
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.3899672815459427,
+      "offset": [
+        3919.9303430786454,
+        1010.1367765923738
+      ]
+    },
+    "frontendVersion": "1.59.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true,
+    "linkPresentation": {
+      "231": {
+        "hidden": true,
+        "label": "UltraText VAE"
+      },
+      "232": {
+        "hidden": true,
+        "label": "UltraTex VAE"
+      },
+      "239": {
+        "hidden": true,
+        "label": "Empty prompt"
+      },
+      "257": {
+        "hidden": true,
+        "label": "UltraTex VAE"
+      },
+      "259": {
+        "hidden": true
+      },
+      "274": {
+        "hidden": true
+      },
+      "276": {
+        "hidden": true
+      },
+      "284": {
+        "hidden": true,
+        "label": "Cameras Info"
+      },
+      "288": {
+        "hidden": true,
+        "label": "Cameras Info"
+      },
+      "295": {
+        "hidden": true,
+        "label": "MR Model"
+      },
+      "296": {
+        "hidden": true,
+        "label": "Albedo Model"
+      },
+      "312": {
+        "hidden": true
+      },
+      "412": {
+        "hidden": true,
+        "label": "Rendered Mesh Resolution"
+      },
+      "413": {
+        "hidden": true,
+        "label": "Rendered Mesh Resolution"
+      },
+      "414": {
+        "hidden": true,
+        "label": "Texture resolution"
+      },
+      "416": {
+        "hidden": true,
+        "label": "Texture resolution"
+      },
+      "446": {
+        "hidden": true,
+        "label": "Rendered Mesh Resolution"
+      },
+      "447": {
+        "hidden": true,
+        "label": "Rendered Mesh Resolution"
+      },
+      "471": {
+        "hidden": true
+      },
+      "472": {
+        "hidden": true
+      }
+    }
+  },
+  "version": 0.4
+}

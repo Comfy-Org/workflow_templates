@@ -10,7 +10,8 @@ comfyui-workflow-templates/           # Meta package (depends on all others)
 ├── comfyui-workflow-templates-media-image   # Legacy image assets (frozen — 0.3.160, 85.3 MB on PyPI)
 ├── comfyui-workflow-templates-media-other   # Legacy other assets (frozen — 0.3.229, 85.0 MB on PyPI)
 ├── comfyui-workflow-templates-media-assets-01  # Asset shard 01 (frozen)
-├── comfyui-workflow-templates-media-assets-02  # New template assets
+├── comfyui-workflow-templates-media-assets-02  # Asset shard 02 (frozen)
+├── comfyui-workflow-templates-media-assets-03  # New template assets
 └── comfyui-subgraph-blueprints              # Subgraph blueprints
 ```
 

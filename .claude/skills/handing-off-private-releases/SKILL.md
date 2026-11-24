@@ -107,7 +107,7 @@ for f in files:
 EOF
 ```
 
-Expect the root package plus the active sub-packages (usually `core`, `json`, `media-assets-02`, and `comfyui-subgraph-blueprints` if blueprints changed). The frozen bundles (`media-api`, `media-image`, `media-video`, `media-other`, `media-assets-01`) should not appear. If one does, stop and check `scripts/docs/frozen_bundles.md` before handing off.
+Expect the root package plus the active sub-packages (usually `core`, `json`, `media-assets-03`, and `comfyui-subgraph-blueprints` if blueprints changed). The frozen bundles (`media-api`, `media-image`, `media-video`, `media-other`, `media-assets-01`, `media-assets-02`) should not appear. If one does, stop and check `scripts/docs/frozen_bundles.md` before handing off.
 
 ### 5. Create the bundle
 

@@ -7,12 +7,20 @@ This script validates:
 2. index.json against the schema
 3. Blueprint structure (definitions.subgraphs present with required fields)
 4. blueprints_bundles.json consistency with files on disk
+5. slot_index values on workflow nodes and subgraph nodes/links
+   (same rules as frontend zSlotIndex and PR #1458)
 """
 
 import argparse
 import json
 import sys
 from pathlib import Path
+
+_validate_dir = Path(__file__).resolve().parent
+if str(_validate_dir) not in sys.path:
+    sys.path.insert(0, str(_validate_dir))
+
+from slot_index import validate_workflow_slot_indexes  # noqa: E402
 
 try:
     import jsonschema
@@ -105,6 +113,34 @@ def validate_blueprint_structure() -> list[str]:
     return errors
 
 
+def validate_slot_indexes() -> list[str]:
+    """Reject invalid slot_index values on blueprint nodes and subgraph links.
+
+    Applies the same zSlotIndex rules as the template validator (PR #1458):
+    optional but not nullable on node inputs/outputs, required on links.
+    Subgraph links are accepted as tuples or as zComfyLinkObject.
+    """
+    errors = []
+
+    for bp_file in sorted(BLUEPRINTS_DIR.glob("*.json")):
+        if bp_file.name.startswith("index"):
+            continue
+
+        try:
+            with bp_file.open() as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            continue  # Already caught in syntax check
+
+        if not isinstance(data, dict):
+            errors.append(f"{bp_file.name}: expected a JSON object")
+            continue
+
+        errors.extend(validate_workflow_slot_indexes(data, bp_file.name))
+
+    return errors
+
+
 def validate_bundles_consistency() -> list[str]:
     """Check that blueprints_bundles.json matches files on disk."""
     errors = []
@@ -168,6 +204,14 @@ def main():
         print(f"  ❌ {len(errors)} structure error(s)")
     else:
         print("  ✅ All blueprints have valid structure")
+
+    print("Checking slot_index values...")
+    errors = validate_slot_indexes()
+    if errors:
+        all_errors.extend(errors)
+        print(f"  ❌ {len(errors)} slot_index error(s)")
+    else:
+        print("  ✅ All slot_index values are valid")
 
     print("Checking blueprints_bundles.json consistency...")
     errors = validate_bundles_consistency()
