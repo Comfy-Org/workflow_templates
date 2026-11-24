@@ -9,6 +9,8 @@ on:
       - 'scripts/sync/sync_blueprints.py'
       - 'scripts/blueprints/import_blueprints.py'
       - 'scripts/validate/validate_blueprints.py'
+      - 'scripts/validate/slot_index.py'
+      - 'scripts/validate/test_validate_blueprints.py'
       - '.github/workflows/validate-blueprints.yml'
   pull_request:
     types: [opened, synchronize]
@@ -19,6 +21,8 @@ on:
       - 'scripts/sync/sync_blueprints.py'
       - 'scripts/blueprints/import_blueprints.py'
       - 'scripts/validate/validate_blueprints.py'
+      - 'scripts/validate/slot_index.py'
+      - 'scripts/validate/test_validate_blueprints.py'
       - '.github/workflows/validate-blueprints.yml'
 
 jobs:
@@ -50,6 +54,10 @@ jobs:
 
       - name: Validate blueprints
         run: python scripts/validate/validate_blueprints.py
+
+      - name: Run blueprint slot_index unit tests
+        working-directory: scripts/validate
+        run: python -m unittest test_validate_blueprints -v
 
       - name: Verify import_blueprints.py was run
         run: |
