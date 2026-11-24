@@ -77,9 +77,6 @@ introduced).
   re-points wires. Real example: `Preview3D`'s model path lives at `inputs[2].model_file`, not `inputs[0]` (that is
   `camera_info`), so code that assumed index 0 dropped the 3D preview connection for 11 templates.
 
-- Sonilo 1.5: `references/sonilo-music-1_5.md`.
-- Breeze TTS 2 / Breeze voice family (partner audio nodes: TTS, clone, design, remix, localize, selector): `references/breeze-voice-nodes.md`.
-
 ## Hidden links: presentation lives in `extra.linkPresentation`
 
 Hiding a wire removes the stroke, not the connection. It is the no-install way to make a long stage-to-stage link
