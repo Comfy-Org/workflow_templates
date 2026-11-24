@@ -71,6 +71,26 @@ python3 scripts/validate/check_links.py extract
 python3 scripts/validate/check_links.py report
 ```
 
+## `skip_urls`: links a logged-out client cannot check
+
+`skip_urls` exempts a URL from the link checker (`validate/check_links.py` reads it through
+`should_skip_url`). It exists for links that cannot be verified anonymously:
+
+- Hugging Face repos with `gated: auto`/`manual` access — a `resolve` request answers `401` to a logged-out client.
+- Login-walled pages — a download endpoint that answers `401`, a wiki whose redirect chain ends on a login page.
+
+Do **not** add a public link here, and do not add one because the check is noisy: a public
+`huggingface.co/<owner>/<repo>` page, a public `resolve/main` file, a GitHub repo or a docs page all resolve
+fine and belong to the checked set. Entries are substring/regex matched, so a repo-level URL silently exempts
+every file under it too — prefer the narrowest link that actually fails.
+
+Before adding or removing an entry, confirm it really is uncheckable:
+
+```bash
+curl -sL "https://huggingface.co/api/models/<owner>/<repo>" | python3 -c "import json,sys;print(json.load(sys.stdin)['gated'])"
+curl -s -o /dev/null -w '%{http_code}\n' -L -r 0-63 "https://huggingface.co/<owner>/<repo>/resolve/main/<file>"   # 401 = keep, 206/200 = remove
+```
+
 ## Adding Custom Nodes to Whitelist
 
 ### Method 1: Add via cnr_id
