@@ -5,6 +5,7 @@ Validate workflow templates index.json against schema and check file consistency
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
@@ -356,15 +357,33 @@ def _is_node_id(value) -> bool:
 
 
 def _is_slot_index(value) -> bool:
-    """zSlotIndex: int, or string parseable as int."""
+    """zSlotIndex: int, or a string parseInt can turn into a number.
+
+    Mirrors the frontend exactly:
+
+        const zSlotIndex = z.union([
+          z.number().int(),
+          z.string().transform((v) => parseInt(v)).refine((v) => !isNaN(v))
+        ])
+
+    Two consequences worth knowing:
+    - ``slot_index`` is declared ``zSlotIndex.optional()`` (no ``.nullable()``),
+      so a stored ``null`` fails validateComfyWorkflow and the template silently
+      falls back to the legacy loader. Omit the key instead - the slot index is
+      derived from array position.
+    - ``parseInt`` stops at the first non-digit, so ``"3.7"`` and ``"3abc"`` are
+      valid (2/3), while ``"abc"`` and ``""`` are not. We match that on purpose:
+      a checker stricter than the frontend would block templates the frontend
+      happily loads.
+    """
+    if isinstance(value, bool):  # bool is an int subclass; z.number() rejects it
+        return False
     if isinstance(value, int):
         return True
+    if isinstance(value, float):
+        return value.is_integer()  # z.number().int()
     if isinstance(value, str):
-        try:
-            int(value)
-            return True
-        except ValueError:
-            return False
+        return re.match(r"\s*[+-]?\d", value) is not None
     return False
 
 
@@ -395,6 +414,11 @@ def _validate_node_output(output: dict, path: str) -> List[str]:
     links = output.get('links')
     if links is not None and not isinstance(links, list):
         errors.append(f"{path}.links: expected array or null")
+    if 'slot_index' in output and not _is_slot_index(output['slot_index']):
+        errors.append(
+            f"{path}.slot_index: expected int or parseable string, got "
+            f"{type(output['slot_index']).__name__} (omit the key instead of null)"
+        )
     return errors
 
 
@@ -404,6 +428,11 @@ def _validate_node_input(inp: dict, path: str) -> List[str]:
         errors.append(f"{path}.name: expected string")
     if 'type' in inp and not _is_data_type(inp['type']):
         errors.append(f"{path}.type: invalid data type value")
+    if 'slot_index' in inp and not _is_slot_index(inp['slot_index']):
+        errors.append(
+            f"{path}.slot_index: expected int or parseable string, got "
+            f"{type(inp['slot_index']).__name__} (omit the key instead of null)"
+        )
     return errors
 
 
@@ -477,6 +506,27 @@ def _validate_comfy_link(link, path: str) -> List[str]:
     return errors
 
 
+def _validate_comfy_link_object(link: dict, path: str) -> List[str]:
+    """zComfyLinkObject: subgraph definitions store links as objects, not tuples."""
+    errors = []
+    if not isinstance(link.get('id'), (int, float)):
+        errors.append(f"{path}.id: expected number")
+    if not _is_node_id(link.get('origin_id')):
+        errors.append(f"{path}.origin_id: expected int or string")
+    if not _is_slot_index(link.get('origin_slot')):
+        errors.append(f"{path}.origin_slot: expected int or parseInt-able string")
+    if not _is_node_id(link.get('target_id')):
+        errors.append(f"{path}.target_id: expected int or string")
+    if not _is_slot_index(link.get('target_slot')):
+        errors.append(f"{path}.target_slot: expected int or parseInt-able string")
+    if not _is_data_type(link.get('type')):
+        errors.append(f"{path}.type: invalid data type")
+    parent = link.get('parentId')
+    if parent is not None and not isinstance(parent, (int, float)):
+        errors.append(f"{path}.parentId: expected number")
+    return errors
+
+
 def _validate_groups(groups, path: str) -> List[str]:
     """Validate a groups array (used at top-level and inside subgraphs)."""
     errors = []
@@ -546,9 +596,45 @@ def _validate_workflow_04(data: dict, template_name: str) -> List[str]:
         if not isinstance(sg, dict):
             continue
         sg_id = sg.get('id', f'subgraph-{idx}')
+        sg_path = f"{p}: definitions.subgraphs[{sg_id}]"
         sg_groups = sg.get('groups')
         if sg_groups is not None:
-            errors.extend(_validate_groups(sg_groups, f"{p}: definitions.subgraphs[{sg_id}]"))
+            errors.extend(_validate_groups(sg_groups, sg_path))
+
+        # Subgraph definitions carry their own links array, and the frontend
+        # validates it with the same zComfyLink tuple (zSlotIndex on slots 2/4).
+        sg_links = sg.get('links')
+        if sg_links is not None:
+            if not isinstance(sg_links, list):
+                errors.append(f"{sg_path}.links: expected array")
+            else:
+                for li, link in enumerate(sg_links):
+                    link_path = f"{sg_path}.links[{li}]"
+                    if isinstance(link, dict):
+                        errors.extend(_validate_comfy_link_object(link, link_path))
+                    else:
+                        errors.extend(_validate_comfy_link(link, link_path))
+
+        # Subgraph nodes are validated by the same Zod schema as top-level
+        # nodes (definitions.subgraphs[].nodes[].outputs[].slot_index, ...),
+        # so their slots must be checked too.
+        sg_nodes = sg.get('nodes')
+        if not isinstance(sg_nodes, list):
+            continue
+        for ni, sg_node in enumerate(sg_nodes):
+            if not isinstance(sg_node, dict):
+                continue
+            node_path = f"{sg_path}.nodes[{ni}]"
+            sg_outputs = sg_node.get('outputs')
+            if isinstance(sg_outputs, list):
+                for oi, out in enumerate(sg_outputs):
+                    if isinstance(out, dict):
+                        errors.extend(_validate_node_output(out, f"{node_path}.outputs[{oi}]"))
+            sg_inputs = sg_node.get('inputs')
+            if isinstance(sg_inputs, list):
+                for ii, inp in enumerate(sg_inputs):
+                    if isinstance(inp, dict):
+                        errors.extend(_validate_node_input(inp, f"{node_path}.inputs[{ii}]"))
 
     return errors
 
