@@ -89,7 +89,7 @@
             "control_after_generate"
           ],
           [
-            "11",
+            "13",
             "filename_prefix"
           ]
         ]
@@ -159,7 +159,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "# Emoji Pack — one photo, one animated chat emoji per run\n\n`Custom Combo` picks the expression (1–8). Its line is spliced into the prompt scaffold by `Replace Text`,\nso one run = one **Nano Banana 2.1** call that draws a 4x2 pixel-art sprite sheet of that expression\n(eight animation beats). `Split Image into List of Tiles` cuts the sheet open, `Rebatch Images` makes it an\nanimation, `Remove Background` + `Invert Mask` + `Join Image with Alpha` drop the flat magenta, and the loop is saved as a\ntransparent **128x128** WebP at 8 fps.\n\nThis is the ComfyUI rebuild of Comfy's [Emojinius](https://emojinius.comfy.org/) emoji maker: same prompt\nscaffold, same eight expressions, same magenta key colour, but core nodes instead of the app's browser\nchroma key.\n\n## How to use\n\n1. Drop a photo or illustration of **one** character into `Load Image` — that subject is what gets redrawn\n   in pixel art, so a clear, well-lit face works best.\n2. Pick the expression in `Custom Combo` (it shows each expression's label, action and beats).\n3. Run. The loop lands under `output/emoji_pack/`, named after the expression.\n4. Want several expressions in one run? Copy the card (`Ctrl + C` / `Ctrl + V`) and pick a different\n   expression on the copy — each card is one paid call.\n\n## The eight expressions\n\n| # | Expression | `action` |\n|---|---|---|\n| 1 | Wave hello | The character waves one arm in a big friendly greeting, the shoulders rocking gently side to side and the other hand resting at the waist. |\n| 2 | Dancing | The character grooves from the waist up — shoulders bouncing, head nodding, both arms pumping through a dance. |\n| 3 | Thumbs up | The character throws a confident double thumbs-up with a proud chest-puff and an approving nod. |\n| 4 | Facepalm | The character slowly raises one hand and drags it down their face in exasperation while the shoulders sag and the whole body deflates. |\n| 5 | Typing furiously | The character hammers a keyboard held at chest height at absurd speed, with a focused scowl. |\n| 6 | Mind blown | The character's eyes go wide, both hands fly to the sides of the head, and the top of the head pops open in a burst of stars and rays. |\n| 7 | Sobbing | The character wails dramatically with the head tipped back, twin tear fountains arcing out from the eyes, the whole body shaking. |\n| 8 | Rolling on the floor laughing | The character howls with laughter — head thrown all the way back, one hand slapping the chest, the whole upper body shaking. |\n\n## Transparency\n\n`Remove Background` (BiRefNet) + `Invert Mask` + `Join Image with Alpha` matte the flat magenta\n`#FF00FF` away, so the loop comes out already transparent. (`Join Image with Alpha` takes a mask where\n1 means transparent, and BiRefNet returns 1 for the subject — hence the invert.) `Load Background Removal Model` needs `birefnet.safetensors` in\n`ComfyUI/models/background_removal/` ([Comfy-Org/BiRefNet](https://huggingface.co/Comfy-Org/BiRefNet)).\n\nPrefer the flat magenta (no weights, key it yourself later)? Open the card, delete `Remove Background` and\n`Join Image with Alpha`, and wire `Image Scale` into `Save Animated WEBP`.\n\n## What the prompt is doing\n\n- **Torso-up framing, always.** Head, shoulders, both arms and hands stay inside the cell and the top 12%\n  stays empty, so raised hands never clip. Poses that reach out get drawn smaller instead of cropped.\n- **One character per cell.** No sub-grids, no repeated copies, no nested sprite sheets — the model adds\n  those unless told not to.\n- **Identity comes from `image1`.** Nothing in the prose describes the character, so the drawing follows\n  your input rather than drifting toward a generic pixel person.\n- **Every frame obeys the same lock.** Accessories and logos stay identical across the eight beats, which\n  is what keeps the loop from flickering.\n\n## Notes\n\n- `Image Scale` normalises the sheet to 2048x1152 before the tiles are cut, so 512x576\n  lines up exactly on a 4x2 grid — change the model's aspect ratio or resolution and those numbers change\n  with it.\n- 8 fps x 8 frames is a one-second loop; frame 8 is written to flow back into frame 1.\n"
+        "# Emoji Pack — one photo, one animated chat emoji per run\n\n`Custom Combo` picks the expression (1–8). Its line is spliced into the prompt scaffold by `Replace Text`,\nso one run = one **Nano Banana 2.1** call that draws a 4x2 pixel-art sprite sheet of that expression\n(eight animation beats). `Split Image into List of Tiles` cuts the sheet open, `Rebatch Images` makes it an\nanimation, `Remove Background` → `Threshold Mask` → `Grow Mask` (-1) → `Invert Mask` → `Join Image with Alpha`\ndrop the flat magenta, and the loop is saved as a\ntransparent **128x128** WebP at 8 fps.\n\nThis is the ComfyUI rebuild of Comfy's [Emojinius](https://emojinius.comfy.org/) emoji maker: same prompt\nscaffold, same eight expressions, same magenta key colour, but core nodes instead of the app's browser\nchroma key.\n\n## How to use\n\n1. Drop a photo or illustration of **one** character into `Load Image` — that subject is what gets redrawn\n   in pixel art, so a clear, well-lit face works best.\n2. Pick the expression in `Custom Combo` (it shows each expression's label, action and beats).\n3. Run. The loop lands under `output/emoji_pack/`, named after the expression.\n4. Want several expressions in one run? Copy the card (`Ctrl + C` / `Ctrl + V`) and pick a different\n   expression on the copy — each card is one paid call.\n\n## The eight expressions\n\n| # | Expression | `action` |\n|---|---|---|\n| 1 | Wave hello | The character waves one arm in a big friendly greeting, the shoulders rocking gently side to side and the other hand resting at the waist. |\n| 2 | Dancing | The character grooves from the waist up — shoulders bouncing, head nodding, both arms pumping through a dance. |\n| 3 | Thumbs up | The character throws a confident double thumbs-up with a proud chest-puff and an approving nod. |\n| 4 | Facepalm | The character slowly raises one hand and drags it down their face in exasperation while the shoulders sag and the whole body deflates. |\n| 5 | Typing furiously | The character hammers a keyboard held at chest height at absurd speed, with a focused scowl. |\n| 6 | Mind blown | The character's eyes go wide, both hands fly to the sides of the head, and the top of the head pops open in a burst of stars and rays. |\n| 7 | Sobbing | The character wails dramatically with the head tipped back, twin tear fountains arcing out from the eyes, the whole body shaking. |\n| 8 | Rolling on the floor laughing | The character howls with laughter — head thrown all the way back, one hand slapping the chest, the whole upper body shaking. |\n\n## Transparency\n\n`Remove Background` (BiRefNet) mattes the subject, then `Threshold Mask` hardens the soft edge, `Grow Mask`\nwith expand -1 pulls it in one pixel so no magenta rim survives, and `Invert Mask` + `Join Image with Alpha`\nturn it into the alpha channel (`Join` takes a mask where 1 means transparent, BiRefNet returns 1 for the\nsubject).\n\nThe emoji-size `Image Scale` uses `nearest-exact`: downscaling with lanczos mixed magenta into the rim\npixels and produced a pink halo. `Convert Image Color to Mask` would be the \"obvious\" chroma key here, but\nit matches the colour exactly — the model's magenta carries a few units of noise, so it keys almost nothing. `Load Background Removal Model` needs `birefnet.safetensors` in\n`ComfyUI/models/background_removal/` ([Comfy-Org/BiRefNet](https://huggingface.co/Comfy-Org/BiRefNet)).\n\nPrefer the flat magenta (no weights, key it yourself later)? Open the card, delete `Remove Background` and\n`Join Image with Alpha`, and wire `Image Scale` into `Save Animated WEBP`.\n\n## What the prompt is doing\n\n- **Torso-up framing, always.** Head, shoulders, both arms and hands stay inside the cell and the top 12%\n  stays empty, so raised hands never clip. Poses that reach out get drawn smaller instead of cropped.\n- **One character per cell.** No sub-grids, no repeated copies, no nested sprite sheets — the model adds\n  those unless told not to.\n- **Identity comes from `image1`.** Nothing in the prose describes the character, so the drawing follows\n  your input rather than drifting toward a generic pixel person.\n- **Every frame obeys the same lock.** Accessories and logos stay identical across the eight beats, which\n  is what keeps the loop from flickering.\n\n## Notes\n\n- `Image Scale` normalises the sheet to 2048x1152 before the tiles are cut, so 512x576\n  lines up exactly on a 4x2 grid — change the model's aspect ratio or resolution and those numbers change\n  with it.\n- 8 fps x 8 frames is a one-second loop; frame 8 is written to flow back into frame 1.\n"
       ]
     },
     {
@@ -225,8 +225,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 0,
-          "lastNodeId": 11,
-          "lastLinkId": 14,
+          "lastNodeId": 13,
+          "lastLinkId": 16,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -244,7 +244,7 @@
         "outputNode": {
           "id": -20,
           "bounding": [
-            4770,
+            5450,
             580,
             120,
             60
@@ -284,11 +284,11 @@
             "name": "IMAGE",
             "type": "IMAGE",
             "linkIds": [
-              14
+              16
             ],
             "localized_name": "IMAGE",
             "pos": [
-              4770,
+              5450,
               600
             ]
           }
@@ -612,7 +612,7 @@
               "Node name for S&R": "ImageScale"
             },
             "widgets_values": [
-              "lanczos",
+              "nearest-exact",
               128,
               128,
               "disabled"
@@ -660,14 +660,14 @@
           },
           {
             "id": 9,
-            "type": "InvertMask",
+            "type": "ThresholdMask",
             "pos": [
               3590,
-              760
+              720
             ],
             "size": [
               300,
-              100
+              120
             ],
             "flags": {},
             "order": 8,
@@ -689,16 +689,18 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "InvertMask"
+              "Node name for S&R": "ThresholdMask"
             },
-            "widgets_values": []
+            "widgets_values": [
+              0.5
+            ]
           },
           {
             "id": 10,
-            "type": "JoinImageWithAlpha",
+            "type": "GrowMask",
             "pos": [
               3930,
-              560
+              720
             ],
             "size": [
               300,
@@ -709,6 +711,79 @@
             "mode": 0,
             "inputs": [
               {
+                "name": "mask",
+                "type": "MASK",
+                "link": 12
+              }
+            ],
+            "outputs": [
+              {
+                "name": "mask",
+                "type": "MASK",
+                "links": [
+                  13
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "GrowMask"
+            },
+            "widgets_values": [
+              -1,
+              false
+            ]
+          },
+          {
+            "id": 11,
+            "type": "InvertMask",
+            "pos": [
+              4270,
+              720
+            ],
+            "size": [
+              300,
+              100
+            ],
+            "flags": {},
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "mask",
+                "type": "MASK",
+                "link": 13
+              }
+            ],
+            "outputs": [
+              {
+                "name": "mask",
+                "type": "MASK",
+                "links": [
+                  14
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "InvertMask"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 12,
+            "type": "JoinImageWithAlpha",
+            "pos": [
+              4610,
+              560
+            ],
+            "size": [
+              300,
+              140
+            ],
+            "flags": {},
+            "order": 11,
+            "mode": 0,
+            "inputs": [
+              {
                 "name": "image",
                 "type": "IMAGE",
                 "link": 10
@@ -716,7 +791,7 @@
               {
                 "name": "alpha",
                 "type": "MASK",
-                "link": 12
+                "link": 14
               }
             ],
             "outputs": [
@@ -724,8 +799,8 @@
                 "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
-                  13,
-                  14
+                  15,
+                  16
                 ]
               }
             ],
@@ -735,10 +810,10 @@
             "widgets_values": []
           },
           {
-            "id": 11,
+            "id": 13,
             "type": "SaveAnimatedWEBP",
             "pos": [
-              4270,
+              4950,
               540
             ],
             "size": [
@@ -746,13 +821,13 @@
               330
             ],
             "flags": {},
-            "order": 10,
+            "order": 12,
             "mode": 0,
             "inputs": [
               {
                 "name": "images",
                 "type": "IMAGE",
-                "link": 13
+                "link": 15
               }
             ],
             "outputs": [
@@ -852,7 +927,7 @@
             "id": 10,
             "origin_id": 7,
             "origin_slot": 0,
-            "target_id": 10,
+            "target_id": 12,
             "target_slot": 0,
             "type": "IMAGE"
           },
@@ -869,7 +944,7 @@
             "origin_id": 9,
             "origin_slot": 0,
             "target_id": 10,
-            "target_slot": 1,
+            "target_slot": 0,
             "type": "MASK"
           },
           {
@@ -878,11 +953,27 @@
             "origin_slot": 0,
             "target_id": 11,
             "target_slot": 0,
-            "type": "IMAGE"
+            "type": "MASK"
           },
           {
             "id": 14,
-            "origin_id": 10,
+            "origin_id": 11,
+            "origin_slot": 0,
+            "target_id": 12,
+            "target_slot": 1,
+            "type": "MASK"
+          },
+          {
+            "id": 15,
+            "origin_id": 12,
+            "origin_slot": 0,
+            "target_id": 13,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 16,
+            "origin_id": 12,
             "origin_slot": 0,
             "target_id": -20,
             "target_slot": 0,
