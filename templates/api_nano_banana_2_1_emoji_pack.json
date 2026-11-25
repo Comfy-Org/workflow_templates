@@ -1,0 +1,1002 @@
+{
+  "id": "6f2b1d84-3c57-4a91-8e0d-2a9c4b7f5e31",
+  "revision": 0,
+  "last_node_id": 11,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        -1180,
+        140
+      ],
+      "size": [
+        320,
+        400
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "emoji_pack_character.png",
+        "image"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "e8172e9c-27fd-596f-ae12-ff66477d8a61",
+      "pos": [
+        -560,
+        140
+      ],
+      "size": [
+        560,
+        440
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "bg_model",
+          "type": "BACKGROUND_REMOVAL",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "1",
+            "choice"
+          ],
+          [
+            "3",
+            "seed"
+          ],
+          [
+            "3",
+            "control_after_generate"
+          ],
+          [
+            "13",
+            "filename_prefix"
+          ]
+        ]
+      },
+      "widgets_values": [
+        "Wave hello: The character waves one arm in a big friendly greeting, the shoulders rocking gently side to side and the other hand resting at the waist. Beats: frame 1 arm at the side, frames 2-3 arm rising, frames 4-5 arm swung fully right at full extension with fingers splayed, frames 6-7 arm swung fully left, frame 8 beginning to lower back to the start.",
+        100000,
+        "fixed",
+        "emoji_pack/wave-hello"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "LoadBackgroundRemovalModel",
+      "pos": [
+        -1180,
+        640
+      ],
+      "size": [
+        340,
+        90
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "bg_model",
+          "type": "BACKGROUND_REMOVAL",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadBackgroundRemovalModel",
+        "models": [
+          {
+            "name": "birefnet.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors",
+            "directory": "background_removal"
+          }
+        ]
+      },
+      "widgets_values": [
+        "birefnet.safetensors"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "MarkdownNote",
+      "pos": [
+        -2340,
+        -700
+      ],
+      "size": [
+        900,
+        1400
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# Emoji Pack — one photo, one animated chat emoji per run\n\n`Custom Combo` picks the expression (1–8). Its line is spliced into the prompt scaffold by `Replace Text`,\nso one run = one **Nano Banana 2.1** call that draws a 4x2 pixel-art sprite sheet of that expression\n(eight animation beats). `Split Image into List of Tiles` cuts the sheet open, `Rebatch Images` makes it an\nanimation, `Remove Background` → `Threshold Mask` → `Grow Mask` (-1) → `Invert Mask` → `Join Image with Alpha`\ndrop the flat magenta, and the loop is saved as a\ntransparent **128x128** WebP at 8 fps.\n\nThis is the ComfyUI rebuild of Comfy's [Emojinius](https://emojinius.comfy.org/) emoji maker: same prompt\nscaffold, same eight expressions, same magenta key colour, but core nodes instead of the app's browser\nchroma key.\n\n## How to use\n\n1. Drop a photo or illustration of **one** character into `Load Image` — that subject is what gets redrawn\n   in pixel art, so a clear, well-lit face works best.\n2. Pick the expression in `Custom Combo` (it shows each expression's label, action and beats).\n3. Run. The loop lands under `output/emoji_pack/`, named after the expression.\n4. Want several expressions in one run? Copy the card (`Ctrl + C` / `Ctrl + V`) and pick a different\n   expression on the copy — each card is one paid call.\n\n## The eight expressions\n\n| # | Expression | `action` |\n|---|---|---|\n| 1 | Wave hello | The character waves one arm in a big friendly greeting, the shoulders rocking gently side to side and the other hand resting at the waist. |\n| 2 | Dancing | The character grooves from the waist up — shoulders bouncing, head nodding, both arms pumping through a dance. |\n| 3 | Thumbs up | The character throws a confident double thumbs-up with a proud chest-puff and an approving nod. |\n| 4 | Facepalm | The character slowly raises one hand and drags it down their face in exasperation while the shoulders sag and the whole body deflates. |\n| 5 | Typing furiously | The character hammers a keyboard held at chest height at absurd speed, with a focused scowl. |\n| 6 | Mind blown | The character's eyes go wide, both hands fly to the sides of the head, and the top of the head pops open in a burst of stars and rays. |\n| 7 | Sobbing | The character wails dramatically with the head tipped back, twin tear fountains arcing out from the eyes, the whole body shaking. |\n| 8 | Rolling on the floor laughing | The character howls with laughter — head thrown all the way back, one hand slapping the chest, the whole upper body shaking. |\n\n## Transparency\n\n`Remove Background` (BiRefNet) mattes the subject, then `Threshold Mask` hardens the soft edge, `Grow Mask`\nwith expand -1 pulls it in one pixel so no magenta rim survives, and `Invert Mask` + `Join Image with Alpha`\nturn it into the alpha channel (`Join` takes a mask where 1 means transparent, BiRefNet returns 1 for the\nsubject).\n\nThe emoji-size `Image Scale` uses `nearest-exact`: downscaling with lanczos mixed magenta into the rim\npixels and produced a pink halo. `Convert Image Color to Mask` would be the \"obvious\" chroma key here, but\nit matches the colour exactly — the model's magenta carries a few units of noise, so it keys almost nothing. `Load Background Removal Model` needs `birefnet.safetensors` in\n`ComfyUI/models/background_removal/` ([Comfy-Org/BiRefNet](https://huggingface.co/Comfy-Org/BiRefNet)).\n\nPrefer the flat magenta (no weights, key it yourself later)? Open the card, delete `Remove Background` and\n`Join Image with Alpha`, and wire `Image Scale` into `Save Animated WEBP`.\n\n## What the prompt is doing\n\n- **Torso-up framing, always.** Head, shoulders, both arms and hands stay inside the cell and the top 12%\n  stays empty, so raised hands never clip. Poses that reach out get drawn smaller instead of cropped.\n- **One character per cell.** No sub-grids, no repeated copies, no nested sprite sheets — the model adds\n  those unless told not to.\n- **Identity comes from `image1`.** Nothing in the prose describes the character, so the drawing follows\n  your input rather than drifting toward a generic pixel person.\n- **Every frame obeys the same lock.** Accessories and logos stay identical across the eight beats, which\n  is what keeps the loop from flickering.\n\n## Notes\n\n- `Image Scale` normalises the sheet to 2048x1152 before the tiles are cut, so 512x576\n  lines up exactly on a 4x2 grid — change the model's aspect ratio or resolution and those numbers change\n  with it.\n- 8 fps x 8 frames is a one-second loop; frame 8 is written to flow back into frame 1.\n"
+      ]
+    },
+    {
+      "id": 11,
+      "type": "MarkdownNote",
+      "pos": [
+        -2340,
+        760
+      ],
+      "size": [
+        900,
+        420
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "## Editing the expression list\n\n`Custom Combo` stores its options in the widget itself, one line per expression, as\n`<label>: <action> Beats: <beats>`. The selected line replaces `{EXPRESSION}` in the scaffold, so an\nexpression's three parts stay together in the list.\n\nAdd, reorder or reword an option and the prompt follows — keep the scaffold's rules intact (torso-up\nframing, one character per cell, magenta background). A caller's own addition (\"give him a tiny crown\")\nbelongs in the scaffold's override paragraph and must read the same for all eight frames.\n"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      3,
+      0,
+      2,
+      1,
+      "BACKGROUND_REMOVAL"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Emoji Loop",
+      "bounding": [
+        -1220,
+        100,
+        1260,
+        700
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "e8172e9c-27fd-596f-ae12-ff66477d8a61",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 13,
+          "lastLinkId": 16,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Emoji Loop",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -120,
+            20,
+            120,
+            200
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            5450,
+            580,
+            120,
+            60
+          ]
+        },
+        "inputs": [
+          {
+            "id": "2cccf549-f46a-5fb8-b759-b0b5b40aebf5",
+            "name": "image",
+            "type": "IMAGE",
+            "linkIds": [
+              1
+            ],
+            "localized_name": "image",
+            "pos": [
+              -120,
+              40
+            ]
+          },
+          {
+            "id": "520ba007-8d9b-5f74-b1de-16c9a96e4146",
+            "name": "bg_model",
+            "type": "BACKGROUND_REMOVAL",
+            "linkIds": [
+              8
+            ],
+            "localized_name": "bg_model",
+            "pos": [
+              -120,
+              140
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "6b1f7633-d6a4-55b1-9c2c-a879161ca081",
+            "name": "IMAGE",
+            "type": "IMAGE",
+            "linkIds": [
+              16
+            ],
+            "localized_name": "IMAGE",
+            "pos": [
+              5450,
+              600
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 1,
+            "type": "CustomCombo",
+            "pos": [
+              0,
+              40
+            ],
+            "size": [
+              440,
+              320
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  2
+                ]
+              },
+              {
+                "name": "INDEX",
+                "type": "INT",
+                "links": []
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "CustomCombo"
+            },
+            "widgets_values": [
+              "Wave hello: The character waves one arm in a big friendly greeting, the shoulders rocking gently side to side and the other hand resting at the waist. Beats: frame 1 arm at the side, frames 2-3 arm rising, frames 4-5 arm swung fully right at full extension with fingers splayed, frames 6-7 arm swung fully left, frame 8 beginning to lower back to the start.",
+              0,
+              "Wave hello: The character waves one arm in a big friendly greeting, the shoulders rocking gently side to side and the other hand resting at the waist. Beats: frame 1 arm at the side, frames 2-3 arm rising, frames 4-5 arm swung fully right at full extension with fingers splayed, frames 6-7 arm swung fully left, frame 8 beginning to lower back to the start.",
+              "Dancing: The character grooves from the waist up — shoulders bouncing, head nodding, both arms pumping through a dance. Beats: frame 1 arms low and leaning left, frames 2-3 arms rising, frames 4-5 both arms punched overhead with the head thrown back, frames 6-7 arms swung out wide leaning right, frame 8 dropping back toward the start; small motion streaks at the hands.",
+              "Thumbs up: The character throws a confident double thumbs-up with a proud chest-puff and an approving nod. Beats: frame 1 hands low, frames 2-3 fists drawing up to the chest, frames 4-6 thumbs snapping up and out at full extension with a chest-puff, frames 7-8 an approving nod as the hands start to lower.",
+              "Facepalm: The character slowly raises one hand and drags it down their face in exasperation while the shoulders sag and the whole body deflates. Beats: frames 1-2 standing upright, head beginning to tilt down, 3-4 hand lifting toward the face, 5-6 palm meeting the face with a small impact shake and impact lines, 7-8 hand dragging down the face as the shoulders slump, then resetting.",
+              "Typing furiously: The character hammers a keyboard held at chest height at absurd speed, with a focused scowl. Beats: each frame shows a distinctly different hand position over the keys with the head bobbing and small sharp motion lines and sweat droplets popping off the hands; frames 5-6 add a few crisp spark shapes above the keys; frame 8 is a quick glance up at the viewer. The hands stay clearly drawn in every frame.",
+              "Mind blown: The character's eyes go wide, both hands fly to the sides of the head, and the top of the head pops open in a burst of stars and rays. Beats: frame 1 neutral, frames 2-3 eyes widening as both hands rise to the head, frames 4-6 the burst at full size with stars and radiating rays flying outward and the body leaning back, frames 7-8 the burst shrinking back toward neutral.",
+              "Sobbing: The character wails dramatically with the head tipped back, twin tear fountains arcing out from the eyes, the whole body shaking. Beats: frames 1-2 face crumpling and shoulders rising, 3-4 head tipping back as the first tears jet out, 5-6 the full wail with the biggest tear arcs and a puddle spreading at the feet, 7-8 sniffling back down with the puddle shrinking.",
+              "Rolling on the floor laughing: The character howls with laughter — head thrown all the way back, one hand slapping the chest, the whole upper body shaking. Beats: frame 1 a grin, frames 2-3 head tipping back as the laugh starts, frames 4-6 the full howl with the head thrown right back, mouth wide, hand slapping the chest and bold laughter lines radiating outward, frames 7-8 rocking forward back toward the grin.",
+              ""
+            ]
+          },
+          {
+            "id": 2,
+            "type": "StringReplace",
+            "pos": [
+              500,
+              40
+            ],
+            "size": [
+              440,
+              220
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "string",
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "name": "find",
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "name": "replace",
+                "type": "STRING",
+                "link": 2
+              }
+            ],
+            "outputs": [
+              {
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  3
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "StringReplace"
+            },
+            "widgets_values": [
+              "Pixel art sprite sheet, 64x64 pixels per cell, 4x2 grid (8 frames total, single image), solid magenta #FF00FF background throughout.\n\nimage1 IS the character. Copy who is in it — species, face, hair, skin, build, clothing, colors — and redraw that same subject in pixel art. Nothing below describes what the character looks like; every appearance detail comes from image1 and from image1 only. If image1 is a person, the result is that person; if it is an animal, that animal.\n\nThis is a single animation loop of ONE expression: {EXPRESSION}\n\nTORSO-UP SHOT, framed from roughly the waist up. The head, shoulders, chest, both arms and both hands are always inside the frame; the legs and feet are outside it. This is NOT a tight head-and-shoulders portrait — there is enough room around the torso for the arms to gesture widely without leaving the frame. Head, face, arms, hands and any props all animate.\n\nFRAMING, the most important rule, applied to EVERY frame: the torso is cut cleanly by the bottom edge at about waist height, and the top 12% of the cell is empty background ABOVE the head, ears and any raised hands. Both hands stay fully inside the frame with a clear background margin on the left and right — a hand or elbow is NEVER cropped by a side edge. If a pose reaches out or up, draw the character SMALLER so the gesture still fits. The character is centered and the head sits in the upper half of the cell.\n\nONE CHARACTER PER CELL: each of the 8 cells contains exactly one character at one single moment in time. Never subdivide a cell into a smaller grid, never draw multiple copies of the character inside one cell, never nest a sprite sheet inside a cell.\n\nAny logo, lettering, pendant or badge worn by the character is copied exactly as it appears in image1 and is never redrawn as a different letter or symbol. The face is clearly drawn in every frame with the same features the character has in image1 — never blank, melted, smeared or obscured, and never given features image1 does not have.\n\nFrame order is left to right, top to bottom (frame 1 to frame 8), forming a continuous, seamlessly loopable cycle — frame 8 flows naturally back into frame 1.\n\nLock across all frames: character identity, face, full outfit and accessories exactly as worn in image1, proportions, color palette, outline weight (1px black), camera framing, crop, and scale. The character's standing height in pixels is IDENTICAL in all 8 frames — the camera never pushes in or pulls back, the character never changes size and never drifts off-center. All motion comes from the body, limbs and props.\n\nSpread the action evenly across all 8 frames — at most ONE frame sits in the neutral rest pose; every other frame is a visibly different stage of the motion. Show motion with crisp pixel motion-lines and small shape offsets, never with blur, smear or streaking across the body.\n\nBuilt to read at 32-pixel Slack emoji size: the head and face are large and clearly legible, the silhouette is bold and simple, pose changes between frames are big and obvious, motion is exaggerated cartoon motion with chunky readable shapes. Avoid fine detail that would disappear when scaled down.\n\nHard pixel edges, no anti-aliasing, no sub-pixel positioning, no gradients.",
+              "{EXPRESSION}",
+              "Wave hello: The character waves one arm in a big friendly greeting, the shoulders rocking gently side to side and the other hand resting at the waist. Beats: frame 1 arm at the side, frames 2-3 arm rising, frames 4-5 arm swung fully right at full extension with fingers splayed, frames 6-7 arm swung fully left, frame 8 beginning to lower back to the start."
+            ]
+          },
+          {
+            "id": 3,
+            "type": "GeminiNanoBanana2V2",
+            "pos": [
+              1000,
+              -40
+            ],
+            "size": [
+              660,
+              720
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "prompt",
+                "type": "STRING",
+                "link": 3
+              },
+              {
+                "name": "model.images.image_1",
+                "type": "IMAGE",
+                "link": 1,
+                "label": "image_1",
+                "shape": 7
+              },
+              {
+                "name": "model.files",
+                "type": "GEMINI_INPUT_FILES",
+                "link": null,
+                "label": "files",
+                "shape": 7
+              }
+            ],
+            "outputs": [
+              {
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  4
+                ]
+              },
+              {
+                "name": "STRING",
+                "type": "STRING",
+                "links": []
+              },
+              {
+                "name": "thought_image",
+                "type": "IMAGE",
+                "links": []
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "GeminiNanoBanana2V2"
+            },
+            "widgets_values": [
+              "Pixel art sprite sheet, 64x64 pixels per cell, 4x2 grid (8 frames total, single image), solid magenta #FF00FF background throughout.\n\nimage1 IS the character. Copy who is in it — species, face, hair, skin, build, clothing, colors — and redraw that same subject in pixel art. Nothing below describes what the character looks like; every appearance detail comes from image1 and from image1 only. If image1 is a person, the result is that person; if it is an animal, that animal.\n\nThis is a single animation loop of ONE expression: {EXPRESSION}\n\nTORSO-UP SHOT, framed from roughly the waist up. The head, shoulders, chest, both arms and both hands are always inside the frame; the legs and feet are outside it. This is NOT a tight head-and-shoulders portrait — there is enough room around the torso for the arms to gesture widely without leaving the frame. Head, face, arms, hands and any props all animate.\n\nFRAMING, the most important rule, applied to EVERY frame: the torso is cut cleanly by the bottom edge at about waist height, and the top 12% of the cell is empty background ABOVE the head, ears and any raised hands. Both hands stay fully inside the frame with a clear background margin on the left and right — a hand or elbow is NEVER cropped by a side edge. If a pose reaches out or up, draw the character SMALLER so the gesture still fits. The character is centered and the head sits in the upper half of the cell.\n\nONE CHARACTER PER CELL: each of the 8 cells contains exactly one character at one single moment in time. Never subdivide a cell into a smaller grid, never draw multiple copies of the character inside one cell, never nest a sprite sheet inside a cell.\n\nAny logo, lettering, pendant or badge worn by the character is copied exactly as it appears in image1 and is never redrawn as a different letter or symbol. The face is clearly drawn in every frame with the same features the character has in image1 — never blank, melted, smeared or obscured, and never given features image1 does not have.\n\nFrame order is left to right, top to bottom (frame 1 to frame 8), forming a continuous, seamlessly loopable cycle — frame 8 flows naturally back into frame 1.\n\nLock across all frames: character identity, face, full outfit and accessories exactly as worn in image1, proportions, color palette, outline weight (1px black), camera framing, crop, and scale. The character's standing height in pixels is IDENTICAL in all 8 frames — the camera never pushes in or pulls back, the character never changes size and never drifts off-center. All motion comes from the body, limbs and props.\n\nSpread the action evenly across all 8 frames — at most ONE frame sits in the neutral rest pose; every other frame is a visibly different stage of the motion. Show motion with crisp pixel motion-lines and small shape offsets, never with blur, smear or streaking across the body.\n\nBuilt to read at 32-pixel Slack emoji size: the head and face are large and clearly legible, the silhouette is bold and simple, pose changes between frames are big and obvious, motion is exaggerated cartoon motion with chunky readable shapes. Avoid fine detail that would disappear when scaled down.\n\nHard pixel edges, no anti-aliasing, no sub-pixel positioning, no gradients.",
+              "Gemini Nano Banana 2.1",
+              "16:9",
+              "2K",
+              "HIGH",
+              100000,
+              "fixed",
+              "IMAGE",
+              "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests.",
+              1.0,
+              0.95
+            ],
+            "showAdvanced": true
+          },
+          {
+            "id": 4,
+            "type": "ImageScale",
+            "pos": [
+              1720,
+              380
+            ],
+            "size": [
+              360,
+              150
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "image",
+                "type": "IMAGE",
+                "link": 4
+              }
+            ],
+            "outputs": [
+              {
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  5
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImageScale"
+            },
+            "widgets_values": [
+              "lanczos",
+              2048,
+              1152,
+              "disabled"
+            ]
+          },
+          {
+            "id": 5,
+            "type": "SplitImageToTileList",
+            "pos": [
+              2120,
+              380
+            ],
+            "size": [
+              380,
+              170
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "image",
+                "type": "IMAGE",
+                "link": 5
+              }
+            ],
+            "outputs": [
+              {
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  6
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "SplitImageToTileList"
+            },
+            "widgets_values": [
+              512,
+              576,
+              0
+            ]
+          },
+          {
+            "id": 6,
+            "type": "RebatchImages",
+            "pos": [
+              2540,
+              380
+            ],
+            "size": [
+              330,
+              120
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "type": "IMAGE",
+                "link": 6
+              }
+            ],
+            "outputs": [
+              {
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  7
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "RebatchImages"
+            },
+            "widgets_values": [
+              8
+            ]
+          },
+          {
+            "id": 7,
+            "type": "ImageScale",
+            "pos": [
+              2910,
+              380
+            ],
+            "size": [
+              300,
+              150
+            ],
+            "flags": {},
+            "order": 6,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "image",
+                "type": "IMAGE",
+                "link": 7
+              }
+            ],
+            "outputs": [
+              {
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  9,
+                  10
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImageScale"
+            },
+            "widgets_values": [
+              "nearest-exact",
+              128,
+              128,
+              "disabled"
+            ]
+          },
+          {
+            "id": 8,
+            "type": "RemoveBackground",
+            "pos": [
+              3250,
+              560
+            ],
+            "size": [
+              300,
+              140
+            ],
+            "flags": {},
+            "order": 7,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "bg_removal_model",
+                "type": "BACKGROUND_REMOVAL",
+                "link": 8
+              },
+              {
+                "name": "image",
+                "type": "IMAGE",
+                "link": 9
+              }
+            ],
+            "outputs": [
+              {
+                "name": "mask",
+                "type": "MASK",
+                "links": [
+                  11
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "RemoveBackground"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 9,
+            "type": "ThresholdMask",
+            "pos": [
+              3590,
+              720
+            ],
+            "size": [
+              300,
+              120
+            ],
+            "flags": {},
+            "order": 8,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "mask",
+                "type": "MASK",
+                "link": 11
+              }
+            ],
+            "outputs": [
+              {
+                "name": "mask",
+                "type": "MASK",
+                "links": [
+                  12
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ThresholdMask"
+            },
+            "widgets_values": [
+              0.5
+            ]
+          },
+          {
+            "id": 10,
+            "type": "GrowMask",
+            "pos": [
+              3930,
+              720
+            ],
+            "size": [
+              300,
+              140
+            ],
+            "flags": {},
+            "order": 9,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "mask",
+                "type": "MASK",
+                "link": 12
+              }
+            ],
+            "outputs": [
+              {
+                "name": "mask",
+                "type": "MASK",
+                "links": [
+                  13
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "GrowMask"
+            },
+            "widgets_values": [
+              -1,
+              false
+            ]
+          },
+          {
+            "id": 11,
+            "type": "InvertMask",
+            "pos": [
+              4270,
+              720
+            ],
+            "size": [
+              300,
+              100
+            ],
+            "flags": {},
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "mask",
+                "type": "MASK",
+                "link": 13
+              }
+            ],
+            "outputs": [
+              {
+                "name": "mask",
+                "type": "MASK",
+                "links": [
+                  14
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "InvertMask"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 12,
+            "type": "JoinImageWithAlpha",
+            "pos": [
+              4610,
+              560
+            ],
+            "size": [
+              300,
+              140
+            ],
+            "flags": {},
+            "order": 11,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "image",
+                "type": "IMAGE",
+                "link": 10
+              },
+              {
+                "name": "alpha",
+                "type": "MASK",
+                "link": 14
+              }
+            ],
+            "outputs": [
+              {
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  15,
+                  16
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "JoinImageWithAlpha"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 13,
+            "type": "SaveAnimatedWEBP",
+            "pos": [
+              4950,
+              540
+            ],
+            "size": [
+              460,
+              330
+            ],
+            "flags": {},
+            "order": 12,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "type": "IMAGE",
+                "link": 15
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "type": "IMAGE",
+                "links": []
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "SaveAnimatedWEBP"
+            },
+            "widgets_values": [
+              "emoji_pack/wave_hello",
+              8,
+              true,
+              100,
+              "default"
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 1,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 3,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 2,
+            "origin_id": 1,
+            "origin_slot": 0,
+            "target_id": 2,
+            "target_slot": 2,
+            "type": "STRING"
+          },
+          {
+            "id": 3,
+            "origin_id": 2,
+            "origin_slot": 0,
+            "target_id": 3,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 4,
+            "origin_id": 3,
+            "origin_slot": 0,
+            "target_id": 4,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 5,
+            "origin_id": 4,
+            "origin_slot": 0,
+            "target_id": 5,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 6,
+            "origin_id": 5,
+            "origin_slot": 0,
+            "target_id": 6,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 7,
+            "origin_id": 6,
+            "origin_slot": 0,
+            "target_id": 7,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 8,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 8,
+            "target_slot": 0,
+            "type": "BACKGROUND_REMOVAL"
+          },
+          {
+            "id": 9,
+            "origin_id": 7,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 10,
+            "origin_id": 7,
+            "origin_slot": 0,
+            "target_id": 12,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 11,
+            "origin_id": 8,
+            "origin_slot": 0,
+            "target_id": 9,
+            "target_slot": 0,
+            "type": "MASK"
+          },
+          {
+            "id": 12,
+            "origin_id": 9,
+            "origin_slot": 0,
+            "target_id": 10,
+            "target_slot": 0,
+            "type": "MASK"
+          },
+          {
+            "id": 13,
+            "origin_id": 10,
+            "origin_slot": 0,
+            "target_id": 11,
+            "target_slot": 0,
+            "type": "MASK"
+          },
+          {
+            "id": 14,
+            "origin_id": 11,
+            "origin_slot": 0,
+            "target_id": 12,
+            "target_slot": 1,
+            "type": "MASK"
+          },
+          {
+            "id": 15,
+            "origin_id": 12,
+            "origin_slot": 0,
+            "target_id": 13,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 16,
+            "origin_id": 12,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          }
+        ],
+        "extra": {
+          "workflowRendererVersion": "LG"
+        }
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [
+        1300,
+        280
+      ]
+    },
+    "frontendVersion": "1.59.10"
+  },
+  "version": 0.4
+}
