@@ -9,6 +9,7 @@ on:
     paths:
       - 'templates/**'
       - 'scripts/validate/validate_templates.py'
+      - 'scripts/validate/test_validate_templates.py'
       - 'scripts/lib/locale_index_files.py'
       - 'scripts/validate/validate_thumbnails.py'
       - '.github/workflows/validate-templates.yml'
@@ -25,6 +26,7 @@ jobs:
         sparse-checkout: |
           templates/
           scripts/validate/validate_templates.py
+          scripts/validate/test_validate_templates.py
           scripts/lib/locale_index_files.py
           scripts/lib/paths.py
           scripts/validate/validate_thumbnails.py
@@ -47,6 +49,10 @@ jobs:
         check-jsonschema --schemafile templates/index.schema.json templates/index.json
         echo "✅ index.json is valid against schema"
     
+    - name: Run validator unit tests
+      working-directory: scripts/validate
+      run: python -m unittest test_validate_templates -v
+
     - name: Run validation script
       id: validation
       run: |
