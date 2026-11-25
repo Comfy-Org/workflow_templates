@@ -1,0 +1,1609 @@
+{
+  "id": "de6314a0-6d88-47aa-9d79-fc683cf283e8",
+  "revision": 0,
+  "last_node_id": 34,
+  "last_link_id": 30,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -760,
+        810
+      ],
+      "size": [
+        700,
+        1130
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# Gemini Decision — four decisions in one graph\n\nThe Gemini decision nodes answer a question about text, images, audio or video and hand the answer back as a value\nthe graph can branch on. The same model is exposed four ways; every case below is wired end to end, so copy the\none you need.\n\n- **Case 1 · one image, one verdict** — a yes/no question plus the probability behind it. The cheapest gate you can put in front of an expensive node.\n- **Case 2 · two candidates, one winner** — score both, compare the numbers with a math rule, let a switch pass the winner downstream.\n- **Case 3 · your own options** — classify into a list you write, one option per line.\n- **Case 4 · pick from a batch** — pick the image that matches the prompt, then keep it with `index`.\n\nAll four cases run in one queue. These are API (partner) nodes: sign in with a Comfy account, or set an API key\n(Settings → API Keys → My API Key).\n\n## What the nodes return\n\n| Node | Outputs |\n| --- | --- |\n| **Gemini Decision (Yes/No)** | `result` (BOOLEAN), `answer` (\"yes\"/\"no\"), `probability` (0–1) — flips at the threshold widget, 0.01–0.99 |\n| **Gemini Decision (Choice)** | `choice` (STRING), `option_index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Pick Image)** | `index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Score)** | `result` (BOOLEAN), `score` (1–10) — true when score ≥ threshold, 1–10 |\n\nConnect text (`text`), up to **16 images** (`image_1…image_16`), one or more audio clips (`audio_1…`) and one\nvideo (`video_1`). Name the sockets in the question, e.g. *\"Does image_2 show the same person as image_1?\"* —\nthe model sees those names.\n\n## How to use\n\n1. Sign in, or paste an API key.\n2. Swap the demo images in the `Load Image` nodes, or connect audio / video instead.\n3. Ask one thing per node, and phrase it so **\"yes\"** — or the first option — is the case you act on.\n4. Tune the threshold (0.01–0.99 for yes/no, 1–10 for score) until false positives stop hurting.\n5. Route `result` into `If/Else Switch`, or `index` / `option_index` into a dispatch rule.\n\n**Cost** is per token, so a short question and one image cost a fraction of a cent. Put the decision *before*\nthe expensive step and put that step on the accepted branch — the rejected branch then costs nothing.\n"
+      ],
+      "widgets_values_named": {
+        "text": "# Gemini Decision — four decisions in one graph\n\nThe Gemini decision nodes answer a question about text, images, audio or video and hand the answer back as a value\nthe graph can branch on. The same model is exposed four ways; every case below is wired end to end, so copy the\none you need.\n\n- **Case 1 · one image, one verdict** — a yes/no question plus the probability behind it. The cheapest gate you can put in front of an expensive node.\n- **Case 2 · two candidates, one winner** — score both, compare the numbers with a math rule, let a switch pass the winner downstream.\n- **Case 3 · your own options** — classify into a list you write, one option per line.\n- **Case 4 · pick from a batch** — pick the image that matches the prompt, then keep it with `index`.\n\nAll four cases run in one queue. These are API (partner) nodes: sign in with a Comfy account, or set an API key\n(Settings → API Keys → My API Key).\n\n## What the nodes return\n\n| Node | Outputs |\n| --- | --- |\n| **Gemini Decision (Yes/No)** | `result` (BOOLEAN), `answer` (\"yes\"/\"no\"), `probability` (0–1) — flips at the threshold widget, 0.01–0.99 |\n| **Gemini Decision (Choice)** | `choice` (STRING), `option_index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Pick Image)** | `index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Score)** | `result` (BOOLEAN), `score` (1–10) — true when score ≥ threshold, 1–10 |\n\nConnect text (`text`), up to **16 images** (`image_1…image_16`), one or more audio clips (`audio_1…`) and one\nvideo (`video_1`). Name the sockets in the question, e.g. *\"Does image_2 show the same person as image_1?\"* —\nthe model sees those names.\n\n## How to use\n\n1. Sign in, or paste an API key.\n2. Swap the demo images in the `Load Image` nodes, or connect audio / video instead.\n3. Ask one thing per node, and phrase it so **\"yes\"** — or the first option — is the case you act on.\n4. Tune the threshold (0.01–0.99 for yes/no, 1–10 for score) until false positives stop hurting.\n5. Route `result` into `If/Else Switch`, or `index` / `option_index` into a dispatch rule.\n\n**Cost** is per token, so a short question and one image cost a fraction of a cent. Put the decision *before*\nthe expensive step and put that step on the accepted branch — the rejected branch then costs nothing.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 7,
+      "type": "MarkdownNote",
+      "pos": [
+        0,
+        810
+      ],
+      "size": [
+        560,
+        200
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "### Case 1 · one image, one verdict\n\n`Load Image → Gemini (Yes/No) → Preview as Text`\n\n*\"Is there a person in the image?\"* — `probability` is the confidence in \"yes\", `result` turns true once it\nclears the threshold (0.5 here). Good for publish gates: subject facing the camera, clean background, watermark or\nlogo detection, content checks. Change the question, run it, watch `probability` move — then wire `result` into\na switch.\n"
+      ],
+      "widgets_values_named": {
+        "text": "### Case 1 · one image, one verdict\n\n`Load Image → Gemini (Yes/No) → Preview as Text`\n\n*\"Is there a person in the image?\"* — `probability` is the confidence in \"yes\", `result` turns true once it\nclears the threshold (0.5 here). Good for publish gates: subject facing the camera, clean background, watermark or\nlogo detection, content checks. Change the question, run it, watch `probability` move — then wire `result` into\na switch.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 15,
+      "type": "MarkdownNote",
+      "pos": [
+        1390,
+        810
+      ],
+      "size": [
+        560,
+        200
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "### Case 2 · two candidates, one winner\n\nEach image gets its own 1–10 score against the same question; `Math Expression` compares the two floats and\n`If/Else Switch` passes the winner to `Preview Image`.\n\nRules you can drop into the expression: `a > b` (current) · `a < b` · `abs(a - b) > 1` (only when clearly\nbetter) · `a > 6 && a > b` (good in absolute terms *and* better). Both calls are billed — this is \"best of two\",\nworth it when the next step is far more expensive.\n"
+      ],
+      "widgets_values_named": {
+        "text": "### Case 2 · two candidates, one winner\n\nEach image gets its own 1–10 score against the same question; `Math Expression` compares the two floats and\n`If/Else Switch` passes the winner to `Preview Image`.\n\nRules you can drop into the expression: `a > b` (current) · `a < b` · `abs(a - b) > 1` (only when clearly\nbetter) · `a > 6 && a > b` (good in absolute terms *and* better). Both calls are billed — this is \"best of two\",\nworth it when the next step is far more expensive.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 21,
+      "type": "MarkdownNote",
+      "pos": [
+        0,
+        2100
+      ],
+      "size": [
+        560,
+        220
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "### Case 3 · classify into your own options\n\n`options` is one option per line, used exactly as typed (2 to 255 options, max 128 characters each). Add a catch-all such as `other` so an\ninput that fits nothing still lands somewhere. `choice` is the text, `option_index` its position from 0 — feed\nthat into a switch or a prompt selector.\n\nSwap the list for your own taxonomy: camera angle, shot size, product category, tone of voice, moderation label.\n"
+      ],
+      "widgets_values_named": {
+        "text": "### Case 3 · classify into your own options\n\n`options` is one option per line, used exactly as typed (2 to 255 options, max 128 characters each). Add a catch-all such as `other` so an\ninput that fits nothing still lands somewhere. `choice` is the text, `option_index` its position from 0 — feed\nthat into a switch or a prompt selector.\n\nSwap the list for your own taxonomy: camera angle, shot size, product category, tone of voice, moderation label.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 30,
+      "type": "MarkdownNote",
+      "pos": [
+        1390,
+        2100
+      ],
+      "size": [
+        560,
+        200
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "### Case 4 · pick the winner from a batch\n\n`Load Image ×2 → Image Batch → Gemini (Pick Image)` — the node sees the batch, `text` carries what you asked for,\nand `index` says which image won (from 0). `Math Expression` turns that index into a boolean and `If/Else Switch`\nreturns the picked image, so the rest of the graph works on one image instead of a batch.\n\n2 to 64 images. Leave `text` empty to ask \"which is best\" instead of \"which matches\".\n"
+      ],
+      "widgets_values_named": {
+        "text": "### Case 4 · pick the winner from a batch\n\n`Load Image ×2 → Image Batch → Gemini (Pick Image)` — the node sees the batch, `text` carries what you asked for,\nand `index` says which image won (from 0). `Math Expression` turns that index into a boolean and `If/Else Switch`\nreturns the picked image, so the rest of the graph works on one image instead of a batch.\n\n2 to 64 images. Leave `text` empty to ask \"which is best\" instead of \"which matches\".\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        70,
+        1370
+      ],
+      "size": [
+        320,
+        340
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "api_gemini_decision_input.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "api_gemini_decision_input.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 3,
+      "type": "GeminiDecisionYesNo",
+      "pos": [
+        470,
+        1410
+      ],
+      "size": [
+        400,
+        240
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio.audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "video.video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "type": "BOOLEAN",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "answer",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        },
+        {
+          "name": "probability",
+          "type": "FLOAT",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GeminiDecisionYesNo"
+      },
+      "widgets_values": [
+        "gemini-decision-1",
+        "Is there a person in the image?",
+        0.5
+      ],
+      "widgets_values_named": {
+        "model": "gemini-decision-1",
+        "question": "Is there a person in the image?",
+        "threshold": 0.5
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "PreviewAny",
+      "pos": [
+        950,
+        1200
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 5,
+      "type": "PreviewAny",
+      "pos": [
+        950,
+        1460
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 6,
+      "type": "PreviewAny",
+      "pos": [
+        950,
+        1720
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 8,
+      "type": "LoadImage",
+      "pos": [
+        1460,
+        1150
+      ],
+      "size": [
+        320,
+        340
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            5,
+            10
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "api_gemini_decision_input_2.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "api_gemini_decision_input_2.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 9,
+      "type": "LoadImage",
+      "pos": [
+        1460,
+        1600
+      ],
+      "size": [
+        320,
+        340
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            6,
+            11
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "api_gemini_decision_input_3.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "api_gemini_decision_input_3.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 10,
+      "type": "GeminiDecisionScore",
+      "pos": [
+        1860,
+        1160
+      ],
+      "size": [
+        400,
+        240
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "name": "images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio.audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "video.video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "type": "BOOLEAN",
+          "links": null
+        },
+        {
+          "name": "score",
+          "type": "FLOAT",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GeminiDecisionScore"
+      },
+      "widgets_values": [
+        "gemini-decision-1",
+        "Rate the technical quality of the image from 1 (worst) to 10 (best).",
+        6
+      ],
+      "widgets_values_named": {
+        "model": "gemini-decision-1",
+        "question": "Rate the technical quality of the image from 1 (worst) to 10 (best).",
+        "threshold": 6
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 11,
+      "type": "GeminiDecisionScore",
+      "pos": [
+        1860,
+        1590
+      ],
+      "size": [
+        400,
+        240
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "name": "images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio.audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "video.video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "type": "BOOLEAN",
+          "links": null
+        },
+        {
+          "name": "score",
+          "type": "FLOAT",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GeminiDecisionScore"
+      },
+      "widgets_values": [
+        "gemini-decision-1",
+        "Rate the technical quality of the image from 1 (worst) to 10 (best).",
+        6
+      ],
+      "widgets_values_named": {
+        "model": "gemini-decision-1",
+        "question": "Rate the technical quality of the image from 1 (worst) to 10 (best).",
+        "threshold": 6
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 12,
+      "type": "ComfyMathExpression",
+      "pos": [
+        2340,
+        1360
+      ],
+      "size": [
+        400,
+        150
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 7
+        },
+        {
+          "name": "values.b",
+          "shape": 7,
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 8
+        },
+        {
+          "name": "values.c",
+          "shape": 7,
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression"
+      },
+      "widgets_values": [
+        "a > b"
+      ],
+      "widgets_values_named": {
+        "expression": "a > b"
+      }
+    },
+    {
+      "id": 13,
+      "type": "ComfySwitchNode",
+      "pos": [
+        2410,
+        1630
+      ],
+      "size": [
+        250,
+        80
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 11
+        },
+        {
+          "name": "on_true",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 10
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "switch"
+          },
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "IMAGE",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ],
+      "widgets_values_named": {
+        "switch": false
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 14,
+      "type": "PreviewImage",
+      "pos": [
+        2820,
+        1290
+      ],
+      "size": [
+        380,
+        500
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 16,
+      "type": "LoadImage",
+      "pos": [
+        70,
+        2677
+      ],
+      "size": [
+        360,
+        350
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            13
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "api_gemini_decision_input_3.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "api_gemini_decision_input_3.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 17,
+      "type": "GeminiDecisionChoice",
+      "pos": [
+        470,
+        2697
+      ],
+      "size": [
+        400,
+        270
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 13
+        },
+        {
+          "name": "images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio.audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "video.video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "choice",
+          "type": "STRING",
+          "links": [
+            14
+          ]
+        },
+        {
+          "name": "option_index",
+          "type": "INT",
+          "links": [
+            15
+          ]
+        },
+        {
+          "name": "confidence",
+          "type": "FLOAT",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GeminiDecisionChoice"
+      },
+      "widgets_values": [
+        "gemini-decision-1",
+        "What style is the image?",
+        "photo\nillustration\n3d render\nanime\nsketch\nother"
+      ],
+      "widgets_values_named": {
+        "model": "gemini-decision-1",
+        "question": "What style is the image?",
+        "options": "photo\nillustration\n3d render\nanime\nsketch\nother"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 18,
+      "type": "PreviewAny",
+      "pos": [
+        950,
+        2507
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 19,
+      "type": "PreviewAny",
+      "pos": [
+        950,
+        2767
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 20,
+      "type": "PreviewAny",
+      "pos": [
+        950,
+        3027
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 22,
+      "type": "LoadImage",
+      "pos": [
+        1460,
+        2460
+      ],
+      "size": [
+        320,
+        360
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            23,
+            27
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "api_gemini_decision_input_2.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "api_gemini_decision_input_2.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 23,
+      "type": "LoadImage",
+      "pos": [
+        1460,
+        2900
+      ],
+      "size": [
+        320,
+        340
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            24,
+            28
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "api_gemini_decision_input_3.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "api_gemini_decision_input_3.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 25,
+      "type": "GeminiDecisionPickImage",
+      "pos": [
+        2340,
+        2500
+      ],
+      "size": [
+        400,
+        220
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 29
+        },
+        {
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": 26
+        }
+      ],
+      "outputs": [
+        {
+          "name": "index",
+          "type": "INT",
+          "links": [
+            21
+          ]
+        },
+        {
+          "name": "confidence",
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GeminiDecisionPickImage"
+      },
+      "widgets_values": [
+        "gemini-decision-1",
+        "Which image best matches the prompt in text?"
+      ],
+      "widgets_values_named": {
+        "model": "gemini-decision-1",
+        "question": "Which image best matches the prompt in text?"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 27,
+      "type": "ComfyMathExpression",
+      "pos": [
+        2340,
+        2820
+      ],
+      "size": [
+        400,
+        130
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 21
+        },
+        {
+          "name": "values.b",
+          "shape": 7,
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression"
+      },
+      "widgets_values": [
+        "a == 0"
+      ],
+      "widgets_values_named": {
+        "expression": "a == 0"
+      }
+    },
+    {
+      "id": 28,
+      "type": "ComfySwitchNode",
+      "pos": [
+        2410,
+        3090
+      ],
+      "size": [
+        250,
+        80
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 24
+        },
+        {
+          "name": "on_true",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 23
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "switch"
+          },
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "IMAGE",
+          "links": [
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ],
+      "widgets_values_named": {
+        "switch": false
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 29,
+      "type": "PreviewImage",
+      "pos": [
+        2820,
+        2600
+      ],
+      "size": [
+        380,
+        500
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 31,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        1900,
+        2880
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "a bowl of ramen with a soft-boiled egg, shot from above"
+      ],
+      "widgets_values_named": {
+        "value": "a bowl of ramen with a soft-boiled egg, shot from above"
+      }
+    },
+    {
+      "id": 33,
+      "type": "BatchImagesNode",
+      "pos": [
+        1960,
+        2710
+      ],
+      "size": [
+        140,
+        66
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images.image0",
+          "type": "IMAGE",
+          "link": 27
+        },
+        {
+          "name": "images.image1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 28
+        },
+        {
+          "name": "images.image2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BatchImagesNode"
+      }
+    }
+  ],
+  "links": [
+    [
+      2,
+      3,
+      0,
+      4,
+      0,
+      "BOOLEAN"
+    ],
+    [
+      3,
+      3,
+      1,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      4,
+      3,
+      2,
+      6,
+      0,
+      "FLOAT"
+    ],
+    [
+      9,
+      12,
+      2,
+      13,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      10,
+      8,
+      0,
+      13,
+      1,
+      "IMAGE"
+    ],
+    [
+      11,
+      9,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ],
+    [
+      12,
+      13,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      14,
+      17,
+      0,
+      18,
+      0,
+      "STRING"
+    ],
+    [
+      15,
+      17,
+      1,
+      19,
+      0,
+      "INT"
+    ],
+    [
+      16,
+      17,
+      2,
+      20,
+      0,
+      "FLOAT"
+    ],
+    [
+      22,
+      27,
+      2,
+      28,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      23,
+      22,
+      0,
+      28,
+      1,
+      "IMAGE"
+    ],
+    [
+      24,
+      23,
+      0,
+      28,
+      0,
+      "IMAGE"
+    ],
+    [
+      25,
+      28,
+      0,
+      29,
+      0,
+      "IMAGE"
+    ],
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      8,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      9,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      10,
+      1,
+      12,
+      0,
+      "FLOAT"
+    ],
+    [
+      8,
+      11,
+      1,
+      12,
+      1,
+      "FLOAT"
+    ],
+    [
+      13,
+      16,
+      0,
+      17,
+      0,
+      "IMAGE"
+    ],
+    [
+      21,
+      25,
+      0,
+      27,
+      0,
+      "INT"
+    ],
+    [
+      26,
+      31,
+      0,
+      25,
+      1,
+      "STRING"
+    ],
+    [
+      27,
+      22,
+      0,
+      33,
+      0,
+      "IMAGE"
+    ],
+    [
+      28,
+      23,
+      0,
+      33,
+      1,
+      "IMAGE"
+    ],
+    [
+      29,
+      33,
+      0,
+      25,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Case 1 · One image, one verdict",
+      "bounding": [
+        0,
+        1060,
+        1245,
+        946
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Case 2 · Two candidates, scored and compared",
+      "bounding": [
+        1390,
+        1060,
+        1880,
+        946
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Case 3 · Classify into your own options",
+      "bounding": [
+        0,
+        2370,
+        1245,
+        940
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Case 4 · Pick the winner from a batch",
+      "bounding": [
+        1390,
+        2370,
+        1880,
+        940
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.26333125430607995,
+      "offset": [
+        2108.946336639553,
+        546.8176791661652
+      ]
+    },
+    "frontendVersion": "1.59.6"
+  },
+  "version": 0.4
+}
