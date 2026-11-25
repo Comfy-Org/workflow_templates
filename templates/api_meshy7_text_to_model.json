@@ -1,8 +1,8 @@
 {
   "id": "a6bbab40-b34c-40b2-bd77-cd8869b91cc9",
   "revision": 0,
-  "last_node_id": 10,
-  "last_link_id": 6,
+  "last_node_id": 14,
+  "last_link_id": 8,
   "nodes": [
     {
       "id": 1,
@@ -21,7 +21,7 @@
       "inputs": [
         {
           "name": "meshy_task_id",
-          "type": "MESHY_TASK_ID",
+          "type": "MESHY_TASK_ID,STRING",
           "link": null
         },
         {
@@ -39,7 +39,7 @@
         },
         {
           "name": "meshy_task_id",
-          "type": "MESHY_TASK_ID",
+          "type": "MESHY_TASK_ID,STRING",
           "links": null
         },
         {
@@ -92,7 +92,7 @@
       "inputs": [
         {
           "name": "rig_task_id",
-          "type": "MESHY_RIGGED_TASK_ID",
+          "type": "MESHY_RIGGED_TASK_ID,STRING",
           "link": null
         }
       ],
@@ -144,7 +144,7 @@
       "inputs": [
         {
           "name": "meshy_task_id",
-          "type": "MESHY_TASK_ID",
+          "type": "MESHY_TASK_ID,STRING",
           "link": null
         },
         {
@@ -162,7 +162,7 @@
         },
         {
           "name": "meshy_task_id",
-          "type": "MESHY_TASK_ID",
+          "type": "MESHY_TASK_ID,STRING",
           "links": null
         },
         {
@@ -213,7 +213,7 @@
       "inputs": [
         {
           "name": "meshy_task_id",
-          "type": "MESHY_TASK_ID",
+          "type": "MESHY_TASK_ID,STRING",
           "link": null
         },
         {
@@ -231,7 +231,7 @@
         },
         {
           "name": "rig_task_id",
-          "type": "MESHY_RIGGED_TASK_ID",
+          "type": "MESHY_RIGGED_TASK_ID,STRING",
           "links": null
         },
         {
@@ -271,7 +271,7 @@
         550
       ],
       "flags": {},
-      "order": 5,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
@@ -306,7 +306,7 @@
         550
       ],
       "flags": {},
-      "order": 6,
+      "order": 10,
       "mode": 0,
       "inputs": [
         {
@@ -352,8 +352,10 @@
         },
         {
           "name": "meshy_task_id",
-          "type": "MESHY_TASK_ID",
-          "links": null
+          "type": "MESHY_TASK_ID,STRING",
+          "links": [
+            8
+          ]
         },
         {
           "name": "GLB",
@@ -405,6 +407,162 @@
       },
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 11,
+      "type": "SaveText",
+      "pos": [
+        -920,
+        1760
+      ],
+      "size": [
+        400,
+        225.99996461105096
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveText"
+      },
+      "widgets_values": [
+        "ComfyUI",
+        "txt"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "ComfyUI",
+        "format": "txt"
+      }
+    },
+    {
+      "id": 12,
+      "type": "MarkdownNote",
+      "pos": [
+        -920,
+        1390
+      ],
+      "size": [
+        410,
+        270
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note",
+      "properties": {},
+      "widgets_values": [
+        "## Saved text\n\n`Save Text` writes the path of the generated model to a `.txt`, stamped with the date. Handy when you want to find the file again without digging through `output/`.\n\n## Task id\n\nThe `meshy_task_id` output is what the Meshy toolset nodes take, so you can refine, re-texture or rig the same job later without rebuilding it.\n\n## Output\n\nBoth save nodes write into `ComfyUI/output/3d/`. The preview node can also export the file straight from its viewport."
+      ],
+      "widgets_values_named": {
+        "text": "## Saved text\n\n`Save Text` writes the path of the generated model to a `.txt`, stamped with the date. Handy when you want to find the file again without digging through `output/`.\n\n## Task id\n\nThe `meshy_task_id` output is what the Meshy toolset nodes take, so you can refine, re-texture or rig the same job later without rebuilding it.\n\n## Output\n\nBoth save nodes write into `ComfyUI/output/3d/`. The preview node can also export the file straight from its viewport."
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 13,
+      "type": "MarkdownNote",
+      "pos": [
+        -2270,
+        900
+      ],
+      "size": [
+        610,
+        1510
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Meshy 6: Multi-Image to 3D Model\n\n**Three photos of the same subject in, one textured 3D model out.** Meshy 6 fuses a front, a side and a back view into a single mesh, so the surfaces the camera never sees are inferred from the other views instead of guessed from one image.\n\n**Input assets (demo):**\n- [joker_front.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_front.jpg) — front view, the framing and scale reference (required workflow input).\n- [joker_back.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_back.jpg) — back view, gives the model its rear silhouette (required workflow input).\n- [joker_side.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_side.jpg) — side view, fixes depth and profile (required workflow input).\n\n### What each node does\n\n| Node | Role |\n|---|---|\n| **Load Image** ×3 | Front, back and side reference of the same subject. They feed `images.image0`, `image1` and `image2`; a fourth slot exists but stays empty here. |\n| **Meshy: Multi-Image to Model** | Single API call: fuses the views into one mesh, runs a remesh to a game-ready triangle budget, generates UVs and returns three things — the model `GLB`, an `FBX`, and the `model_file` path of the result on disk. |\n| **Preview 3D & Animation** | Shows the returned file in the viewport and can export it from the node. Deprecated — `Preview 3D (Advanced)` replaces it. |\n| **Save 3D (Advanced)** | Writes the GLB the node returned to the output folder. |\n| **Save GLB** | Writes the FBX branch as GLB. Both save nodes exist to show the two formats; wire the one you need and remove the other. |\n| **Save Text** | Writes the returned file path to a `.txt`, one line, stamped with the date (for example `meshy_model_path_20261125_203113_00001.txt`). |\n| **Meshy Toolset** | Bypassed group of five follow-up calls, driven by the returned task id instead of the file: see below. |\n\n### The Meshy toolset\n\nThe toolset is the same model's follow-up API chain. Every node in it takes a `meshy_task_id`, i.e. the id of an existing Meshy job — it re-uses the geometry instead of generating it again, so refining or re-texturing an old task costs one call rather than a fresh build.\n\n- **Meshy: Refine** — adds PBR maps and a texture prompt to an existing task.\n- **Meshy: Texture** — re-textures with a style prompt or a reference image.\n- **Meshy: Texture N1** — N1 texturing, optionally keeping the original UVs.\n- **Meshy: Rig Model** — turns the mesh into a rigged character, `height_meters` sets the scale.\n- **Meshy: Animate** — animates a rigged task by `action_id`.\n\nThey ship **bypassed** (the whole group is `Ctrl+B`-ready): select the nodes you want and press `Ctrl+B` to enable them, then wire the `meshy_task_id` output of **Multi-Image to Model** (or an id saved earlier) into the node you enabled. Leave them off unless you need a second pass.\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `model` | `meshy-6` is the multi-image model; pick it unless you are deliberately comparing. |\n| `should_remesh` → `topology`, `target_polycount` | Remesh on, `triangle` topology, 300000 triangles. Lower the budget for real-time use. |\n| `symmetry_mode` | `auto` lets the model mirror symmetric parts; set `on`/`off` when the subject is (or is not) symmetric. |\n| `should_texture` → `texture_resolution`, `pbr` | Texture generation and 2K maps; PBR is off by default. |\n| `pose_mode` | `auto` reads the pose from the references. |\n| `seed` | Fixed, so a re-run repeats the same request; the render itself is not bit-identical. |\n| `ultra_mode` | Extra mesh detail for a higher credit cost. |\n\n---\n\n### Limitations\n\n- Billed per run (the node shows the credit cost); follow-up toolset calls are billed separately.\n- Three views of the *same* subject, taken from roughly front, side and back, give the best result; unrelated images are fused into one object.\n- The returned files are already on disk, so both save nodes are optional — they exist to control the name and the folder.\n\n---\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare the input assets.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Meshy 6: Multi-Image to 3D Model\n\n**Three photos of the same subject in, one textured 3D model out.** Meshy 6 fuses a front, a side and a back view into a single mesh, so the surfaces the camera never sees are inferred from the other views instead of guessed from one image.\n\n**Input assets (demo):**\n- [joker_front.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_front.jpg) — front view, the framing and scale reference (required workflow input).\n- [joker_back.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_back.jpg) — back view, gives the model its rear silhouette (required workflow input).\n- [joker_side.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_side.jpg) — side view, fixes depth and profile (required workflow input).\n\n### What each node does\n\n| Node | Role |\n|---|---|\n| **Load Image** ×3 | Front, back and side reference of the same subject. They feed `images.image0`, `image1` and `image2`; a fourth slot exists but stays empty here. |\n| **Meshy: Multi-Image to Model** | Single API call: fuses the views into one mesh, runs a remesh to a game-ready triangle budget, generates UVs and returns three things — the model `GLB`, an `FBX`, and the `model_file` path of the result on disk. |\n| **Preview 3D & Animation** | Shows the returned file in the viewport and can export it from the node. Deprecated — `Preview 3D (Advanced)` replaces it. |\n| **Save 3D (Advanced)** | Writes the GLB the node returned to the output folder. |\n| **Save GLB** | Writes the FBX branch as GLB. Both save nodes exist to show the two formats; wire the one you need and remove the other. |\n| **Save Text** | Writes the returned file path to a `.txt`, one line, stamped with the date (for example `meshy_model_path_20261125_203113_00001.txt`). |\n| **Meshy Toolset** | Bypassed group of five follow-up calls, driven by the returned task id instead of the file: see below. |\n\n### The Meshy toolset\n\nThe toolset is the same model's follow-up API chain. Every node in it takes a `meshy_task_id`, i.e. the id of an existing Meshy job — it re-uses the geometry instead of generating it again, so refining or re-texturing an old task costs one call rather than a fresh build.\n\n- **Meshy: Refine** — adds PBR maps and a texture prompt to an existing task.\n- **Meshy: Texture** — re-textures with a style prompt or a reference image.\n- **Meshy: Texture N1** — N1 texturing, optionally keeping the original UVs.\n- **Meshy: Rig Model** — turns the mesh into a rigged character, `height_meters` sets the scale.\n- **Meshy: Animate** — animates a rigged task by `action_id`.\n\nThey ship **bypassed** (the whole group is `Ctrl+B`-ready): select the nodes you want and press `Ctrl+B` to enable them, then wire the `meshy_task_id` output of **Multi-Image to Model** (or an id saved earlier) into the node you enabled. Leave them off unless you need a second pass.\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `model` | `meshy-6` is the multi-image model; pick it unless you are deliberately comparing. |\n| `should_remesh` → `topology`, `target_polycount` | Remesh on, `triangle` topology, 300000 triangles. Lower the budget for real-time use. |\n| `symmetry_mode` | `auto` lets the model mirror symmetric parts; set `on`/`off` when the subject is (or is not) symmetric. |\n| `should_texture` → `texture_resolution`, `pbr` | Texture generation and 2K maps; PBR is off by default. |\n| `pose_mode` | `auto` reads the pose from the references. |\n| `seed` | Fixed, so a re-run repeats the same request; the render itself is not bit-identical. |\n| `ultra_mode` | Extra mesh detail for a higher credit cost. |\n\n---\n\n### Limitations\n\n- Billed per run (the node shows the credit cost); follow-up toolset calls are billed separately.\n- Three views of the *same* subject, taken from roughly front, side and back, give the best result; unrelated images are fused into one object.\n- The returned files are already on disk, so both save nodes are optional — they exist to control the name and the folder.\n\n---\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare the input assets.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 14,
+      "type": "MeshyTextureN1Node",
+      "pos": [
+        -1517.5803914804944,
+        2054.825899888746
+      ],
+      "size": [
+        400,
+        150
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "meshy_task_id",
+          "type": "MESHY_TASK_ID,STRING",
+          "link": null
+        },
+        {
+          "name": "front_view",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "extra_views.view0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "meshy_task_id",
+          "type": "MESHY_TASK_ID,STRING",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": null
+        },
+        {
+          "name": "FBX",
+          "type": "FILE_3D_FBX",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MeshyTextureN1Node"
+      },
+      "widgets_values": [
+        "meshy-n1",
+        true
+      ],
+      "widgets_values_named": {
+        "model": "meshy-n1",
+        "enable_original_uv": true
+      },
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
@@ -423,6 +581,14 @@
       8,
       0,
       "FILE_3D_FBX"
+    ],
+    [
+      8,
+      9,
+      1,
+      11,
+      0,
+      "STRING"
     ]
   ],
   "groups": [
@@ -432,8 +598,8 @@
       "bounding": [
         -1610,
         870,
-        600,
-        1170
+        590,
+        1410
       ],
       "color": "#3f789e",
       "flags": {}
@@ -442,13 +608,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.4850396834713515,
+      "scale": 0.2442619656056837,
       "offset": [
-        2309.5880960981867,
-        -185.76127153116593
+        3829.6367484487323,
+        925.4866391419183
       ]
     },
-    "frontendVersion": "1.53.6",
+    "frontendVersion": "1.59.10",
     "workflowRendererVersion": "LG",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
