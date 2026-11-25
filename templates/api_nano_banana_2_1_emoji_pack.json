@@ -1,0 +1,1259 @@
+{
+  "id": "6f2b1d84-3c57-4a91-8e0d-2a9c4b7f5e31",
+  "revision": 0,
+  "last_node_id": 22,
+  "last_link_id": 26,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        -1600,
+        300
+      ],
+      "size": [
+        320,
+        400
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "emoji_pack_character.png",
+        "image"
+      ],
+      "title": "Character"
+    },
+    {
+      "id": 2,
+      "type": "GeminiNanoBanana2V2",
+      "pos": [
+        -1200,
+        200
+      ],
+      "size": [
+        660,
+        720
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.images.image_1",
+          "type": "IMAGE",
+          "link": 1,
+          "label": "image_1",
+          "shape": 7
+        },
+        {
+          "name": "model.files",
+          "type": "GEMINI_INPUT_FILES",
+          "link": null,
+          "label": "files",
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2,
+            3
+          ]
+        },
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "thought_image",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GeminiNanoBanana2V2"
+      },
+      "widgets_values": [
+        "Pixel art sprite sheet, 64x64 pixels per cell, 4x2 grid (8 frames total, single image), solid magenta #FF00FF background throughout.\n\nimage1 IS the character. Copy who is in it — species, face, hair, skin, build, clothing, colors — and redraw that same subject in pixel art. Nothing below describes what the character looks like; every appearance detail comes from image1 and from image1 only. If image1 is a person, the result is that person; if it is an animal, that animal.\n\nThis is a single animation loop of ONE expression: wave hello\n\nTORSO-UP SHOT, framed from roughly the waist up. The head, shoulders, chest, both arms and both hands are always inside the frame; the legs and feet are outside it. This is NOT a tight head-and-shoulders portrait — there is enough room around the torso for the arms to gesture widely without leaving the frame. Head, face, arms, hands and any props all animate.\n\nFRAMING, the most important rule, applied to EVERY frame: the torso is cut cleanly by the bottom edge at about waist height, and the top 12% of the cell is empty background ABOVE the head, ears and any raised hands. Both hands stay fully inside the frame with a clear background margin on the left and right — a hand or elbow is NEVER cropped by a side edge. If a pose reaches out or up, draw the character SMALLER so the gesture still fits. The character is centered and the head sits in the upper half of the cell.\n\nONE CHARACTER PER CELL: each of the 8 cells contains exactly one character at one single moment in time. Never subdivide a cell into a smaller grid, never draw multiple copies of the character inside one cell, never nest a sprite sheet inside a cell.\n\nAny logo, lettering, pendant or badge worn by the character is copied exactly as it appears in image1 and is never redrawn as a different letter or symbol. The face is clearly drawn in every frame with the same features the character has in image1 — never blank, melted, smeared or obscured, and never given features image1 does not have.\n\nAction: The character waves one arm in a big friendly greeting, the shoulders rocking gently side to side and the other hand resting at the waist.\n\nFrame beats: frame 1 arm at the side, frames 2-3 arm rising, frames 4-5 arm swung fully right at full extension with fingers splayed, frames 6-7 arm swung fully left, frame 8 beginning to lower back to the start.\n\nFrame order is left to right, top to bottom (frame 1 to frame 8), forming a continuous, seamlessly loopable cycle — frame 8 flows naturally back into frame 1.\n\nLock across all frames: character identity, face, full outfit and accessories exactly as worn in image1, proportions, color palette, outline weight (1px black), camera framing, crop, and scale. The character's standing height in pixels is IDENTICAL in all 8 frames — the camera never pushes in or pulls back, the character never changes size and never drifts off-center. All motion comes from the body, limbs and props.\n\nSpread the action evenly across all 8 frames — at most ONE frame sits in the neutral rest pose; every other frame is a visibly different stage of the motion. Show motion with crisp pixel motion-lines and small shape offsets, never with blur, smear or streaking across the body.\n\nBuilt to read at 32-pixel Slack emoji size: the head and face are large and clearly legible, the silhouette is bold and simple, pose changes between frames are big and obvious, motion is exaggerated cartoon motion with chunky readable shapes. Avoid fine detail that would disappear when scaled down.\n\nHard pixel edges, no anti-aliasing, no sub-pixel positioning, no gradients.",
+        "Gemini Nano Banana 2.1",
+        "16:9",
+        "2K",
+        "HIGH",
+        100000,
+        "fixed",
+        "IMAGE",
+        "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests.",
+        1.0,
+        0.95
+      ],
+      "title": "Emoji Sprite Sheet",
+      "showAdvanced": true
+    },
+    {
+      "id": 15,
+      "type": "SaveImage",
+      "pos": [
+        -460,
+        240
+      ],
+      "size": [
+        400,
+        420
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "api_nano_banana_2_1_emoji_pack_sheet"
+      ],
+      "title": "Sprite Sheet PNG"
+    },
+    {
+      "id": 3,
+      "type": "ImageScale",
+      "pos": [
+        -1200,
+        1140
+      ],
+      "size": [
+        360,
+        150
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "lanczos",
+        2048,
+        1152,
+        "disabled"
+      ],
+      "title": "Fit 4x2 Grid"
+    },
+    {
+      "id": 4,
+      "type": "ImageCropV2",
+      "pos": [
+        -840,
+        1100
+      ],
+      "size": [
+        270,
+        250
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageCropV2"
+      },
+      "widgets_values": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 512,
+          "height": 576
+        }
+      ],
+      "title": "Frame 1",
+      "widgets_values_named": {
+        "crop_region": {
+          "x": 0,
+          "y": 0,
+          "width": 512,
+          "height": 576
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "ImageCropV2",
+      "pos": [
+        -540,
+        1100
+      ],
+      "size": [
+        270,
+        250
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageCropV2"
+      },
+      "widgets_values": [
+        {
+          "x": 512,
+          "y": 0,
+          "width": 512,
+          "height": 576
+        }
+      ],
+      "title": "Frame 2",
+      "widgets_values_named": {
+        "crop_region": {
+          "x": 512,
+          "y": 0,
+          "width": 512,
+          "height": 576
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "ImageCropV2",
+      "pos": [
+        -240,
+        1100
+      ],
+      "size": [
+        270,
+        250
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageCropV2"
+      },
+      "widgets_values": [
+        {
+          "x": 1024,
+          "y": 0,
+          "width": 512,
+          "height": 576
+        }
+      ],
+      "title": "Frame 3",
+      "widgets_values_named": {
+        "crop_region": {
+          "x": 1024,
+          "y": 0,
+          "width": 512,
+          "height": 576
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "ImageCropV2",
+      "pos": [
+        60,
+        1100
+      ],
+      "size": [
+        270,
+        250
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageCropV2"
+      },
+      "widgets_values": [
+        {
+          "x": 1536,
+          "y": 0,
+          "width": 512,
+          "height": 576
+        }
+      ],
+      "title": "Frame 4",
+      "widgets_values_named": {
+        "crop_region": {
+          "x": 1536,
+          "y": 0,
+          "width": 512,
+          "height": 576
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "ImageCropV2",
+      "pos": [
+        -840,
+        1380
+      ],
+      "size": [
+        270,
+        250
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageCropV2"
+      },
+      "widgets_values": [
+        {
+          "x": 0,
+          "y": 576,
+          "width": 512,
+          "height": 576
+        }
+      ],
+      "title": "Frame 5",
+      "widgets_values_named": {
+        "crop_region": {
+          "x": 0,
+          "y": 576,
+          "width": 512,
+          "height": 576
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "ImageCropV2",
+      "pos": [
+        -540,
+        1380
+      ],
+      "size": [
+        270,
+        250
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageCropV2"
+      },
+      "widgets_values": [
+        {
+          "x": 512,
+          "y": 576,
+          "width": 512,
+          "height": 576
+        }
+      ],
+      "title": "Frame 6",
+      "widgets_values_named": {
+        "crop_region": {
+          "x": 512,
+          "y": 576,
+          "width": 512,
+          "height": 576
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "ImageCropV2",
+      "pos": [
+        -240,
+        1380
+      ],
+      "size": [
+        270,
+        250
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageCropV2"
+      },
+      "widgets_values": [
+        {
+          "x": 1024,
+          "y": 576,
+          "width": 512,
+          "height": 576
+        }
+      ],
+      "title": "Frame 7",
+      "widgets_values_named": {
+        "crop_region": {
+          "x": 1024,
+          "y": 576,
+          "width": 512,
+          "height": 576
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "ImageCropV2",
+      "pos": [
+        60,
+        1380
+      ],
+      "size": [
+        270,
+        250
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageCropV2"
+      },
+      "widgets_values": [
+        {
+          "x": 1536,
+          "y": 576,
+          "width": 512,
+          "height": 576
+        }
+      ],
+      "title": "Frame 8",
+      "widgets_values_named": {
+        "crop_region": {
+          "x": 1536,
+          "y": 576,
+          "width": 512,
+          "height": 576
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "BatchImagesNode",
+      "pos": [
+        720,
+        1120
+      ],
+      "size": [
+        300,
+        500
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images.image0",
+          "type": "IMAGE",
+          "link": 12,
+          "label": "image0",
+          "shape": 7
+        },
+        {
+          "name": "images.image1",
+          "type": "IMAGE",
+          "link": 13,
+          "label": "image1",
+          "shape": 7
+        },
+        {
+          "name": "images.image2",
+          "type": "IMAGE",
+          "link": 14,
+          "label": "image2",
+          "shape": 7
+        },
+        {
+          "name": "images.image3",
+          "type": "IMAGE",
+          "link": 15,
+          "label": "image3",
+          "shape": 7
+        },
+        {
+          "name": "images.image4",
+          "type": "IMAGE",
+          "link": 16,
+          "label": "image4",
+          "shape": 7
+        },
+        {
+          "name": "images.image5",
+          "type": "IMAGE",
+          "link": 17,
+          "label": "image5",
+          "shape": 7
+        },
+        {
+          "name": "images.image6",
+          "type": "IMAGE",
+          "link": 18,
+          "label": "image6",
+          "shape": 7
+        },
+        {
+          "name": "images.image7",
+          "type": "IMAGE",
+          "link": 19,
+          "label": "image7",
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BatchImagesNode"
+      },
+      "widgets_values": [],
+      "title": "8 Frames"
+    },
+    {
+      "id": 13,
+      "type": "ImageScale",
+      "pos": [
+        720,
+        1700
+      ],
+      "size": [
+        300,
+        150
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            21,
+            23,
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "lanczos",
+        128,
+        128,
+        "disabled"
+      ],
+      "title": "Emoji Size"
+    },
+    {
+      "id": 14,
+      "type": "SaveAnimatedWEBP",
+      "pos": [
+        1080,
+        1660
+      ],
+      "size": [
+        460,
+        330
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveAnimatedWEBP"
+      },
+      "widgets_values": [
+        "api_nano_banana_2_1_emoji_pack",
+        8,
+        true,
+        100,
+        "default"
+      ],
+      "title": "Emoji Loop (WebP)"
+    },
+    {
+      "id": 17,
+      "type": "LoadBackgroundRemovalModel",
+      "pos": [
+        720,
+        2180
+      ],
+      "size": [
+        340,
+        90
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "bg_model",
+          "type": "BACKGROUND_REMOVAL",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadBackgroundRemovalModel"
+      },
+      "widgets_values": [
+        "birefnet.safetensors"
+      ],
+      "title": "BiRefNet"
+    },
+    {
+      "id": 18,
+      "type": "RemoveBackground",
+      "pos": [
+        1100,
+        2160
+      ],
+      "size": [
+        300,
+        140
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "bg_removal_model",
+          "type": "BACKGROUND_REMOVAL",
+          "link": 22
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RemoveBackground"
+      },
+      "widgets_values": [],
+      "title": "Matte"
+    },
+    {
+      "id": 19,
+      "type": "JoinImageWithAlpha",
+      "pos": [
+        1460,
+        2160
+      ],
+      "size": [
+        300,
+        140
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 24
+        },
+        {
+          "name": "alpha",
+          "type": "MASK",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinImageWithAlpha"
+      },
+      "widgets_values": [],
+      "title": "Add Alpha"
+    },
+    {
+      "id": 20,
+      "type": "SaveAnimatedWEBP",
+      "pos": [
+        1820,
+        2120
+      ],
+      "size": [
+        460,
+        330
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 26
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveAnimatedWEBP"
+      },
+      "widgets_values": [
+        "api_nano_banana_2_1_emoji_pack_alpha",
+        8,
+        true,
+        100,
+        "default"
+      ],
+      "title": "Emoji Loop (transparent)"
+    },
+    {
+      "id": 16,
+      "type": "MarkdownNote",
+      "pos": [
+        -2560,
+        -560
+      ],
+      "size": [
+        800,
+        1560
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# Emoji Pack — one photo, eight animated emoji\n\nOne **Nano Banana 2.1** call draws a 4x2 pixel-art sprite sheet of a single character in a single\nexpression, eight beats apart; those eight cells become one looping **animated WebP** at\n128x128, 8 fps. This is the ComfyUI rebuild of Comfy's\n[Emojinius](https://emojinius.comfy.org/) emoji maker — the same prompt scaffold, done with core nodes\nso it runs on a normal graph.\n\n## How to use\n\n1. Drop a photo or illustration of **one** character into `LoadImage` — that subject is what gets\n   redrawn in pixel art, so a clear, well-lit face works best.\n2. Run the graph. You get two files: the **emoji loop** (animated WebP) and the raw **sprite sheet** PNG.\n3. For a different expression, change the three phrases in the prompt — the expression name, its\n   action, and its eight beats. The table below has all eight sets.\n\n## The eight expressions\n\n| Expression | `name` | `action` |\n|---|---|---|\n| Wave hello | wave hello | The character waves one arm in a big friendly greeting, the shoulders rocking gently side to side and the other hand resting at the waist. |\n| Dancing | dancing | The character grooves from the waist up — shoulders bouncing, head nodding, both arms pumping through a dance. |\n| Thumbs up | thumbs up | The character throws a confident double thumbs-up with a proud chest-puff and an approving nod. |\n| Facepalm | facepalm | The character slowly raises one hand and drags it down their face in exasperation while the shoulders sag and the whole body deflates. |\n| Typing furiously | typing furiously | The character hammers a keyboard held at chest height at absurd speed, with a focused scowl. |\n| Mind blown | mind blown | The character's eyes go wide, both hands fly to the sides of the head, and the top of the head pops open in a burst of stars and rays. |\n| Sobbing | sobbing | The character wails dramatically with the head tipped back, twin tear fountains arcing out from the eyes, the whole body shaking. |\n| Rolling on the floor laughing | rolling on the floor laughing | The character howls with laughter — head thrown all the way back, one hand slapping the chest, the whole upper body shaking. |\n\n## What the prompt is doing\n\n- **Torso-up framing, always.** Head, shoulders, both arms and hands stay inside the cell, and the top\n  12% stays empty so raised hands never clip. Poses that reach out get drawn smaller instead of cropped.\n- **One character per cell.** No sub-grids, no repeated copies, no nested sprite sheets — the model\n  loves to add those unless told not to.\n- **Identity comes from `image1`.** Nothing in the prose describes the character, so the drawing follows\n  your input rather than drifting toward a generic pixel person.\n- **Flat magenta `#FF00FF` everywhere else.** That is the key colour, not the background you want in the\n  end.\n\n## Transparency\n\nThe sheet comes back on flat magenta. Two ways out:\n\n- **Key it in an editor** (GIF/WebP export with colour key on `#FF00FF`) — zero extra downloads.\n- **Enable the optional group** (`Optional - cut the magenta with BiRefNet`, select it and press\n  `Ctrl + B`): it mattes the frames with BiRefNet and saves a second, already-transparent WebP. It needs\n  `birefnet.safetensors` in `ComfyUI/models/background_removal/`\n  ([Comfy-Org/BiRefNet](https://huggingface.co/Comfy-Org/BiRefNet)).\n\n## Notes\n\n- The grid maths is exact because `Fit 4x2 Grid` normalises the sheet to 2048x1152 first — if\n  you change the model's aspect ratio or resolution, that node's two numbers must change with it.\n- 8 fps x 8 frames is a one-second loop; frame 8 is written to flow back into frame 1.\n- Slack takes GIF for custom emoji; animated WebP plays in Discord, browsers and Slack's image\n  preview, so convert only if a client insists.\n"
+      ],
+      "title": "Emoji Pack",
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 21,
+      "type": "MarkdownNote",
+      "pos": [
+        -2560,
+        1060
+      ],
+      "size": [
+        800,
+        560
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "## Expression prompts\n\nEvery expression is the same paragraph scaffold, swapped in three places:\n\n- `This is a single animation loop of ONE expression: <name>` → the `name` column above.\n- the `action` sentence → the `action` column above.\n- the trailing `beats` sentence (frame 1 … frame 8) → the beats in\n  [Emojinius `workflows/emoji.pack.json`](https://github.com/Comfy-Org/emojinius/blob/main/workflows/emoji.pack.json).\n\nThe node ships with **wave hello** filled in. Text a caller adds (\"give him a tiny crown\") belongs in\nthe note's own override paragraph, and must stay identical across all eight frames.\n"
+      ],
+      "title": "Prompt slots"
+    },
+    {
+      "id": 22,
+      "type": "MarkdownNote",
+      "pos": [
+        2360,
+        2160
+      ],
+      "size": [
+        760,
+        400
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "## Optional: cut the magenta with BiRefNet\n\nSelect this group and press `Ctrl + B` to enable it. It adds one more output: the same\n{EMOJI_PX}x{EMOJI_PX} loop with a matte instead of the flat magenta.\n\n- Needs `birefnet.safetensors` in `ComfyUI/models/background_removal/`\n  ([Comfy-Org/BiRefNet](https://huggingface.co/Comfy-Org/BiRefNet)).\n- Off by default so the graph runs with no local weights.\n"
+      ],
+      "title": "Optional group"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      15,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      3,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      3,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      3,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      3,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      3,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      3,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      11,
+      3,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ],
+    [
+      12,
+      4,
+      0,
+      12,
+      0,
+      "IMAGE"
+    ],
+    [
+      13,
+      5,
+      0,
+      12,
+      1,
+      "IMAGE"
+    ],
+    [
+      14,
+      6,
+      0,
+      12,
+      2,
+      "IMAGE"
+    ],
+    [
+      15,
+      7,
+      0,
+      12,
+      3,
+      "IMAGE"
+    ],
+    [
+      16,
+      8,
+      0,
+      12,
+      4,
+      "IMAGE"
+    ],
+    [
+      17,
+      9,
+      0,
+      12,
+      5,
+      "IMAGE"
+    ],
+    [
+      18,
+      10,
+      0,
+      12,
+      6,
+      "IMAGE"
+    ],
+    [
+      19,
+      11,
+      0,
+      12,
+      7,
+      "IMAGE"
+    ],
+    [
+      20,
+      12,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ],
+    [
+      21,
+      13,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      22,
+      17,
+      0,
+      18,
+      0,
+      "BACKGROUND_REMOVAL"
+    ],
+    [
+      23,
+      13,
+      0,
+      18,
+      1,
+      "IMAGE"
+    ],
+    [
+      24,
+      13,
+      0,
+      19,
+      0,
+      "IMAGE"
+    ],
+    [
+      25,
+      18,
+      0,
+      19,
+      1,
+      "MASK"
+    ],
+    [
+      26,
+      19,
+      0,
+      20,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "1 — Character to sprite sheet",
+      "bounding": [
+        -1660,
+        120,
+        1720,
+        860
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "2 — 8 frames to one looping emoji",
+      "bounding": [
+        -880,
+        1030,
+        2160,
+        980
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Optional - cut the magenta with BiRefNet (Select and Ctrl-B to enable)",
+      "bounding": [
+        680,
+        2080,
+        2500,
+        420
+      ],
+      "color": "#8A8",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.42,
+      "offset": [
+        760,
+        240
+      ]
+    },
+    "frontendVersion": "1.59.10"
+  },
+  "version": 0.4
+}
