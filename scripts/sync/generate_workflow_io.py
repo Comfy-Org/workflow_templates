@@ -32,6 +32,7 @@ OUTPUT_NODE_TYPES = [
     "SaveAudio",
     "VHS_SaveVideo",
     "Save3DModel",
+    "Save3DAdvanced",
     "SaveGLB",
     "SaveImageAdvanced",
     "Preview3D",
