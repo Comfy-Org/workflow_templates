@@ -13,7 +13,7 @@
       ],
       "size": [
         700,
-        1130
+        810
       ],
       "flags": {},
       "order": 0,
@@ -22,10 +22,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "# Gemini Decision — four decisions in one graph\n\nThe Gemini decision nodes answer a question about text, images, audio or video and hand the answer back as a value\nthe graph can branch on. The same model is exposed four ways; every case below is wired end to end, so copy the\none you need.\n\n- **Case 1 · one image, one verdict** — a yes/no question plus the probability behind it. The cheapest gate you can put in front of an expensive node.\n- **Case 2 · two candidates, one winner** — score both, compare the numbers with a math rule, let a switch pass the winner downstream.\n- **Case 3 · your own options** — classify into a list you write, one option per line.\n- **Case 4 · pick from a batch** — pick the image that matches the prompt, then keep it with `index`.\n\nAll four cases run in one queue. These are API (partner) nodes: sign in with a Comfy account, or set an API key\n(Settings → API Keys → My API Key).\n\n## What the nodes return\n\n| Node | Outputs |\n| --- | --- |\n| **Gemini Decision (Yes/No)** | `result` (BOOLEAN), `answer` (\"yes\"/\"no\"), `probability` (0–1) — flips at the threshold widget, 0.01–0.99 |\n| **Gemini Decision (Choice)** | `choice` (STRING), `option_index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Pick Image)** | `index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Score)** | `result` (BOOLEAN), `score` (1–10) — true when score ≥ threshold, 1–10 |\n\nConnect text (`text`), up to **16 images** (`image_1…image_16`), one or more audio clips (`audio_1…`) and one\nvideo (`video_1`). Name the sockets in the question, e.g. *\"Does image_2 show the same person as image_1?\"* —\nthe model sees those names.\n\n## How to use\n\n1. Sign in, or paste an API key.\n2. Swap the demo images in the `Load Image` nodes, or connect audio / video instead.\n3. Ask one thing per node, and phrase it so **\"yes\"** — or the first option — is the case you act on.\n4. Tune the threshold (0.01–0.99 for yes/no, 1–10 for score) until false positives stop hurting.\n5. Route `result` into `If/Else Switch`, or `index` / `option_index` into a dispatch rule.\n\n**Cost** is per token, so a short question and one image cost a fraction of a cent. Put the decision *before*\nthe expensive step and put that step on the accepted branch — the rejected branch then costs nothing.\n"
+        "# Gemini Decision — four decisions in one graph\n\nThe Gemini decision nodes answer a question about text, images, audio or video and hand the answer back as a value\nthe graph can branch on. The same model is exposed four ways; every case below is wired end to end, so copy the\none you need.\n\n**Input assets (demo):**\n- [cyclist_in_rain_night_street.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/cyclist_in_rain_night_street.png)\n- [ramen_bowl_top_view.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/ramen_bowl_top_view.png)\n- [girl_red_umbrella_station.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/girl_red_umbrella_station.png)\n\n- **Case 1 · one image, one verdict** — a yes/no question plus the probability behind it. The cheapest gate you can put in front of an expensive node.\n- **Case 2 · two candidates, one winner** — score both, compare the numbers with a math rule, let a switch pass the winner downstream.\n- **Case 3 · your own options** — classify into a list you write, one option per line.\n- **Case 4 · pick from a batch** — pick the image that matches the prompt, then keep it with `index`.\n\nAll four cases run in one queue. These are API (partner) nodes: sign in with a Comfy account, or set an API key\n(Settings → API Keys → My API Key).\n\n## What the nodes return\n\n| Node | Outputs |\n| --- | --- |\n| **Gemini Decision (Yes/No)** | `result` (BOOLEAN), `answer` (\"yes\"/\"no\"), `probability` (0–1) — flips at the threshold widget, 0.01–0.99 |\n| **Gemini Decision (Choice)** | `choice` (STRING), `option_index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Pick Image)** | `index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Score)** | `result` (BOOLEAN), `score` (1–10) — true when score ≥ threshold, 1–10 |\n\nConnect text (`text`), up to **16 images** (`image_1…image_16`), one or more audio clips (`audio_1…`) and one\nvideo (`video_1`). Name the sockets in the question, e.g. *\"Does image_2 show the same person as image_1?\"* —\nthe model sees those names.\n\n## How to use\n\n1. Sign in, or paste an API key.\n2. Swap the demo images in the `Load Image` nodes, or connect audio / video instead.\n3. Ask one thing per node, and phrase it so **\"yes\"** — or the first option — is the case you act on.\n4. Tune the threshold (0.01–0.99 for yes/no, 1–10 for score) until false positives stop hurting.\n5. Route `result` into `If/Else Switch`, or `index` / `option_index` into a dispatch rule.\n\n**Cost** is per token, so a short question and one image cost a fraction of a cent. Put the decision *before*\nthe expensive step and put that step on the accepted branch — the rejected branch then costs nothing.\n"
       ],
       "widgets_values_named": {
-        "text": "# Gemini Decision — four decisions in one graph\n\nThe Gemini decision nodes answer a question about text, images, audio or video and hand the answer back as a value\nthe graph can branch on. The same model is exposed four ways; every case below is wired end to end, so copy the\none you need.\n\n- **Case 1 · one image, one verdict** — a yes/no question plus the probability behind it. The cheapest gate you can put in front of an expensive node.\n- **Case 2 · two candidates, one winner** — score both, compare the numbers with a math rule, let a switch pass the winner downstream.\n- **Case 3 · your own options** — classify into a list you write, one option per line.\n- **Case 4 · pick from a batch** — pick the image that matches the prompt, then keep it with `index`.\n\nAll four cases run in one queue. These are API (partner) nodes: sign in with a Comfy account, or set an API key\n(Settings → API Keys → My API Key).\n\n## What the nodes return\n\n| Node | Outputs |\n| --- | --- |\n| **Gemini Decision (Yes/No)** | `result` (BOOLEAN), `answer` (\"yes\"/\"no\"), `probability` (0–1) — flips at the threshold widget, 0.01–0.99 |\n| **Gemini Decision (Choice)** | `choice` (STRING), `option_index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Pick Image)** | `index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Score)** | `result` (BOOLEAN), `score` (1–10) — true when score ≥ threshold, 1–10 |\n\nConnect text (`text`), up to **16 images** (`image_1…image_16`), one or more audio clips (`audio_1…`) and one\nvideo (`video_1`). Name the sockets in the question, e.g. *\"Does image_2 show the same person as image_1?\"* —\nthe model sees those names.\n\n## How to use\n\n1. Sign in, or paste an API key.\n2. Swap the demo images in the `Load Image` nodes, or connect audio / video instead.\n3. Ask one thing per node, and phrase it so **\"yes\"** — or the first option — is the case you act on.\n4. Tune the threshold (0.01–0.99 for yes/no, 1–10 for score) until false positives stop hurting.\n5. Route `result` into `If/Else Switch`, or `index` / `option_index` into a dispatch rule.\n\n**Cost** is per token, so a short question and one image cost a fraction of a cent. Put the decision *before*\nthe expensive step and put that step on the accepted branch — the rejected branch then costs nothing.\n"
+        "text": "# Gemini Decision — four decisions in one graph\n\nThe Gemini decision nodes answer a question about text, images, audio or video and hand the answer back as a value\nthe graph can branch on. The same model is exposed four ways; every case below is wired end to end, so copy the\none you need.\n\n**Input assets (demo):**\n- [cyclist_in_rain_night_street.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/cyclist_in_rain_night_street.png)\n- [ramen_bowl_top_view.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/ramen_bowl_top_view.png)\n- [girl_red_umbrella_station.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/girl_red_umbrella_station.png)\n\n- **Case 1 · one image, one verdict** — a yes/no question plus the probability behind it. The cheapest gate you can put in front of an expensive node.\n- **Case 2 · two candidates, one winner** — score both, compare the numbers with a math rule, let a switch pass the winner downstream.\n- **Case 3 · your own options** — classify into a list you write, one option per line.\n- **Case 4 · pick from a batch** — pick the image that matches the prompt, then keep it with `index`.\n\nAll four cases run in one queue. These are API (partner) nodes: sign in with a Comfy account, or set an API key\n(Settings → API Keys → My API Key).\n\n## What the nodes return\n\n| Node | Outputs |\n| --- | --- |\n| **Gemini Decision (Yes/No)** | `result` (BOOLEAN), `answer` (\"yes\"/\"no\"), `probability` (0–1) — flips at the threshold widget, 0.01–0.99 |\n| **Gemini Decision (Choice)** | `choice` (STRING), `option_index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Pick Image)** | `index` (INT, from 0), `confidence` (0–1) |\n| **Gemini Decision (Score)** | `result` (BOOLEAN), `score` (1–10) — true when score ≥ threshold, 1–10 |\n\nConnect text (`text`), up to **16 images** (`image_1…image_16`), one or more audio clips (`audio_1…`) and one\nvideo (`video_1`). Name the sockets in the question, e.g. *\"Does image_2 show the same person as image_1?\"* —\nthe model sees those names.\n\n## How to use\n\n1. Sign in, or paste an API key.\n2. Swap the demo images in the `Load Image` nodes, or connect audio / video instead.\n3. Ask one thing per node, and phrase it so **\"yes\"** — or the first option — is the case you act on.\n4. Tune the threshold (0.01–0.99 for yes/no, 1–10 for score) until false positives stop hurting.\n5. Route `result` into `If/Else Switch`, or `index` / `option_index` into a dispatch rule.\n\n**Cost** is per token, so a short question and one image cost a fraction of a cent. Put the decision *before*\nthe expensive step and put that step on the accepted branch — the rejected branch then costs nothing.\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -167,11 +167,11 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "api_gemini_decision_input.png",
+        "cyclist_in_rain_night_street.png",
         "image"
       ],
       "widgets_values_named": {
-        "image": "api_gemini_decision_input.png",
+        "image": "cyclist_in_rain_night_street.png",
         "upload": "image"
       }
     },
@@ -396,11 +396,11 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "api_gemini_decision_input_2.png",
+        "ramen_bowl_top_view.png",
         "image"
       ],
       "widgets_values_named": {
-        "image": "api_gemini_decision_input_2.png",
+        "image": "ramen_bowl_top_view.png",
         "upload": "image"
       }
     },
@@ -438,11 +438,11 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "api_gemini_decision_input_3.png",
+        "girl_red_umbrella_station.png",
         "image"
       ],
       "widgets_values_named": {
-        "image": "api_gemini_decision_input_3.png",
+        "image": "girl_red_umbrella_station.png",
         "upload": "image"
       }
     },
@@ -782,11 +782,11 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "api_gemini_decision_input_3.png",
+        "girl_red_umbrella_station.png",
         "image"
       ],
       "widgets_values_named": {
-        "image": "api_gemini_decision_input_3.png",
+        "image": "girl_red_umbrella_station.png",
         "upload": "image"
       }
     },
@@ -1011,11 +1011,11 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "api_gemini_decision_input_2.png",
+        "ramen_bowl_top_view.png",
         "image"
       ],
       "widgets_values_named": {
-        "image": "api_gemini_decision_input_2.png",
+        "image": "ramen_bowl_top_view.png",
         "upload": "image"
       }
     },
@@ -1053,11 +1053,11 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "api_gemini_decision_input_3.png",
+        "girl_red_umbrella_station.png",
         "image"
       ],
       "widgets_values_named": {
-        "image": "api_gemini_decision_input_3.png",
+        "image": "girl_red_umbrella_station.png",
         "upload": "image"
       }
     },
