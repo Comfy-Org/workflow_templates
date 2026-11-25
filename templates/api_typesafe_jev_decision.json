@@ -126,10 +126,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "### Case 4 · pick the winner from a batch\n\n`Load Image ×2 → Image Batch → Jev (Pick Image)` — the node sees the batch, `text` carries what you asked for,\nand `index` says which image won (from 0). `Math Expression` turns that index into a boolean and `If/Else Switch`\nreturns the picked image, so the rest of the graph works on one image instead of a batch.\n\n2 to 32 images. Leave `text` empty to ask \"which is best\" instead of \"which matches\".\n"
+        "### Case 4 · pick the winner from a batch\n\n`Load Image ×2 → Batch Images → Jev (Pick Image)` — the node sees the batch, `text` carries what you asked for,\nand `index` says which image won (from 0). `Math Expression` turns that index into a boolean and `If/Else Switch`\nreturns the picked image, so the rest of the graph works on one image instead of a batch.\n\n2 to 32 images. Leave `text` empty to ask \"which is best\" instead of \"which matches\".\n"
       ],
       "widgets_values_named": {
-        "text": "### Case 4 · pick the winner from a batch\n\n`Load Image ×2 → Image Batch → Jev (Pick Image)` — the node sees the batch, `text` carries what you asked for,\nand `index` says which image won (from 0). `Math Expression` turns that index into a boolean and `If/Else Switch`\nreturns the picked image, so the rest of the graph works on one image instead of a batch.\n\n2 to 32 images. Leave `text` empty to ask \"which is best\" instead of \"which matches\".\n"
+        "text": "### Case 4 · pick the winner from a batch\n\n`Load Image ×2 → Batch Images → Jev (Pick Image)` — the node sees the batch, `text` carries what you asked for,\nand `index` says which image won (from 0). `Math Expression` turns that index into a boolean and `If/Else Switch`\nreturns the picked image, so the rest of the graph works on one image instead of a batch.\n\n2 to 32 images. Leave `text` empty to ask \"which is best\" instead of \"which matches\".\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -1015,28 +1015,35 @@
     },
     {
       "id": 24,
-      "type": "ImageBatch",
+      "type": "BatchImagesNode",
       "pos": [
         1930,
         2730
       ],
       "size": [
-        250,
-        60
+        180,
+        100
       ],
       "flags": {},
       "order": 16,
       "mode": 0,
       "inputs": [
         {
-          "name": "image1",
+          "name": "images.image0",
           "type": "IMAGE",
           "link": 17
         },
         {
-          "name": "image2",
+          "name": "images.image1",
+          "shape": 7,
           "type": "IMAGE",
           "link": 18
+        },
+        {
+          "name": "images.image2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
         }
       ],
       "outputs": [
@@ -1049,7 +1056,7 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "ImageBatch"
+        "Node name for S&R": "BatchImagesNode"
       }
     },
     {

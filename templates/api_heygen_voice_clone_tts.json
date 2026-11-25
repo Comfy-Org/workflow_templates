@@ -1,0 +1,270 @@
+{
+  "id": "2a120bc3-f39e-4185-81e7-859b77f5208b",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 5,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadAudio",
+      "pos": [
+        640,
+        140
+      ],
+      "size": [
+        360,
+        161.9999900032576
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.46.0"
+      },
+      "widgets_values": [
+        "casual_voice_reference.wav",
+        ""
+      ],
+      "widgets_values_named": {
+        "audio": "casual_voice_reference.wav",
+        "upload": ""
+      }
+    },
+    {
+      "id": 2,
+      "type": "HeyGenVoiceCloneTextToSpeechNode",
+      "pos": [
+        1070,
+        140
+      ],
+      "size": [
+        430,
+        440
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.audio",
+          "type": "AUDIO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HeyGenVoiceCloneTextToSpeechNode"
+      },
+      "widgets_values": [
+        "heygen-voice-1",
+        "Record once, clone once. This voice can read any script you write, in English, without another session in front of the microphone.",
+        "auto",
+        0.5,
+        "English",
+        "max",
+        true,
+        42,
+        "fixed",
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "model": "heygen-voice-1",
+        "model.text": "Record once, clone once. This voice can read any script you write, in English, without another session in front of the microphone.",
+        "model.language": "auto",
+        "model.expressiveness_boost": 0.5,
+        "model.recording_language": "English",
+        "model.similarity": "max",
+        "model.remove_background_noise": true,
+        "model.seed": 42,
+        "control_after_generate#1": "fixed",
+        "control_after_generate": "fixed"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        1580,
+        140
+      ],
+      "size": [
+        520,
+        217.99996490478517
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveAudioAdvanced",
+        "cnr_id": "comfy-core",
+        "ver": "0.46.0"
+      },
+      "widgets_values": [
+        "audio/api_heygen_voice_clone_tts",
+        "mp3",
+        "V0"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "audio/api_heygen_voice_clone_tts",
+        "format": "mp3",
+        "format.quality": "V0"
+      }
+    },
+    {
+      "id": 6,
+      "type": "MarkdownNote",
+      "pos": [
+        0,
+        140
+      ],
+      "size": [
+        560,
+        545
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## HeyGen Voice 1.0 Instant Clone Text to Speech\n\nClone a voice from one recording and read a script in it, in a single node: the request clones,\nspeaks and deletes the clone. No voice-lab upload, no separate clone step, no account setup in\nHeyGen, and no clone left behind to occupy the voice slots of our shared workspace.\n\n**Input assets (demo):**\n- [casual_voice_reference.wav](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/casual_voice_reference.wav)\n\n### How to use\n\n1. Sign in with your ComfyUI account. This is an API node and bills per use.\n2. Load a recording of **one** speaker: at least 10 seconds of clear speech. Only the first\n   3 minutes are used, and background noise is stripped when `remove_background_noise` is on.\n3. Write what the voice should say in `text` (up to 5000 characters, about 12 minutes of\n   speech). `language` is the language of the text; set it for closely related languages\n   such as Serbian or Malay, where auto-detection can guess wrong.\n4. `recording_language` is the language spoken in the recording, also `auto` by default.\n5. `expressiveness_boost` runs 0.0 to 1.0. Higher is more animated, lower stays closer to the\n   source voice. 0.5 is the balanced default.\n6. `similarity` says how hard the clone follows the recording: `medium`, `high`, `extra_high`\n   or `max`. `seed` only decides whether the node re-runs; renders are non-deterministic.\n\n### Two engines\n\n`heygen-voice-1` is the quality pass, `heygen-voice-1-turbo` is about 4x cheaper per thousand\ncharacters. The inputs are identical, so switching engines only changes price and speed.\n\n### Recording your own\n\n`Record Audio` sits below the chain, bypassed: record a line in the browser and wire its AUDIO output into the node when you do not want to ship a file.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## HeyGen Voice 1.0 Instant Clone Text to Speech\n\nClone a voice from one recording and read a script in it, in a single node: the request clones,\nspeaks and deletes the clone. No voice-lab upload, no separate clone step, no account setup in\nHeyGen, and no clone left behind to occupy the voice slots of our shared workspace.\n\n**Input assets (demo):**\n- [casual_voice_reference.wav](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/casual_voice_reference.wav)\n\n### How to use\n\n1. Sign in with your ComfyUI account. This is an API node and bills per use.\n2. Load a recording of **one** speaker: at least 10 seconds of clear speech. Only the first\n   3 minutes are used, and background noise is stripped when `remove_background_noise` is on.\n3. Write what the voice should say in `text` (up to 5000 characters, about 12 minutes of\n   speech). `language` is the language of the text; set it for closely related languages\n   such as Serbian or Malay, where auto-detection can guess wrong.\n4. `recording_language` is the language spoken in the recording, also `auto` by default.\n5. `expressiveness_boost` runs 0.0 to 1.0. Higher is more animated, lower stays closer to the\n   source voice. 0.5 is the balanced default.\n6. `similarity` says how hard the clone follows the recording: `medium`, `high`, `extra_high`\n   or `max`. `seed` only decides whether the node re-runs; renders are non-deterministic.\n\n### Two engines\n\n`heygen-voice-1` is the quality pass, `heygen-voice-1-turbo` is about 4x cheaper per thousand\ncharacters. The inputs are identical, so switching engines only changes price and speed.\n\n### Recording your own\n\n`Record Audio` sits below the chain, bypassed: record a line in the browser and wire its AUDIO output into the node when you do not want to ship a file.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 9,
+      "type": "RecordAudio",
+      "pos": [
+        640,
+        790
+      ],
+      "size": [
+        340,
+        140
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RecordAudio"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ],
+      "widgets_values_named": {
+        "audio": "",
+        "audio#1": ""
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "AUDIO"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "AUDIO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Clone the voice, then speak",
+      "bounding": [
+        570,
+        50,
+        1600,
+        620
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Optional · record a line instead",
+      "bounding": [
+        570,
+        730,
+        480,
+        270
+      ],
+      "color": "#444",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7513148009015777,
+      "offset": [
+        308.64348835620194,
+        131.75918919170692
+      ]
+    },
+    "frontendVersion": "1.59.10",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
