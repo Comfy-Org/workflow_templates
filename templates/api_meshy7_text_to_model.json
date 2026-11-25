@@ -286,11 +286,11 @@
         "ver": "0.16.3"
       },
       "widgets_values": [
-        "3d/meshy_text2model",
+        "3d/api_meshy7_text_to_model",
         ""
       ],
       "widgets_values_named": {
-        "filename_prefix": "3d/meshy_text2model",
+        "filename_prefix": "3d/api_meshy7_text_to_model",
         "image": ""
       }
     },
@@ -321,11 +321,11 @@
         "ver": "0.16.3"
       },
       "widgets_values": [
-        "3d/meshy_text2model",
+        "3d/api_meshy7_text_to_model_from_fbx",
         ""
       ],
       "widgets_values_named": {
-        "filename_prefix": "3d/meshy_text2model",
+        "filename_prefix": "3d/api_meshy7_text_to_model_from_fbx",
         "image": ""
       }
     },
@@ -387,7 +387,7 @@
         "auto",
         "",
         1548939181,
-        "randomize",
+        "fixed",
         false,
         "2k"
       ],
@@ -401,7 +401,7 @@
         "symmetry_mode": "auto",
         "pose_mode": "",
         "seed": 1548939181,
-        "control_after_generate": "randomize",
+        "control_after_generate": "fixed",
         "ultra_mode": false,
         "ultra_resolution": "2k"
       },
@@ -440,11 +440,11 @@
         "Node name for S&R": "SaveText"
       },
       "widgets_values": [
-        "ComfyUI",
+        "meshy_model_path_%year%%month%%day%_%hour%%minute%",
         "txt"
       ],
       "widgets_values_named": {
-        "filename_prefix": "ComfyUI",
+        "filename_prefix": "meshy_model_path_%year%%month%%day%_%hour%%minute%",
         "format": "txt"
       }
     },
@@ -467,7 +467,7 @@
       "title": "Note",
       "properties": {},
       "widgets_values": [
-        "## Saved text\n\n`Save Text` writes the path of the generated model to a `.txt`, stamped with the date. Handy when you want to find the file again without digging through `output/`.\n\n## Task id\n\nThe `meshy_task_id` output is what the Meshy toolset nodes take, so you can refine, re-texture or rig the same job later without rebuilding it.\n\n## Output\n\nBoth save nodes write into `ComfyUI/output/3d/`. The preview node can also export the file straight from its viewport."
+        "## Saved text\n\n`Save Text` writes the path of the generated model to a `.txt`, stamped with the date. Handy when you want to find the file again without digging through `output/`.\n\n## Task id\n\nThe `meshy_task_id` output is what the Meshy toolset nodes take, so you can refine, re-texture or rig the same job later without rebuilding it.\n\n## Output\n\nBoth save nodes write into `ComfyUI/output/3d/` — one for the GLB branch, one for the FBX branch."
       ],
       "widgets_values_named": {
         "text": "## Saved text\n\n`Save Text` writes the path of the generated model to a `.txt`, stamped with the date. Handy when you want to find the file again without digging through `output/`.\n\n## Task id\n\nThe `meshy_task_id` output is what the Meshy toolset nodes take, so you can refine, re-texture or rig the same job later without rebuilding it.\n\n## Output\n\nBoth save nodes write into `ComfyUI/output/3d/`. The preview node can also export the file straight from its viewport."
@@ -484,7 +484,7 @@
       ],
       "size": [
         610,
-        1510
+        1345
       ],
       "flags": {},
       "order": 6,
@@ -493,7 +493,7 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Meshy 6: Multi-Image to 3D Model\n\n**Three photos of the same subject in, one textured 3D model out.** Meshy 6 fuses a front, a side and a back view into a single mesh, so the surfaces the camera never sees are inferred from the other views instead of guessed from one image.\n\n**Input assets (demo):**\n- [joker_front.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_front.jpg) — front view, the framing and scale reference (required workflow input).\n- [joker_back.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_back.jpg) — back view, gives the model its rear silhouette (required workflow input).\n- [joker_side.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_side.jpg) — side view, fixes depth and profile (required workflow input).\n\n### What each node does\n\n| Node | Role |\n|---|---|\n| **Load Image** ×3 | Front, back and side reference of the same subject. They feed `images.image0`, `image1` and `image2`; a fourth slot exists but stays empty here. |\n| **Meshy: Multi-Image to Model** | Single API call: fuses the views into one mesh, runs a remesh to a game-ready triangle budget, generates UVs and returns three things — the model `GLB`, an `FBX`, and the `model_file` path of the result on disk. |\n| **Preview 3D & Animation** | Shows the returned file in the viewport and can export it from the node. Deprecated — `Preview 3D (Advanced)` replaces it. |\n| **Save 3D (Advanced)** | Writes the GLB the node returned to the output folder. |\n| **Save GLB** | Writes the FBX branch as GLB. Both save nodes exist to show the two formats; wire the one you need and remove the other. |\n| **Save Text** | Writes the returned file path to a `.txt`, one line, stamped with the date (for example `meshy_model_path_20261125_203113_00001.txt`). |\n| **Meshy Toolset** | Bypassed group of five follow-up calls, driven by the returned task id instead of the file: see below. |\n\n### The Meshy toolset\n\nThe toolset is the same model's follow-up API chain. Every node in it takes a `meshy_task_id`, i.e. the id of an existing Meshy job — it re-uses the geometry instead of generating it again, so refining or re-texturing an old task costs one call rather than a fresh build.\n\n- **Meshy: Refine** — adds PBR maps and a texture prompt to an existing task.\n- **Meshy: Texture** — re-textures with a style prompt or a reference image.\n- **Meshy: Texture N1** — N1 texturing, optionally keeping the original UVs.\n- **Meshy: Rig Model** — turns the mesh into a rigged character, `height_meters` sets the scale.\n- **Meshy: Animate** — animates a rigged task by `action_id`.\n\nThey ship **bypassed** (the whole group is `Ctrl+B`-ready): select the nodes you want and press `Ctrl+B` to enable them, then wire the `meshy_task_id` output of **Multi-Image to Model** (or an id saved earlier) into the node you enabled. Leave them off unless you need a second pass.\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `model` | `meshy-6` is the multi-image model; pick it unless you are deliberately comparing. |\n| `should_remesh` → `topology`, `target_polycount` | Remesh on, `triangle` topology, 300000 triangles. Lower the budget for real-time use. |\n| `symmetry_mode` | `auto` lets the model mirror symmetric parts; set `on`/`off` when the subject is (or is not) symmetric. |\n| `should_texture` → `texture_resolution`, `pbr` | Texture generation and 2K maps; PBR is off by default. |\n| `pose_mode` | `auto` reads the pose from the references. |\n| `seed` | Fixed, so a re-run repeats the same request; the render itself is not bit-identical. |\n| `ultra_mode` | Extra mesh detail for a higher credit cost. |\n\n---\n\n### Limitations\n\n- Billed per run (the node shows the credit cost); follow-up toolset calls are billed separately.\n- Three views of the *same* subject, taken from roughly front, side and back, give the best result; unrelated images are fused into one object.\n- The returned files are already on disk, so both save nodes are optional — they exist to control the name and the folder.\n\n---\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare the input assets.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "## Meshy 7: Text to 3D Model\n\n**One prompt in, one textured 3D model out.** Meshy 7 builds the mesh from the description alone — no reference image — then remeshes it to a game-ready triangle budget and generates UVs and textures in the same call.\n\n### What each node does\n\n| Node | Role |\n|---|---|\n| **Meshy: Text to Model** | The whole generation is this one API call: `prompt` and `style` in, a remeshed and textured model out. It returns the `GLB`, the same model as `FBX`, and `model_file`, the path of the result on disk. |\n| **Save GLB** (upper) | Writes the `GLB` branch to `output/3d/`. |\n| **Save GLB** (lower) | Writes the `FBX` branch, converted to GLB, under its own name so the two files never overwrite each other. |\n| **Save Text** | Writes `model_file` to a `.txt`, stamped with the date — a cheap way to find the output again later. |\n| **Meshy Toolset** | Bypassed group of five follow-up calls driven by `meshy_task_id`: refine, texture, texture N1, rig, animate. |\n\n### The Meshy toolset\n\nThe toolset is the follow-up API chain for a job that already exists. Every node in it takes a `meshy_task_id` and re-uses that job's geometry, so a second pass costs one call instead of a fresh generation.\n\n- **Meshy: Refine** — adds PBR maps and a texture prompt to an existing task.\n- **Meshy: Texture** — re-textures with a style prompt or a reference image.\n- **Meshy: Texture N1** — N1 texturing, optionally keeping the original UVs.\n- **Meshy: Rig Model** — turns the mesh into a rigged character; `height_meters` sets the scale.\n- **Meshy: Animate** — animates a rigged task by `action_id`.\n\nThey ship **bypassed**. Select the nodes you want at the bottom of the canvas and press `Ctrl+B` to enable them, then wire the `meshy_task_id` output of **Text to Model** into the node you enabled.\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `prompt` | What to build. The demo asks for an Anubis statue; describe one object, its materials and its pose. |\n| `model` | `meshy-7` for this graph. |\n| `style` | `realistic` keeps the read of a real object; the stylised options push the shape language instead. |\n| `should_remesh` → `topology`, `target_polycount` | Remesh on, `triangle` topology, 300000 triangles. Lower the budget for real-time use. |\n| `symmetry_mode` | `auto` mirrors parts that look symmetric; force `on`/`off` for asymmetric characters. |\n| `pose_mode` | Empty means natural pose. A t-pose in the prompt is the usual trick when the model will be rigged. |\n| `seed` | Fixed, so a re-run repeats the request; the result itself is not bit-identical. |\n| `ultra_mode` → `ultra_resolution` | Extra detail at a higher credit cost, `2k` maps. |\n\n---\n\n### Limitations\n\n- Billed per run (the node shows the credit cost); toolset follow-ups are billed separately.\n- The prompt is the only input — the model cannot see a reference image, so describe silhouette and materials rather than relying on a look you know.\n- One object per run: asking for a scene usually fuses the parts into a single mesh.\n- The saved files are copies; the API already returned them, so the save nodes are there to control name and folder.\n\n---\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)).\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       ],
       "widgets_values_named": {
         "text": "## Meshy 6: Multi-Image to 3D Model\n\n**Three photos of the same subject in, one textured 3D model out.** Meshy 6 fuses a front, a side and a back view into a single mesh, so the surfaces the camera never sees are inferred from the other views instead of guessed from one image.\n\n**Input assets (demo):**\n- [joker_front.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_front.jpg) — front view, the framing and scale reference (required workflow input).\n- [joker_back.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_back.jpg) — back view, gives the model its rear silhouette (required workflow input).\n- [joker_side.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/joker_side.jpg) — side view, fixes depth and profile (required workflow input).\n\n### What each node does\n\n| Node | Role |\n|---|---|\n| **Load Image** ×3 | Front, back and side reference of the same subject. They feed `images.image0`, `image1` and `image2`; a fourth slot exists but stays empty here. |\n| **Meshy: Multi-Image to Model** | Single API call: fuses the views into one mesh, runs a remesh to a game-ready triangle budget, generates UVs and returns three things — the model `GLB`, an `FBX`, and the `model_file` path of the result on disk. |\n| **Preview 3D & Animation** | Shows the returned file in the viewport and can export it from the node. Deprecated — `Preview 3D (Advanced)` replaces it. |\n| **Save 3D (Advanced)** | Writes the GLB the node returned to the output folder. |\n| **Save GLB** | Writes the FBX branch as GLB. Both save nodes exist to show the two formats; wire the one you need and remove the other. |\n| **Save Text** | Writes the returned file path to a `.txt`, one line, stamped with the date (for example `meshy_model_path_20261125_203113_00001.txt`). |\n| **Meshy Toolset** | Bypassed group of five follow-up calls, driven by the returned task id instead of the file: see below. |\n\n### The Meshy toolset\n\nThe toolset is the same model's follow-up API chain. Every node in it takes a `meshy_task_id`, i.e. the id of an existing Meshy job — it re-uses the geometry instead of generating it again, so refining or re-texturing an old task costs one call rather than a fresh build.\n\n- **Meshy: Refine** — adds PBR maps and a texture prompt to an existing task.\n- **Meshy: Texture** — re-textures with a style prompt or a reference image.\n- **Meshy: Texture N1** — N1 texturing, optionally keeping the original UVs.\n- **Meshy: Rig Model** — turns the mesh into a rigged character, `height_meters` sets the scale.\n- **Meshy: Animate** — animates a rigged task by `action_id`.\n\nThey ship **bypassed** (the whole group is `Ctrl+B`-ready): select the nodes you want and press `Ctrl+B` to enable them, then wire the `meshy_task_id` output of **Multi-Image to Model** (or an id saved earlier) into the node you enabled. Leave them off unless you need a second pass.\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `model` | `meshy-6` is the multi-image model; pick it unless you are deliberately comparing. |\n| `should_remesh` → `topology`, `target_polycount` | Remesh on, `triangle` topology, 300000 triangles. Lower the budget for real-time use. |\n| `symmetry_mode` | `auto` lets the model mirror symmetric parts; set `on`/`off` when the subject is (or is not) symmetric. |\n| `should_texture` → `texture_resolution`, `pbr` | Texture generation and 2K maps; PBR is off by default. |\n| `pose_mode` | `auto` reads the pose from the references. |\n| `seed` | Fixed, so a re-run repeats the same request; the render itself is not bit-identical. |\n| `ultra_mode` | Extra mesh detail for a higher credit cost. |\n\n---\n\n### Limitations\n\n- Billed per run (the node shows the credit cost); follow-up toolset calls are billed separately.\n- Three views of the *same* subject, taken from roughly front, side and back, give the best result; unrelated images are fused into one object.\n- The returned files are already on disk, so both save nodes are optional — they exist to control the name and the folder.\n\n---\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare the input assets.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
@@ -594,14 +594,14 @@
   "groups": [
     {
       "id": 1,
-      "title": "Meshy Toolset (select and ctrl-b to enable)",
+      "title": "Meshy Toolset",
       "bounding": [
         -1610,
         870,
         590,
         1410
       ],
-      "color": "#3f789e",
+      "color": "#444",
       "flags": {}
     }
   ],
