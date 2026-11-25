@@ -254,7 +254,7 @@
       {
         "name": "api_nano_banana_2_1_emoji_pack",
         "title": "Nano Banana 2.1：表情包",
-        "description": "把一张角色照片变成会动的聊天表情。Nano Banana 2.1 一次绘制出该角色同一个表情的 4x2 像素风精灵图，8 个动画节拍各占一格；核心节点再把网格切成 8 帧，合成一个 128x128、8 fps 的动态 WebP。改动提示词里的三个短语即可换表情——挥手打招呼、跳舞、点赞、扶额、疯狂打字、脑洞爆炸、大哭、笑到打滚。精灵图以纯洋红背景返回，可自行抠色；也可以启用可选的 BiRefNet 组，直接在图中拿到透明通道。这是 Comfy Emojinius 表情生成器的 ComfyUI 复刻版。",
+        "description": "选一个表情、丢进一张角色照片，就得到一个透明背景的 128x128 动态聊天表情：Nano Banana 2.1 一次调用画出该表情的 4x2 像素风精灵图，「Split Image into List of Tiles + Rebatch Images」把它变成 8 fps 的 8 帧循环，卡片里的 BiRefNet 再把纯洋红底色抠掉，出图即透明，不用另外抠色。列表里内置八个表情——挥手、跳舞、点赞、扶额、疯狂打字、脑洞爆炸、大哭、笑到打滚；复制这张卡就能一次跑多个，每个一次 API 调用。换角色只换照片、不用改提示词。这是 Comfy Emojinius 表情生成器的 ComfyUI 复刻版。",
         "mediaType": "image",
         "mediaSubtype": "webp",
         "tags": ["API","图像","角色参考"],
@@ -277,14 +277,6 @@
               "nodeId": 1,
               "nodeType": "LoadImage",
               "file": "emoji_pack_character.png",
-              "mediaType": "image"
-            }
-          ],
-          "outputs": [
-            {
-              "nodeId": 14,
-              "nodeType": "SaveAnimatedWEBP",
-              "file": "api_nano_banana_2_1_emoji_pack.webp",
               "mediaType": "image"
             }
           ]
