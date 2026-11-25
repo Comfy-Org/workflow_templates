@@ -1,113 +1,9 @@
 {
   "id": "083c898c-0a6e-4f9a-b9c1-7e8ce36506da",
   "revision": 0,
-  "last_node_id": 19,
-  "last_link_id": 15,
+  "last_node_id": 21,
+  "last_link_id": 19,
   "nodes": [
-    {
-      "id": 4,
-      "type": "OpenAIChatConfig",
-      "pos": [
-        -6240,
-        2510
-      ],
-      "size": [
-        390,
-        230
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "properties": {
-        "Node name for S&R": "OpenAIChatConfig",
-        "cnr_id": "comfy-core",
-        "ver": "0.20.1"
-      },
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "OPENAI_CHAT_CONFIG",
-          "type": "OPENAI_CHAT_CONFIG",
-          "links": [
-            3
-          ]
-        }
-      ],
-      "widgets_values": [
-        "auto",
-        4096,
-        "You are an AI specialized in image-to-text prompt generation. Analyze the given image carefully and describe it in a detailed, structured, and prompt-friendly format. Include elements such as subject, clothing, style, environment, lighting, composition, color palette, mood, camera angle, and any other relevant visual details. Your output should resemble a high-quality text-to-image prompt that can help recreate the image. Use concise, descriptive language. Do not include explanations, just output the prompt.",
-        "default"
-      ],
-      "widgets_values_named": {
-        "truncation": "auto",
-        "max_output_tokens": 4096,
-        "instructions": "You are an AI specialized in image-to-text prompt generation. Analyze the given image carefully and describe it in a detailed, structured, and prompt-friendly format. Include elements such as subject, clothing, style, environment, lighting, composition, color palette, mood, camera angle, and any other relevant visual details. Your output should resemble a high-quality text-to-image prompt that can help recreate the image. Use concise, descriptive language. Do not include explanations, just output the prompt.",
-        "reasoning_effort": "default"
-      }
-    },
-    {
-      "id": 3,
-      "type": "OpenAIChatNode",
-      "pos": [
-        -5810,
-        2080
-      ],
-      "size": [
-        400,
-        580
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "showAdvanced": false,
-      "properties": {
-        "Node name for S&R": "OpenAIChatNode",
-        "cnr_id": "comfy-core",
-        "ver": "0.20.1"
-      },
-      "inputs": [
-        {
-          "name": "images",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 4
-        },
-        {
-          "name": "files",
-          "shape": 7,
-          "type": "OPENAI_INPUT_FILES",
-          "link": null
-        },
-        {
-          "name": "advanced_options",
-          "shape": 7,
-          "type": "OPENAI_CHAT_CONFIG",
-          "link": 3
-        }
-      ],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": [
-            15
-          ]
-        }
-      ],
-      "widgets_values": [
-        "Describe this image",
-        false,
-        "gpt-5.6-sol"
-      ],
-      "widgets_values_named": {
-        "prompt": "Describe this image",
-        "persist_context": false,
-        "model": "gpt-5.6-sol"
-      },
-      "color": "#432",
-      "bgcolor": "#653"
-    },
     {
       "id": 5,
       "type": "LoadImage",
@@ -120,20 +16,15 @@
         370
       ],
       "flags": {},
-      "order": 1,
+      "order": 0,
       "mode": 0,
-      "properties": {
-        "Node name for S&R": "LoadImage",
-        "cnr_id": "comfy-core",
-        "ver": "0.20.1"
-      },
       "inputs": [],
       "outputs": [
         {
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            4
+            16
           ]
         },
         {
@@ -142,6 +33,11 @@
           "links": null
         }
       ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.20.1"
+      },
       "widgets_values": [
         "example.png",
         "image"
@@ -155,7 +51,7 @@
       "id": 19,
       "type": "SaveText",
       "pos": [
-        -5370,
+        -5384,
         2080
       ],
       "size": [
@@ -165,14 +61,11 @@
       "flags": {},
       "order": 3,
       "mode": 0,
-      "properties": {
-        "Node name for S&R": "SaveText"
-      },
       "inputs": [
         {
           "name": "text",
           "type": "STRING",
-          "link": 15
+          "link": 19
         }
       ],
       "outputs": [
@@ -182,6 +75,9 @@
           "links": null
         }
       ],
+      "properties": {
+        "Node name for S&R": "SaveText"
+      },
       "widgets_values": [
         "Text/GPT",
         "txt"
@@ -190,45 +86,155 @@
         "filename_prefix": "Text/GPT",
         "format": "txt"
       }
+    },
+    {
+      "id": 20,
+      "type": "OpenAIChatNodeV2",
+      "pos": [
+        -5822,
+        2080
+      ],
+      "size": [
+        400,
+        302
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [
+        {
+          "name": "model.images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 16
+        },
+        {
+          "name": "model.images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model.system_prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "model.system_prompt"
+          },
+          "link": 17
+        },
+        {
+          "name": "model.files",
+          "shape": 7,
+          "type": "OPENAI_INPUT_FILES",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "OpenAIChatNodeV2"
+      },
+      "widgets_values": [
+        "gpt-6.2-sol",
+        "Describe this image",
+        "medium",
+        32768,
+        42,
+        "randomize",
+        ""
+      ],
+      "widgets_values_named": {
+        "model": "gpt-6.2-sol",
+        "model.prompt": "Describe this image",
+        "model.reasoning_effort": "medium",
+        "model.max_output_tokens": 32768,
+        "model.seed": 42,
+        "control_after_generate": "randomize",
+        "model.system_prompt": ""
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 21,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -6240,
+        2510
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "You are an AI specialized in image-to-text prompt generation. Analyze the given image carefully and describe it in a detailed, structured, and prompt-friendly format. Include elements such as subject, clothing, style, environment, lighting, composition, color palette, mood, camera angle, and any other relevant visual details. Your output should resemble a high-quality text-to-image prompt that can help recreate the image. Use concise, descriptive language. Do not include explanations, just output the prompt."
+      ],
+      "widgets_values_named": {
+        "value": "You are an AI specialized in image-to-text prompt generation. Analyze the given image carefully and describe it in a detailed, structured, and prompt-friendly format. Include elements such as subject, clothing, style, environment, lighting, composition, color palette, mood, camera angle, and any other relevant visual details. Your output should resemble a high-quality text-to-image prompt that can help recreate the image. Use concise, descriptive language. Do not include explanations, just output the prompt."
+      }
     }
   ],
   "links": [
     [
-      15,
-      3,
-      0,
-      19,
-      0,
-      "STRING"
-    ],
-    [
-      4,
+      16,
       5,
       0,
-      3,
+      20,
       0,
       "IMAGE"
     ],
     [
-      3,
-      4,
+      17,
+      21,
       0,
-      3,
+      20,
       2,
-      "OPENAI_CHAT_CONFIG"
+      "STRING"
+    ],
+    [
+      19,
+      20,
+      0,
+      19,
+      0,
+      "STRING"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.620921323059155,
+      "scale": 0.5131581182307069,
       "offset": [
-        7026.70373082935,
-        -1638.9863745138896
+        7866.892691734433,
+        -1594.5647175853767
       ]
     },
-    "frontendVersion": "1.61.8",
+    "frontendVersion": "1.59.10",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
