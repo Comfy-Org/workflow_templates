@@ -5,6 +5,7 @@ Validate workflow templates index.json against schema and check file consistency
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
@@ -19,7 +20,10 @@ _lib_dir = Path(__file__).resolve().parent.parent / "lib"
 if str(_lib_dir) not in sys.path:
     sys.path.insert(0, str(_lib_dir))
 
-from locale_index_files import TEMPLATES_NON_WORKFLOW_FILES  # noqa: E402
+from locale_index_files import (  # noqa: E402
+    LANGUAGE_FILES,
+    TEMPLATES_NON_WORKFLOW_FILES,
+)
 
 
 def load_json(file_path: Path) -> Dict:
@@ -98,11 +102,13 @@ def check_file_consistency(index_data: List[Dict], templates_dir: Path) -> Tuple
     workflow_files = {f for f in all_files if f.endswith('.json')}
     media_files = all_files - workflow_files
     
-    # Check for orphaned workflows
-    orphaned_workflows = workflow_files - referenced_workflows
-    for orphan in orphaned_workflows:
-        warnings.append(f"Workflow file not referenced in index.json: {orphan}")
-    
+    # Check for orphaned workflows.
+    # An error, not a warning: `/templates/<name>.json` is served from this
+    # directory while the browser lists only what index.json names, so an
+    # unindexed workflow file is loadable by name and invisible in the UI.
+    for orphan in sorted(workflow_files - referenced_workflows):
+        errors.append(f"Workflow file not referenced in index.json: {orphan}")
+
     # Check for orphaned media files
     # For media files, we need to check if they match the pattern name-N.ext
     potential_orphans = []
@@ -121,6 +127,59 @@ def check_file_consistency(index_data: List[Dict], templates_dir: Path) -> Tuple
         warnings.append(f"Media file not referenced in index.json: {orphan}")
     
     return len(errors) == 0, errors, warnings
+
+
+def template_names(index_data: List[Dict]) -> Set[str]:
+    """Template names an index file advertises, across all of its categories."""
+    return {
+        template['name']
+        for category in index_data
+        for template in category.get('templates', [])
+        if template.get('name')
+    }
+
+
+def check_index_parity(main_index_data: List[Dict], templates_dir: Path) -> Tuple[bool, List[str]]:
+    """Check that every served index names the same templates as index.json.
+
+    `index.json` is not the only catalog shipped from this directory. The
+    frontend serves `index.<locale>.json` to non-English clients and the
+    agent/MCP surface reads `index.mcp.json`, so a name set that drifts from
+    `index.json` makes a template reachable on one surface and invisible on
+    another even though the workflow file itself is served fine.
+
+    A locale index must match `index.json` exactly — it is the same catalog
+    with translated copy. `index.mcp.json` is a deliberate subset (its sync
+    skips instructional categories), so only names it adds are an error.
+    """
+    errors = []
+    main_names = template_names(main_index_data)
+
+    for locale_file in sorted(LANGUAGE_FILES.values()):
+        locale_path = templates_dir / locale_file
+        if not locale_path.exists():
+            continue
+        try:
+            locale_names = template_names(load_json(locale_path))
+        except Exception as e:
+            errors.append(f"{locale_file}: failed to load - {e}")
+            continue
+        for name in sorted(main_names - locale_names):
+            errors.append(f"{locale_file}: template in index.json is missing: {name}")
+        for name in sorted(locale_names - main_names):
+            errors.append(f"{locale_file}: template is not in index.json: {name}")
+
+    mcp_path = templates_dir / 'index.mcp.json'
+    if mcp_path.exists():
+        try:
+            mcp_names = template_names(load_json(mcp_path))
+        except Exception as e:
+            errors.append(f"index.mcp.json: failed to load - {e}")
+        else:
+            for name in sorted(mcp_names - main_names):
+                errors.append(f"index.mcp.json: template is not in index.json: {name}")
+
+    return len(errors) == 0, errors
 
 
 def check_duplicate_names(index_data: List[Dict]) -> Tuple[bool, List[str]]:
@@ -356,15 +415,33 @@ def _is_node_id(value) -> bool:
 
 
 def _is_slot_index(value) -> bool:
-    """zSlotIndex: int, or string parseable as int."""
+    """zSlotIndex: int, or a string parseInt can turn into a number.
+
+    Mirrors the frontend exactly:
+
+        const zSlotIndex = z.union([
+          z.number().int(),
+          z.string().transform((v) => parseInt(v)).refine((v) => !isNaN(v))
+        ])
+
+    Two consequences worth knowing:
+    - ``slot_index`` is declared ``zSlotIndex.optional()`` (no ``.nullable()``),
+      so a stored ``null`` fails validateComfyWorkflow and the template silently
+      falls back to the legacy loader. Omit the key instead - the slot index is
+      derived from array position.
+    - ``parseInt`` stops at the first non-digit, so ``"3.7"`` and ``"3abc"`` are
+      valid (2/3), while ``"abc"`` and ``""`` are not. We match that on purpose:
+      a checker stricter than the frontend would block templates the frontend
+      happily loads.
+    """
+    if isinstance(value, bool):  # bool is an int subclass; z.number() rejects it
+        return False
     if isinstance(value, int):
         return True
+    if isinstance(value, float):
+        return value.is_integer()  # z.number().int()
     if isinstance(value, str):
-        try:
-            int(value)
-            return True
-        except ValueError:
-            return False
+        return re.match(r"\s*[+-]?\d", value) is not None
     return False
 
 
@@ -395,6 +472,11 @@ def _validate_node_output(output: dict, path: str) -> List[str]:
     links = output.get('links')
     if links is not None and not isinstance(links, list):
         errors.append(f"{path}.links: expected array or null")
+    if 'slot_index' in output and not _is_slot_index(output['slot_index']):
+        errors.append(
+            f"{path}.slot_index: expected int or parseable string, got "
+            f"{type(output['slot_index']).__name__} (omit the key instead of null)"
+        )
     return errors
 
 
@@ -404,6 +486,11 @@ def _validate_node_input(inp: dict, path: str) -> List[str]:
         errors.append(f"{path}.name: expected string")
     if 'type' in inp and not _is_data_type(inp['type']):
         errors.append(f"{path}.type: invalid data type value")
+    if 'slot_index' in inp and not _is_slot_index(inp['slot_index']):
+        errors.append(
+            f"{path}.slot_index: expected int or parseable string, got "
+            f"{type(inp['slot_index']).__name__} (omit the key instead of null)"
+        )
     return errors
 
 
@@ -477,6 +564,27 @@ def _validate_comfy_link(link, path: str) -> List[str]:
     return errors
 
 
+def _validate_comfy_link_object(link: dict, path: str) -> List[str]:
+    """zComfyLinkObject: subgraph definitions store links as objects, not tuples."""
+    errors = []
+    if not isinstance(link.get('id'), (int, float)):
+        errors.append(f"{path}.id: expected number")
+    if not _is_node_id(link.get('origin_id')):
+        errors.append(f"{path}.origin_id: expected int or string")
+    if not _is_slot_index(link.get('origin_slot')):
+        errors.append(f"{path}.origin_slot: expected int or parseInt-able string")
+    if not _is_node_id(link.get('target_id')):
+        errors.append(f"{path}.target_id: expected int or string")
+    if not _is_slot_index(link.get('target_slot')):
+        errors.append(f"{path}.target_slot: expected int or parseInt-able string")
+    if not _is_data_type(link.get('type')):
+        errors.append(f"{path}.type: invalid data type")
+    parent = link.get('parentId')
+    if parent is not None and not isinstance(parent, (int, float)):
+        errors.append(f"{path}.parentId: expected number")
+    return errors
+
+
 def _validate_groups(groups, path: str) -> List[str]:
     """Validate a groups array (used at top-level and inside subgraphs)."""
     errors = []
@@ -546,9 +654,45 @@ def _validate_workflow_04(data: dict, template_name: str) -> List[str]:
         if not isinstance(sg, dict):
             continue
         sg_id = sg.get('id', f'subgraph-{idx}')
+        sg_path = f"{p}: definitions.subgraphs[{sg_id}]"
         sg_groups = sg.get('groups')
         if sg_groups is not None:
-            errors.extend(_validate_groups(sg_groups, f"{p}: definitions.subgraphs[{sg_id}]"))
+            errors.extend(_validate_groups(sg_groups, sg_path))
+
+        # Subgraph definitions carry their own links array, and the frontend
+        # validates it with the same zComfyLink tuple (zSlotIndex on slots 2/4).
+        sg_links = sg.get('links')
+        if sg_links is not None:
+            if not isinstance(sg_links, list):
+                errors.append(f"{sg_path}.links: expected array")
+            else:
+                for li, link in enumerate(sg_links):
+                    link_path = f"{sg_path}.links[{li}]"
+                    if isinstance(link, dict):
+                        errors.extend(_validate_comfy_link_object(link, link_path))
+                    else:
+                        errors.extend(_validate_comfy_link(link, link_path))
+
+        # Subgraph nodes are validated by the same Zod schema as top-level
+        # nodes (definitions.subgraphs[].nodes[].outputs[].slot_index, ...),
+        # so their slots must be checked too.
+        sg_nodes = sg.get('nodes')
+        if not isinstance(sg_nodes, list):
+            continue
+        for ni, sg_node in enumerate(sg_nodes):
+            if not isinstance(sg_node, dict):
+                continue
+            node_path = f"{sg_path}.nodes[{ni}]"
+            sg_outputs = sg_node.get('outputs')
+            if isinstance(sg_outputs, list):
+                for oi, out in enumerate(sg_outputs):
+                    if isinstance(out, dict):
+                        errors.extend(_validate_node_output(out, f"{node_path}.outputs[{oi}]"))
+            sg_inputs = sg_node.get('inputs')
+            if isinstance(sg_inputs, list):
+                for ii, inp in enumerate(sg_inputs):
+                    if isinstance(inp, dict):
+                        errors.extend(_validate_node_input(inp, f"{node_path}.inputs[{ii}]"))
 
     return errors
 
@@ -675,7 +819,15 @@ def main():
     all_errors.extend(errors)
     all_warnings.extend(warnings)
     
-    print("\n3️⃣  Checking for duplicate names...")
+    print("\n3️⃣  Checking index parity across locales and the MCP index...")
+    valid, errors = check_index_parity(main_index_data, templates_dir)
+    if valid:
+        print("   ✅ All served indexes agree with index.json")
+    else:
+        print("   ❌ A served index drifts from index.json")
+        all_errors.extend(errors)
+
+    print("\n4️⃣  Checking for duplicate names...")
     valid, errors = check_duplicate_names(main_index_data)
     if valid:
         print("   ✅ No duplicate names found")
@@ -683,7 +835,7 @@ def main():
         print("   ❌ Duplicate names found")
         all_errors.extend(errors)
     
-    print("\n4️⃣  Checking required thumbnails...")
+    print("\n5️⃣  Checking required thumbnails...")
     valid, errors = check_required_thumbnails(main_index_data, templates_dir)
     if valid:
         print("   ✅ All templates have thumbnails")
@@ -691,7 +843,7 @@ def main():
         print("   ❌ Missing thumbnails")
         all_errors.extend(errors)
     
-    print("\n5️⃣  Checking model metadata format...")
+    print("\n6️⃣  Checking model metadata format...")
     valid, errors = check_model_metadata_format(main_index_data, templates_dir)
     if valid:
         print("   ✅ All templates use correct model metadata format")
@@ -699,7 +851,7 @@ def main():
         print("   ❌ Templates using deprecated top-level models format found")
         all_errors.extend(errors)
     
-    print("\n6️⃣  Checking logo references...")
+    print("\n7️⃣  Checking logo references...")
     valid, errors = check_logo_references(main_index_data, templates_dir)
     if valid:
         print("   ✅ All logo provider references are valid")
@@ -707,7 +859,7 @@ def main():
         print("   ❌ Invalid logo references found")
         all_errors.extend(errors)
 
-    print("\n7️⃣  Validating workflow JSON structure (ComfyUI 0.4 schema)...")
+    print("\n8️⃣  Validating workflow JSON structure (ComfyUI 0.4 schema)...")
     valid, errors = check_workflow_schema(main_index_data, templates_dir)
     if valid:
         print("   ✅ All workflow files pass schema validation")

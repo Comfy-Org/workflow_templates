@@ -120,6 +120,48 @@
         "size": 66571993088
       },
       {
+        "name": "image_minimax_h3_image_character_swap",
+        "title": "MiniMax-H3-Image：角色替换",
+        "description": "把照片里的人换成参考图中的角色。适配器把照片当作 <Picture 1>、把角色图当作 <Picture 2>，保留原片的姿势、构图与光线，并沿用参考角色的面部、服装与材质。基于 MiniMax-H3-Image，配合 h3_image_character_swap_v1 LoRA（强度 1.0）。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["图像","图片编辑","角色替换"],
+        "models": ["MiniMax H3 Image"],
+        "minComfyUIVersion": "0.45.0",
+        "date": "2026-11-22",
+        "openSource": true,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 45,
+              "nodeType": "LoadImage",
+              "file": "h3_char_swap_source.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 64,
+              "nodeType": "LoadImage",
+              "file": "h3_char_swap_reference.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 9,
+              "nodeType": "SaveImage",
+              "file": "image_minimax_h3_image_character_swap.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "size": 66679367270,
+        "thumbnailVariant": "compareSlider",
+        "thumbnail": ["input/h3_char_swap_source.png","output/image_minimax_h3_image_character_swap.png"]
+      },
+      {
         "name": "image_minimax_h3_image_t2i",
         "title": "MiniMax-H3-Image：文生图",
         "description": "使用开源权重的 MiniMax-H3-Image，根据文本提示生成写实或平面设计风格的图像。单个检查点同时支持文生图与图像编辑，采样蒸馏为 6 步且不使用 CFG，原生输出约 1600 万像素；可选的提示词扩展器会把简短请求扩展为模型最容易读懂的详细描述。",
@@ -305,6 +347,68 @@
         "minComfyUIVersion": "0.44.0",
         "username": "ComfyUI",
         "thumbnailVariant": "compareSlider"
+      },
+      {
+        "name": "image_sensenova_u16_image_edit",
+        "title": "SenseNova U1.6：图像编辑",
+        "description": "用 SenseNova-U1.6 编辑照片：把原图作为参考附件、用一句话描述要改的地方，同一个 8B 多模态主干先读懂原图再改写，按原图分辨率返回结果，交付前还会自校正一遍、对照提示词复查。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["图片编辑","Int8"],
+        "models": ["SenseNova U1.6"],
+        "minComfyUIVersion": "0.46.0",
+        "date": "2026-11-23",
+        "openSource": true,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 79,
+              "nodeType": "LoadImage",
+              "file": "sensenova_u16_edit_women_in_car.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 24,
+              "nodeType": "SaveImage",
+              "file": "image_sensenova_u16_image_edit.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "thumbnail": ["input/sensenova_u16_edit_women_in_car.png","output/image_sensenova_u16_image_edit.png"],
+        "size": 29420525978
+      },
+      {
+        "name": "image_sensenova_u16_t2i",
+        "title": "SenseNova U1.6：文生图",
+        "description": "用 SenseNova-U1.6 把文字描述变成成图：8B 多模态主干同时负责理解与生成，读取提示词、补全画面细节，按所选画幅输出 4 百万像素图像，返回前会自校正一遍、对照提示词复查。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["文生图","Int8"],
+        "models": ["SenseNova U1.6"],
+        "minComfyUIVersion": "0.46.0",
+        "date": "2026-11-23",
+        "openSource": true,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "outputs": [
+            {
+              "nodeId": 24,
+              "nodeType": "SaveImage",
+              "file": "image_sensenova_u16_t2i.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "thumbnail": ["output/image_sensenova_u16_t2i.png"]
       },
       {
         "name": "image_p_h3_t2i",
@@ -7448,7 +7552,8 @@
             }
           ]
         },
-        "minComfyUIVersion": "0.46.0"
+        "minComfyUIVersion": "0.46.0",
+        "thumbnail": ["input/withered_hydrangeas_still_life_vintage_lit.png","output/utility_rmbg3_remove_background.png"]
       },
       {
         "name": "template_qwen_multiangle.app",
@@ -10450,7 +10555,8 @@
               "mediaType": "video"
             }
           ]
-        }
+        },
+        "thumbnail": ["output/api_heygen_avatar_6_i2v.mp4"]
       },
       {
         "name": "api_heygen_avatar_6_id2v",
@@ -21051,7 +21157,17 @@
         "usage": 17,
         "searchRank": 0,
         "username": "ComfyUI",
-        "minComfyUIVersion": "0.16.4"
+        "minComfyUIVersion": "0.16.4",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 1,
+              "nodeType": "Load3D",
+              "file": "toy.glb",
+              "mediaType": "3d"
+            }
+          ]
+        }
       },
       {
         "name": "templates_shane_single_image_to_3d_model",
@@ -21650,7 +21766,17 @@
         "usage": 12,
         "searchRank": 0,
         "username": "shane",
-        "minComfyUIVersion": "0.16.4"
+        "minComfyUIVersion": "0.16.4",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 265,
+              "nodeType": "Load3D",
+              "file": "toy.glb",
+              "mediaType": "3d"
+            }
+          ]
+        }
       },
       {
         "name": "api_hunyuan3d_text_to_model",
@@ -21685,7 +21811,17 @@
         "usage": 12,
         "searchRank": 0,
         "username": "ComfyUI",
-        "minComfyUIVersion": "0.14.0"
+        "minComfyUIVersion": "0.14.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 36,
+              "nodeType": "Load3D",
+              "file": "motor_cycle.fbx",
+              "mediaType": "3d"
+            }
+          ]
+        }
       },
       {
         "name": "api_hunyuan3d_model2uv",
@@ -21708,7 +21844,17 @@
         "searchRank": 0,
         "username": "ComfyUI",
         "thumbnail": ["thumbnail/api_hunyuan3d_model2uv-1.png","thumbnail/api_hunyuan3d_model2uv-2.png"],
-        "minComfyUIVersion": "0.14.0"
+        "minComfyUIVersion": "0.14.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 13,
+              "nodeType": "Load3D",
+              "file": "toy.glb",
+              "mediaType": "3d"
+            }
+          ]
+        }
       },
       {
         "name": "api_tripo_p1_text_to_model",
@@ -21846,6 +21992,66 @@
         },
         "thumbnail": ["output/api_patina_material_extract.png"],
         "minComfyUIVersion": "0.43.1"
+      },
+      {
+        "name": "3d_ultratex_texture_3d_model",
+        "title": "UltraTex：3D 模型贴图",
+        "description": "用一张参考图为未贴图的模型生成 PBR 贴图。UltraTex 先把网格渲染成六张世界法线视图，再用两个 UltraTex LoRA 在 FLUX.2 Klein 9B 上分别生成反照率与金属度/粗糙度，最后烘焙到网格 UV 上，导出带 PNG 贴图的 PBR GLB。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["3D","3D 贴图"],
+        "models": ["UltraTex","FLUX.2 Klein"],
+        "date": "2026-11-22",
+        "openSource": true,
+        "size": 13207024435,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 14,
+              "nodeType": "LoadImage",
+              "file": "sir_frog.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 234,
+              "nodeType": "Load3DAdvanced",
+              "file": "sir_frog.obj",
+              "mediaType": "3d"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 81,
+              "nodeType": "SaveGLB",
+              "file": "3d/ultratex_texture_3d_model.glb",
+              "mediaType": "3d"
+            },
+            {
+              "nodeId": 228,
+              "nodeType": "SaveImageAdvanced",
+              "file": "3d/ultratex_texture_3d_model_albedo.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 230,
+              "nodeType": "SaveImageAdvanced",
+              "file": "3d/ultratex_texture_3d_model_roughness.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 231,
+              "nodeType": "SaveImageAdvanced",
+              "file": "3d/ultratex_texture_3d_model_metallic.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.46.0",
+        "thumbnailVariant": "compareSlider",
+        "thumbnail": ["thumbnail/3d_ultratex_texture_3d_model-1.mp4","thumbnail/3d_ultratex_texture_3d_model-2.mp4"]
       }
     ]
   },
