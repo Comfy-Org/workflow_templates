@@ -1,0 +1,547 @@
+{
+  "id": "8f1c2d64-3a71-4b8e-9c05-6d2f7a91b3ee",
+  "revision": 0,
+  "last_node_id": 10,
+  "last_link_id": 10,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        520,
+        730
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "color": "#222",
+      "bgcolor": "#000",
+      "properties": {},
+      "widgets_values": [
+        "## Text to Image (SenseNova U1.5)\n\n**Input Assets**\n- none — this template starts from text.\n\nOne English caption in, one image out. U1.5 ships as a single 8B checkpoint: `Checkpoint Loader` returns MODEL, CLIP and VAE together, so there is no separate text encoder or VAE to pick.\n\n1. **Checkpoint Loader** — `SenseNova-U1.5-8B-MoT-BF16-T8.safetensors` from `models/checkpoints/`.\n2. **SenseNova Sampling Options** — `shift` 3.0, the official default.\n3. **CLIP Text Encode** — your caption; leave the negative empty, it encodes the unconditional prompt.\n4. **Empty HiDream O1 Latent Image** — pixel space, so width/height are the final pixel size.\n5. **KSampler** — 50 steps, CFG 4, `euler` / `normal`, denoise 1: the upstream reference settings.\n\nWrite captions the way the model was trained: one sentence, comma-separated attributes, medium last, and quote verbatim any text you want rendered. For dense layouts (posters, infographics) upstream suggests running the brief through its Image PE first — see the cookbook link in the next note.\n\n**Faster runs**: `Lora Loader Model Only` + `SenseNova-U1.5-8B-MoT-LoRA-8step-ComfyUI.safetensors` (strength 1), then 8 steps and CFG 1."
+      ],
+      "widgets_values_named": {
+        "text": "## Text to Image (SenseNova U1.5)\n\n**Input Assets**\n- none — this template starts from text.\n\nOne English caption in, one image out. U1.5 ships as a single 8B checkpoint: `Checkpoint Loader` returns MODEL, CLIP and VAE together, so there is no separate text encoder or VAE to pick.\n\n1. **Checkpoint Loader** — `SenseNova-U1.5-8B-MoT-BF16-T8.safetensors` from `models/checkpoints/`.\n2. **SenseNova Sampling Options** — `shift` 3.0, the official default.\n3. **CLIP Text Encode** — your caption; leave the negative empty, it encodes the unconditional prompt.\n4. **Empty HiDream O1 Latent Image** — pixel space, so width/height are the final pixel size.\n5. **KSampler** — 50 steps, CFG 4, `euler` / `normal`, denoise 1: the upstream reference settings.\n\nWrite captions the way the model was trained: one sentence, comma-separated attributes, medium last, and quote verbatim any text you want rendered. For dense layouts (posters, infographics) upstream suggests running the brief through its Image PE first — see the cookbook link in the next note.\n\n**Faster runs**: `Lora Loader Model Only` + `SenseNova-U1.5-8B-MoT-LoRA-8step-ComfyUI.safetensors` (strength 1), then 8 steps and CFG 1."
+      }
+    },
+    {
+      "id": 2,
+      "type": "MarkdownNote",
+      "pos": [
+        560,
+        0
+      ],
+      "size": [
+        520,
+        730
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "color": "#222",
+      "bgcolor": "#000",
+      "properties": {},
+      "widgets_values": [
+        "## Model Links\n\n- [Hugging Face: t8star/SenseNova-U1.5-Comfy](https://huggingface.co/t8star/SenseNova-U1.5-Comfy) — ComfyUI single-file weights\n- [Official weights: sensenova/SenseNova-U1.5-8B-MoT](https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT)\n- [Cookbook: prompt style, Image PE, editing recipes](https://github.com/OpenSenseNova/SenseNova-U1/blob/feat/u1.5/docs/u1.5_best_practices.md)\n\n**checkpoints**\n- [SenseNova-U1.5-8B-MoT-BF16-T8.safetensors](https://huggingface.co/t8star/SenseNova-U1.5-Comfy/resolve/main/SenseNova-U1.5-8B-MoT-BF16-T8.safetensors) — 35 GB\n\n**loras**\n- [SenseNova-U1.5-8B-MoT-LoRA-8step-ComfyUI.safetensors](https://huggingface.co/t8star/SenseNova-U1.5-Comfy/resolve/main/SenseNova-U1.5-8B-MoT-LoRA-8step-ComfyUI.safetensors) — 815 MB\n\n## Model Storage Location\n\n```\nComfyUI/models/checkpoints/SenseNova-U1.5-8B-MoT-BF16-T8.safetensors\nComfyUI/models/loras/SenseNova-U1.5-8B-MoT-LoRA-8step-ComfyUI.safetensors\n```\n\n## Sizes\n\nOfficial buckets, safe as-is: `2048x2048` (1:1, default), `2720x1536` (16:9), `1536x2720` (9:16), `2496x1664` (3:2), `1664x2496` (2:3), plus 4:3 (2368x1760), 3:4, 2:1 (2880x1440), 1:2, 3:1 (3456x1152) and 1:3 at their own sizes (full list in the cookbook link above).\n\nOther sizes work — multiples of 32 — but fall outside the trained set. Batch > 1 multiplies VRAM; keep 2048x2048 at batch 1."
+      ],
+      "widgets_values_named": {
+        "text": "## Model Links\n\n- [Hugging Face: t8star/SenseNova-U1.5-Comfy](https://huggingface.co/t8star/SenseNova-U1.5-Comfy) — ComfyUI single-file weights\n- [Official weights: sensenova/SenseNova-U1.5-8B-MoT](https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT)\n- [Cookbook: prompt style, Image PE, editing recipes](https://github.com/OpenSenseNova/SenseNova-U1/blob/feat/u1.5/docs/u1.5_best_practices.md)\n\n**checkpoints**\n- [SenseNova-U1.5-8B-MoT-BF16-T8.safetensors](https://huggingface.co/t8star/SenseNova-U1.5-Comfy/resolve/main/SenseNova-U1.5-8B-MoT-BF16-T8.safetensors) — 35 GB\n\n**loras**\n- [SenseNova-U1.5-8B-MoT-LoRA-8step-ComfyUI.safetensors](https://huggingface.co/t8star/SenseNova-U1.5-Comfy/resolve/main/SenseNova-U1.5-8B-MoT-LoRA-8step-ComfyUI.safetensors) — 815 MB\n\n## Model Storage Location\n\n```\nComfyUI/models/checkpoints/SenseNova-U1.5-8B-MoT-BF16-T8.safetensors\nComfyUI/models/loras/SenseNova-U1.5-8B-MoT-LoRA-8step-ComfyUI.safetensors\n```\n\n## Sizes\n\nOfficial buckets, safe as-is: `2048x2048` (1:1, default), `2720x1536` (16:9), `1536x2720` (9:16), `2496x1664` (3:2), `1664x2496` (2:3), plus 4:3 (2368x1760), 3:4, 2:1 (2880x1440), 1:2, 3:1 (3456x1152) and 1:3 at their own sizes (full list in the cookbook link above).\n\nOther sizes work — multiples of 32 — but fall outside the trained set. Batch > 1 multiplies VRAM; keep 2048x2048 at batch 1."
+      }
+    },
+    {
+      "id": 3,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        1260,
+        230
+      ],
+      "size": [
+        340,
+        110
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            2,
+            3
+          ]
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "SenseNova-U1.5-8B-MoT-BF16-T8.safetensors"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "SenseNovaSamplingOptions",
+      "pos": [
+        1260,
+        400
+      ],
+      "size": [
+        340,
+        110
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SenseNovaSamplingOptions"
+      },
+      "widgets_values": [
+        3.0
+      ]
+    },
+    {
+      "id": 5,
+      "type": "CLIPTextEncode",
+      "pos": [
+        1760,
+        70
+      ],
+      "size": [
+        640,
+        360
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "An editorial beauty portrait of a young woman with short copper hair standing against a sage-green studio wall in soft window light, freckles, an oversized ivory knit sweater, a thin gold hoop earring, calm gaze into the lens, a bold black serif masthead reading \"ATELIER\" across the top of the frame, two white cover lines reading \"QUIET LIGHT\" and \"ISSUE 04\" at the bottom left, shallow depth of field, fine film grain, 85mm lens, magazine cover photography."
+      ]
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        1760,
+        490
+      ],
+      "size": [
+        640,
+        180
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 7,
+      "type": "EmptyHiDreamO1LatentImage",
+      "pos": [
+        2560,
+        295
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyHiDreamO1LatentImage"
+      },
+      "widgets_values": [
+        2048,
+        2048,
+        1
+      ]
+    },
+    {
+      "id": 8,
+      "type": "KSampler",
+      "pos": [
+        3060,
+        205
+      ],
+      "size": [
+        340,
+        330
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 5
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 6
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 7
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        7,
+        "randomize",
+        50,
+        4,
+        "euler",
+        "normal",
+        1
+      ]
+    },
+    {
+      "id": 9,
+      "type": "VAEDecode",
+      "pos": [
+        3560,
+        140
+      ],
+      "size": [
+        340,
+        70
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 9
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 10,
+      "type": "SaveImage",
+      "pos": [
+        3560,
+        270
+      ],
+      "size": [
+        340,
+        330
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "image_sensenova_u15_t2i"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      3,
+      0,
+      4,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      3,
+      1,
+      5,
+      0,
+      "CLIP"
+    ],
+    [
+      3,
+      3,
+      1,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      4,
+      3,
+      2,
+      9,
+      1,
+      "VAE"
+    ],
+    [
+      5,
+      4,
+      0,
+      8,
+      0,
+      "MODEL"
+    ],
+    [
+      6,
+      5,
+      0,
+      8,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      7,
+      6,
+      0,
+      8,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      8,
+      7,
+      0,
+      8,
+      3,
+      "LATENT"
+    ],
+    [
+      9,
+      8,
+      0,
+      9,
+      0,
+      "LATENT"
+    ],
+    [
+      10,
+      9,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Model",
+      "bounding": [
+        1200,
+        0,
+        460,
+        730
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Prompt",
+      "bounding": [
+        1700,
+        0,
+        760,
+        730
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Image Size",
+      "bounding": [
+        2500,
+        0,
+        460,
+        730
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Sampling",
+      "bounding": [
+        3000,
+        0,
+        460,
+        730
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Decoding",
+      "bounding": [
+        3500,
+        0,
+        460,
+        730
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "",
+      "bounding": [
+        -60,
+        -60,
+        4080,
+        850
+      ],
+      "color": "#A88",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.75,
+      "offset": [
+        80,
+        120
+      ]
+    },
+    "frontendVersion": "1.58.5"
+  },
+  "version": 0.4
+}
