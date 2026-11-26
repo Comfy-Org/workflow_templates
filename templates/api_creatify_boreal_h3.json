@@ -1,0 +1,205 @@
+{
+  "id": "a4d2c1f0-8e21-4e1a-9d3b-3f0f27b41c01",
+  "revision": 0,
+  "last_node_id": 4,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        100,
+        120
+      ],
+      "size": [
+        283.2,
+        320
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "api_creatify_boreal_h3_input.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "api_creatify_boreal_h3_input.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "CreatifyBorealH3VideoNode",
+      "pos": [
+        520,
+        120
+      ],
+      "size": [
+        440,
+        700
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreatifyBorealH3VideoNode"
+      },
+      "widgets_values": [
+        "Product film for matte bronze wireless earbuds resting on a still water surface. 0-1.5s: slow push in, one droplet falls and rings ripple outward from the case while the earbuds stay razor sharp. 1.5-3s: the lid of the case tilts open on its own, warm rim light sweeping across the bronze edge, shallow depth of field pressing the grey backdrop into soft haze. 3-5s: the camera lifts into a slow arc above the water, the reflection stretches and settles. Keep the earbuds, their bronze-and-black finish and the water surface exactly as they are. Sound: one clean water drop, a low synth swell and a soft click as the lid opens.",
+        "768p",
+        "auto",
+        5,
+        "none",
+        42,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "prompt": "Product film for matte bronze wireless earbuds resting on a still water surface. 0-1.5s: slow push in, one droplet falls and rings ripple outward from the case while the earbuds stay razor sharp. 1.5-3s: the lid of the case tilts open on its own, warm rim light sweeping across the bronze edge, shallow depth of field pressing the grey backdrop into soft haze. 3-5s: the camera lifts into a slow arc above the water, the reflection stretches and settles. Keep the earbuds, their bronze-and-black finish and the water surface exactly as they are. Sound: one clean water drop, a low synth swell and a soft click as the lid opens.",
+        "resolution": "768p",
+        "aspect_ratio": "auto",
+        "duration": 5,
+        "prompt_enhancement": "none",
+        "seed": 42,
+        "control_after_generate": "fixed"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "SaveVideo",
+      "pos": [
+        1000,
+        120
+      ],
+      "size": [
+        455,
+        620
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_creatify_boreal_h3",
+        "mp4",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_creatify_boreal_h3",
+        "format": "mp4",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [
+        -400,
+        120
+      ],
+      "size": [
+        440,
+        700
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Input Asset",
+      "properties": {},
+      "widgets_values": [
+        "## Creatify Boreal-H3 Video\n\n**Text (or first frame) to a video ad with sound.** Boreal-H3 is Creatify's post-trained H3 model for short ads: it writes picture **and** audio from one prompt, keeps a supplied first frame's framing, and can close on a last frame.\n\n**Input asset (demo):**\n- `api_creatify_boreal_h3_input.png` - 1368 x 768 product still from the local Eagle library (bronze wireless earbuds on a water surface). Used as the optional `first_frame`; the video keeps its 16:9 framing.\n\n### What this graph does\n\n1. **Load Image**: the optional first frame. Leave it unconnected for pure text to video.\n2. **Creatify Boreal-H3 Video**: writes the clip and its sound. The optional `last_frame` socket needs `first_frame` to be connected.\n3. **Save Video**: writes the MP4.\n\n---\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `prompt` | What happens, beat by beat. With `prompt_enhancement none` it is used as written. |\n| `resolution` | `768p` (default), `1088p` or `2k`; at `2k` the duration cap drops to 14 s. |\n| `aspect_ratio` | Used without a first frame. With a first frame keep `auto` and the video follows the frame. |\n| `duration` | 1 to 15 seconds, billed per call by resolution and length. |\n| `prompt_enhancement` | `auto`/`ads` rewrite for a video ad and can add spoken lines, `general` rewrites for any video, `none` renders the prompt as written. |\n| `seed` | Controls whether the node re-runs; Creatify picks its own randomness. |\n\n---\n\n### Gotchas\n\n- `last_frame` without `first_frame` is rejected before generation.\n- Connecting `first_frame` while `aspect_ratio` is not `auto` is rejected.\n- The model writes its own soundtrack: describe the sounds you want in the prompt, do not connect an audio node.\n\n---\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare the input assets.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Creatify Boreal-H3 Video\n\n**Text (or first frame) to a video ad with sound.** Boreal-H3 is Creatify's post-trained H3 model for short ads: it writes picture **and** audio from one prompt, keeps a supplied first frame's framing, and can close on a last frame.\n\n**Input asset (demo):**\n- `api_creatify_boreal_h3_input.png` - 1368 x 768 product still from the local Eagle library (bronze wireless earbuds on a water surface). Used as the optional `first_frame`; the video keeps its 16:9 framing.\n\n### What this graph does\n\n1. **Load Image**: the optional first frame. Leave it unconnected for pure text to video.\n2. **Creatify Boreal-H3 Video**: writes the clip and its sound. The optional `last_frame` socket needs `first_frame` to be connected.\n3. **Save Video**: writes the MP4.\n\n---\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `prompt` | What happens, beat by beat. With `prompt_enhancement none` it is used as written. |\n| `resolution` | `768p` (default), `1088p` or `2k`; at `2k` the duration cap drops to 14 s. |\n| `aspect_ratio` | Used without a first frame. With a first frame keep `auto` and the video follows the frame. |\n| `duration` | 1 to 15 seconds, billed per call by resolution and length. |\n| `prompt_enhancement` | `auto`/`ads` rewrite for a video ad and can add spoken lines, `general` rewrites for any video, `none` renders the prompt as written. |\n| `seed` | Controls whether the node re-runs; Creatify picks its own randomness. |\n\n---\n\n### Gotchas\n\n- `last_frame` without `first_frame` is rejected before generation.\n- Connecting `first_frame` while `aspect_ratio` is not `auto` is rejected.\n- The model writes its own soundtrack: describe the sounds you want in the prompt, do not connect an audio node.\n\n---\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare the input assets.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1,
+      "offset": [
+        0,
+        0
+      ]
+    }
+  },
+  "version": 0.4
+}
