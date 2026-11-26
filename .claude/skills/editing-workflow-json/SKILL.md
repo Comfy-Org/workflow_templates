@@ -35,6 +35,24 @@ task instead of guessing.**
   `#222`/`#000`, never yellow (`#432`/`#653` **is** the api_node pair, so a yellow note reads as a partner
   node). Node accents are off unless the graph is genuinely complex, then at most one hero node in red
   `#322`/`#533`. Palette names, table and rationale: `references/layout-and-groups.md`.
+- **Never ship a deprecated node.** Zero tolerance — a graph that queues is not a graph that ships. Before adding a
+  node, read its flag from a running instance (`curl /object_info/<Class> | jq '.[].deprecated'`) or from source
+  (`grep -n 'is_deprecated=True' comfy_api_nodes/*.py`), and re-check the finished graph. Known swaps:
+  `ImageBatch` → `BatchImagesNode` (inputs become autogrow `images.image0`, `images.image1`; extra empty slots carry
+  `"shape": 7`), `ImageCrop` → `ImageCropV2` (one `crop_region` widget `{x,y,width,height}`, not four ints),
+  `PrimitiveString` → `PrimitiveStringMultiline`, `Preview3D` → `Preview3DAdvanced` (widgets `["", 1024, 1024]`,
+  and feed `model_3d` from the 3D-file output, not from the path STRING). A bypassed (`mode: 4`) node still ships —
+  the rule covers it.
+- **A standing string is `Text (Multiline)`, never `Text`.** Prompts, instructions and ids the user reads belong in
+  `PrimitiveStringMultiline`; the single-line `PrimitiveString` box cuts the copy off. Use the single-line node only
+  for a value that is genuinely short and never grows (a file suffix, a numeric token).
+- **One note per purpose.** "What this model is / what the graph does" is its own `MarkdownNote`; repo links,
+  download tree and `Report Issue` stay in the existing `Model Links` note. Two notes carrying the same table cannot
+  be told apart. Note copy is English, and a note never replaces an existing one's job.
+- **Never write `null` into a schema-typed slot field.** `"slot_index": null` (signature: every optional slot prop
+  materialised as null) fails the frontend's zod schema, and the template loader silently degrades the graph to
+  legacy mode instead of failing loudly. Omit the key; index comes from array position. Check with
+  `scripts/validate_workflow_schema.mts` — repo CI does **not** catch this one.
 
 ## Routing table
 
@@ -45,6 +63,10 @@ task instead of guessing.**
 | UUID-typed nodes, promoted subgraph inputs, wrapping a chain into a subgraph | `references/subgraphs.md` |
 | gcd ratio with core nodes, filename-prefix tokens, core text/JSON limits, loop + array pitfalls, model download metadata | `references/editing-recipes.md` |
 | note copy conventions for a shipped template (length, structure, numbers from the schema) | skill `/managing-templates`, plus the note rules above |
+| the graph loads "wrong" / fails zod (`expected number, received null`), or a hand-assembled file needs validating | `references/workflow-schema-validation.md` |
+| naming a node's `title`, display-name table, serial numbers, byte-safe title edits | `references/node-titles.md` |
+| a bug that cost a real round-trip (read before "simplifying" a working chain) | `references/pitfalls.md` |
+| opening the PR: template vs docs rules, translations, assets, validators, CI, what the body must contain | `references/contributing-prs.md` |
 
 Scripts (run them, don't eyeball):
 `scripts/check_wf_links.py` (links/slots of one workflow, exits non-zero on a broken invariant),
@@ -52,6 +74,7 @@ Scripts (run them, don't eyeball):
 `scripts/layout_grid.py` (deterministic grid layout for a whole graph),
 `scripts/audit_links.py` (structural scan across a directory of workflows),
 `scripts/validate_model_links.py` (model download metadata: HF URL ↔ `properties.models` ↔ loader widget),
+`scripts/validate_workflow_schema.mts` (frontend zod schema — run it on every hand-assembled or regenerated workflow),
 `scripts/linkfixer_audit.test.ts` (vitest harness that reuses the frontend's own link checker).
 
 ## Core Principle (explicitly corrected by the user — always follow)
@@ -100,30 +123,12 @@ Node fields: `id`, `type`, `pos` [x,y], `size`, `flags`, `order`, `mode`, `input
 - **SaveVideo** `widgets_values[0]` is the output path — useful for confirming the workflow kind (e.g. `video/LTX_2.5_t2v` → T2V)
 - **LoadImage** `title` can distinguish roles (`Load First Frame` / `Load Last Frame`)
 
-## Node Titles: never replace the node's own name (user-set convention)
+## Node Titles
 
-A custom `title` hides the node type in the node header, so users cannot recognise the node or find it in the node
-search. The original name is how a contributor recognises the node and finds it again. Keep the node's own name and put any hint
-in parentheses:
-
-```
-<ComfyUI display name> (<short hint>)
-```
-
-Examples: `Convert Array to String (boxes → text)`, `Replace Text (Regex) (count the boxes)`,
-`Format Text (Ming coordinates)`, `Get Item From List (layers so far)`, `Int (Width)`.
-
-- Use the **display name the UI shows**, not the `node_id`: `RegexExtract` → `Extract Text`, `RegexReplace` →
-  `Replace Text (Regex)`, `StringFormat` → `Format Text`, `ComfyMathExpression` → `Math Expression`,
-  `ComfyNumberConvert` → `Convert Number`, `ImageCompare` → `Compare Images`, `ResizeImageMaskNode` →
-  `Resize Image/Mask`, `BuildJsonPromptIdeogram` → `Build JSON Prompt (Ideogram)`. Resolve them from the local core
-  clone by scanning files for `node_id="X"` followed by `display_name="…"`; nodes with no `display_name` (LoadImage,
-  UNETLoader, PreviewAny, …) show their `node_id` verbatim → the title is just that name.
-- Serial numbers (`①`, `②`) are allowed *inside* the hint when order matters, never as the whole title; a hint that only
-  repeats the node name (e.g. `End Loop (end loop)`) is dropped, leaving the bare node name.
-- `MarkdownNote` renders as `Note`/`Markdown Note`, so `Note: Model Links`-style titles are already compliant.
-- Edit text-level (`"title": "<old>"` → `"title": "<new>"`) to keep the rest of the file byte-identical, and verify by
-  comparing the parsed JSON with `title` stripped from every node (only titles may differ).
+A custom `title` hides the node type in the header, so the node becomes unfindable in search. Keep the node's own
+name and put any hint in parentheses — `Replace Text (Regex) (count the boxes)`, `Int (Width)` — using the display
+name the UI shows, never the raw `node_id`. The default is no title at all. Naming table, serial-number rules and the
+safe text-level edit procedure: `references/node-titles.md`.
 
 ## Submitting a prompt for review
 
