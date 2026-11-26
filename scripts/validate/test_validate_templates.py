@@ -1,15 +1,29 @@
 #!/usr/bin/env python3
-"""Unit tests for slot_index validation in validate_templates.py.
+"""Unit tests for validate_templates.py.
 
-The frontend schema declares ``slot_index: zSlotIndex.optional()`` with no
-``.nullable()``, so a stored ``"slot_index": null`` makes
-``validateComfyWorkflow`` reject the file and silently downgrade the template
-to the legacy (id+type only) loader. Only numbers and numeric strings pass.
+``SlotIndexTests``: the frontend schema declares ``slot_index:
+zSlotIndex.optional()`` with no ``.nullable()``, so a stored ``"slot_index":
+null`` makes ``validateComfyWorkflow`` reject the file and silently downgrade
+the template to the legacy (id+type only) loader. Only numbers and numeric
+strings pass.
+
+``CatalogParityTests``: ``/templates/<name>.json`` is served from the same
+directory the catalog indexes advertise, so a workflow file or index entry that
+only one surface knows about is loadable by name and invisible in the UI (or
+the reverse). Linear PM-877.
 """
 
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
-from validate_templates import _is_slot_index, _validate_workflow_04
+from validate_templates import (
+    _is_slot_index,
+    _validate_workflow_04,
+    check_file_consistency,
+    check_index_parity,
+)
 
 
 def _workflow(slot_index):
@@ -106,6 +120,106 @@ class SlotIndexTests(unittest.TestCase):
         errors = _validate_workflow_04(wf, "t.json")
         self.assertEqual(len(errors), 1, errors)
         self.assertIn("links[0].target_slot", errors[0])
+
+
+def _index(*names):
+    """One-category index advertising the given template names."""
+    return [
+        {
+            "moduleName": "default",
+            "title": "Basics",
+            "templates": [
+                {"name": name, "mediaType": "image", "mediaSubtype": "webp"}
+                for name in names
+            ],
+        }
+    ]
+
+
+class CatalogParityTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.templates_dir = Path(self._tmp.name)
+        self.addCleanup(self._tmp.cleanup)
+
+    def write(self, filename, data):
+        (self.templates_dir / filename).write_text(
+            json.dumps(data), encoding="utf-8"
+        )
+
+    def test_unindexed_workflow_file_is_an_error(self):
+        index = _index("api_indexed")
+        self.write("index.json", index)
+        self.write("api_indexed.json", {})
+        self.write("api_unindexed.json", {})
+
+        valid, errors, _ = check_file_consistency(index, self.templates_dir)
+
+        self.assertFalse(valid)
+        self.assertTrue(
+            any("api_unindexed.json" in error for error in errors), errors
+        )
+
+    def test_indexed_workflow_file_is_accepted(self):
+        index = _index("api_indexed")
+        self.write("index.json", index)
+        self.write("api_indexed.json", {})
+
+        valid, errors, _ = check_file_consistency(index, self.templates_dir)
+
+        self.assertTrue(valid, errors)
+
+    def test_locale_index_missing_a_template_is_an_error(self):
+        index = _index("api_one", "api_two")
+        self.write("index.json", index)
+        self.write("index.zh.json", _index("api_one"))
+
+        valid, errors = check_index_parity(index, self.templates_dir)
+
+        self.assertFalse(valid)
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("index.zh.json", errors[0])
+        self.assertIn("api_two", errors[0])
+
+    def test_locale_index_with_an_unknown_template_is_an_error(self):
+        index = _index("api_one")
+        self.write("index.json", index)
+        self.write("index.zh.json", _index("api_one", "api_ghost"))
+
+        valid, errors = check_index_parity(index, self.templates_dir)
+
+        self.assertFalse(valid)
+        self.assertIn("api_ghost", errors[0])
+
+    def test_mcp_index_may_be_a_subset(self):
+        index = _index("api_one", "api_two")
+        self.write("index.json", index)
+        self.write("index.mcp.json", _index("api_one"))
+
+        valid, errors = check_index_parity(index, self.templates_dir)
+
+        self.assertTrue(valid, errors)
+
+    def test_mcp_index_naming_an_unlisted_template_is_an_error(self):
+        index = _index("api_one")
+        self.write("index.json", index)
+        self.write("index.mcp.json", _index("api_one", "api_agent_only"))
+
+        valid, errors = check_index_parity(index, self.templates_dir)
+
+        self.assertFalse(valid)
+        self.assertIn("index.mcp.json", errors[0])
+        self.assertIn("api_agent_only", errors[0])
+
+    def test_parity_holds_when_every_index_agrees(self):
+        index = _index("api_one", "api_two")
+        self.write("index.json", index)
+        self.write("index.zh.json", _index("api_two", "api_one"))
+        self.write("index.mcp.json", _index("api_one", "api_two"))
+
+        valid, errors = check_index_parity(index, self.templates_dir)
+
+        self.assertTrue(valid, errors)
 
 
 if __name__ == "__main__":
