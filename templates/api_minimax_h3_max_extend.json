@@ -1,0 +1,430 @@
+{
+ "id": "e4256903-d66b-4d08-acbd-e33becf2c908",
+ "revision": 0,
+ "last_node_id": 4,
+ "last_link_id": 2,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "LoadVideo",
+   "pos": [
+    100.0,
+    130.0
+   ],
+   "size": [
+    282.8,
+    82.0
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "VIDEO",
+     "type": "VIDEO",
+     "links": [
+      1
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoadVideo"
+   },
+   "widgets_values": [
+    "api_minimax_h3_max_extend_input.mp4",
+    "image"
+   ],
+   "widgets_values_named": {
+    "file": "api_minimax_h3_max_extend_input.mp4",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 2,
+   "type": "MinimaxHailuo03MaxExtendVideoNode",
+   "pos": [
+    520.0,
+    130.0
+   ],
+   "size": [
+    420.0,
+    400.0
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model.video",
+     "type": "VIDEO",
+     "link": 1
+    },
+    {
+     "name": "model.prompt",
+     "type": "STRING",
+     "link": null
+    },
+    {
+     "name": "model.reference_audios.audio_1",
+     "type": "AUDIO",
+     "link": null,
+     "shape": 7
+    },
+    {
+     "name": "model.reference_audios.audio_2",
+     "type": "AUDIO",
+     "link": null,
+     "shape": 7
+    }
+   ],
+   "outputs": [
+    {
+     "name": "VIDEO",
+     "type": "VIDEO",
+     "links": [
+      2
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "MinimaxHailuo03MaxExtendVideoNode"
+   },
+   "widgets_values": [
+    "MiniMax H3 Max",
+    "He lands the trick and rides out of frame: the board snaps back to the ground, he pushes twice and the neon signage smears past in the foreground while steam drifts across the wet asphalt. Keep the same sodium-and-cyan lighting, the same low camera height and the same lens character.",
+    5,
+    "768P",
+    "auto",
+    "extended",
+    true,
+    42,
+    "randomize"
+   ],
+   "widgets_values_named": {
+    "model": "MiniMax H3 Max",
+    "model.prompt": "She keeps the lipstick raised, turns the tube slowly so the label catches the light, then lowers it and leans toward the lens with a small smile; the camera drifts a few centimetres closer, the same bright room, white flowers and soft daylight stay unchanged behind her, same handheld rhythm, no cuts.",
+    "model.duration": 5,
+    "model.resolution": "768P",
+    "model.aspect_ratio": "auto",
+    "model.output": "extended",
+    "model.prompt_expansion": true,
+    "model.seed": 42,
+    "control_after_generate": "randomize"
+   }
+  },
+  {
+   "id": 3,
+   "type": "SaveVideo",
+   "pos": [
+    1000.0,
+    130.0
+   ],
+   "size": [
+    453.8,
+    300.0
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "video",
+     "type": "VIDEO",
+     "link": 2
+    }
+   ],
+   "outputs": [
+    {
+     "name": "video",
+     "type": "VIDEO",
+     "links": null
+    }
+   ],
+   "properties": {},
+   "widgets_values": [
+    "api_minimax_h3_max_extend",
+    "auto",
+    "auto",
+    "auto"
+   ],
+   "widgets_values_named": {
+    "filename_prefix": "api_minimax_h3_max_extend",
+    "format": "auto",
+    "format.codec": "auto",
+    "codec": "auto"
+   }
+  },
+  {
+   "id": 4,
+   "type": "MarkdownNote",
+   "pos": [
+    -300.0,
+    760.0
+   ],
+   "size": [
+    1120.0,
+    900.0
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [],
+   "properties": {},
+   "widgets_values": [
+    "## Extend a Clip: MiniMax H3 Max\n\n**Keep the shot rolling.** Extend continues a finished clip with new footage the model generates from your prompt, so a 5 second ad becomes a 10 second one without a second shoot and without a cut. The source clip is the reference for lighting, wardrobe, framing and motion.\n\n---\n\n### What this graph does\n\n1. **Load Video**: the source clip. 1.625 to 60 seconds, up to 50 MB, aspect ratio between 0.4 and 2.5.\n2. **MiniMax H3 Max Extend Video**: generates `duration` seconds of new footage that continues the clip, guided by `prompt`.\n3. **Save Video**: writes the MP4.\n\n**Input Assets:** [api_minimax_h3_max_extend_input.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_minimax_h3_max_extend_input.mp4) — 1280 x 720, 5.04 seconds at 24 fps.\n\n---\n\n### Writing the prompt\n\nDescribe **what happens next**, not what is already in the clip. The model can see the source, so repeating the wardrobe or the room wastes the prompt; name the new action, the new camera move and what has to stay the same.\n\n- `She keeps the lipstick raised, turns the tube slowly so the label catches the light, then lowers it and leans toward the lens with a small smile; the camera drifts a few centimetres closer...`\n- A walk-out: `She sets the cup down, picks up her bag and walks out of frame right; the camera holds, the same room stays lit the same way.`\n\n---\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `model` | `MiniMax H3 Max` or `MiniMax H3 Max Turbo` |\n| `prompt` | What happens in the new footage |\n| `duration` | Seconds of new footage to add, 1 to 15, default 5 |\n| `resolution` | `480P`, `768P`, `1080P` or `2K`, default `768P` |\n| `aspect_ratio` | `auto` follows the source; other values crop to the chosen ratio |\n| `output` | `extended` returns the whole clip re-rendered plus the new footage; `continuation` returns only the new footage, opening with a 1.6 second repeat of the source ending |\n| `prompt_expansion` | Rewrites the prompt against the source video for consistency; turn it off for reproducible seeds |\n| `seed` | Same prompt and seed give similar, not identical, results |\n| `reference_audios` | Optional audio references for the new footage, `@Audio1` to `@Audio3`, at least 2 seconds each and 14.5 seconds in total |\n\nThe optional `reference_audios` sockets are on the node but not wired in this graph. Add a **Load Audio** node and connect it to `reference_audios.audio_1` when the continuation needs to match a voice or a music bed, then refer to it in the prompt as `@Audio1`.\n\n---\n\n### Gotchas\n\n- `extended` re-renders the whole clip at the chosen `resolution`, so a 5.04 second source plus 5 seconds of new footage comes back as roughly 10 seconds at 768P. Budget for the full length, not just the added seconds.\n- `continuation` does not give you a clean join on its own: it starts with a 1.6 second repeat of the source ending, which you trim or cross-fade in an editor.\n- The source must be at least 1.625 seconds long. Shorter clips are rejected before generation.\n- Keep `prompt_expansion` on while you are still exploring; turn it off once you have a prompt you want to reproduce with a fixed seed.\n"
+   ],
+   "widgets_values_named": {
+    "text": "## Extend a Clip: MiniMax H3 Max\n\n**Keep the shot rolling.** Extend continues a finished clip with new footage the model generates from your prompt, so a 5 second ad becomes a 10 second one without a second shoot and without a cut. The source clip is the reference for lighting, wardrobe, framing and motion.\n\n---\n\n### What this graph does\n\n1. **Load Video**: the source clip. 1.625 to 60 seconds, up to 50 MB, aspect ratio between 0.4 and 2.5.\n2. **MiniMax H3 Max Extend Video**: generates `duration` seconds of new footage that continues the clip, guided by `prompt`.\n3. **Save Video**: writes the MP4.\n\n**Input Assets:** [api_minimax_h3_max_extend_input.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_minimax_h3_max_extend_input.mp4) — 1280 x 720, 5.04 seconds at 24 fps.\n\n---\n\n### Writing the prompt\n\nDescribe **what happens next**, not what is already in the clip. The model can see the source, so repeating the wardrobe or the room wastes the prompt; name the new action, the new camera move and what has to stay the same.\n\n- `She keeps the lipstick raised, turns the tube slowly so the label catches the light, then lowers it and leans toward the lens with a small smile; the camera drifts a few centimetres closer...`\n- A walk-out: `She sets the cup down, picks up her bag and walks out of frame right; the camera holds, the same room stays lit the same way.`\n\n---\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `model` | `MiniMax H3 Max` or `MiniMax H3 Max Turbo` |\n| `prompt` | What happens in the new footage |\n| `duration` | Seconds of new footage to add, 1 to 15, default 5 |\n| `resolution` | `480P`, `768P`, `1080P` or `2K`, default `768P` |\n| `aspect_ratio` | `auto` follows the source; other values crop to the chosen ratio |\n| `output` | `extended` returns the whole clip re-rendered plus the new footage; `continuation` returns only the new footage, opening with a 1.6 second repeat of the source ending |\n| `prompt_expansion` | Rewrites the prompt against the source video for consistency; turn it off for reproducible seeds |\n| `seed` | Same prompt and seed give similar, not identical, results |\n| `reference_audios` | Optional audio references for the new footage, `@Audio1` to `@Audio3`, at least 2 seconds each and 14.5 seconds in total |\n\nThe optional `reference_audios` sockets are on the node but not wired in this graph. Add a **Load Audio** node and connect it to `reference_audios.audio_1` when the continuation needs to match a voice or a music bed, then refer to it in the prompt as `@Audio1`.\n\n---\n\n### Gotchas\n\n- `extended` re-renders the whole clip at the chosen `resolution`, so a 5.04 second source plus 5 seconds of new footage comes back as roughly 10 seconds at 768P. Budget for the full length, not just the added seconds.\n- `continuation` does not give you a clean join on its own: it starts with a 1.6 second repeat of the source ending, which you trim or cross-fade in an editor.\n- The source must be at least 1.625 seconds long. Shorter clips are rejected before generation.\n- Keep `prompt_expansion` on while you are still exploring; turn it off once you have a prompt you want to reproduce with a fixed seed.\n"
+   }
+  }
+ ],
+ "links": [
+  [
+   1,
+   1,
+   0,
+   2,
+   0,
+   "VIDEO"
+  ],
+  [
+   2,
+   2,
+   0,
+   3,
+   0,
+   "VIDEO"
+  ]
+ ],
+ "groups": [],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 0.5,
+   "offset": [
+    120.0,
+    -50.0
+   ]
+  },
+  "frontendVersion": "1.57.6"
+ },
+ "version": 0.4,
+ "extra_pnginfo": {
+  "workflow": {
+   "id": "e4256903-d66b-4d08-acbd-e33becf2c908",
+   "revision": 0,
+   "last_node_id": 4,
+   "last_link_id": 2,
+   "nodes": [
+    {
+     "id": 1,
+     "type": "LoadVideo",
+     "pos": [
+      100.0,
+      130.0
+     ],
+     "size": [
+      282.8,
+      82.0
+     ],
+     "flags": {},
+     "order": 0,
+     "mode": 0,
+     "inputs": [],
+     "outputs": [
+      {
+       "name": "VIDEO",
+       "type": "VIDEO",
+       "links": [
+        1
+       ]
+      }
+     ],
+     "properties": {
+      "Node name for S&R": "LoadVideo"
+     },
+     "widgets_values": [
+      "api_minimax_h3_max_extend_input.mp4",
+      "image"
+     ],
+     "widgets_values_named": {
+      "file": "api_minimax_h3_max_extend_input.mp4",
+      "upload": "image"
+     }
+    },
+    {
+     "id": 2,
+     "type": "MinimaxHailuo03MaxExtendVideoNode",
+     "pos": [
+      520.0,
+      130.0
+     ],
+     "size": [
+      420.0,
+      400.0
+     ],
+     "flags": {},
+     "order": 1,
+     "mode": 0,
+     "inputs": [
+      {
+       "name": "model.video",
+       "type": "VIDEO",
+       "link": 1
+      },
+      {
+       "name": "model.prompt",
+       "type": "STRING",
+       "link": null
+      },
+      {
+       "name": "model.reference_audios.audio_1",
+       "type": "AUDIO",
+       "link": null,
+       "shape": 7
+      },
+      {
+       "name": "model.reference_audios.audio_2",
+       "type": "AUDIO",
+       "link": null,
+       "shape": 7
+      }
+     ],
+     "outputs": [
+      {
+       "name": "VIDEO",
+       "type": "VIDEO",
+       "links": [
+        2
+       ]
+      }
+     ],
+     "properties": {
+      "Node name for S&R": "MinimaxHailuo03MaxExtendVideoNode"
+     },
+     "widgets_values": [
+      "MiniMax H3 Max",
+      "He lands the trick and rides out of frame: the board snaps back to the ground, he pushes twice and the neon signage smears past in the foreground while steam drifts across the wet asphalt. Keep the same sodium-and-cyan lighting, the same low camera height and the same lens character.",
+      5,
+      "768P",
+      "auto",
+      "extended",
+      true,
+      42,
+      "randomize"
+     ],
+     "widgets_values_named": {
+      "model": "MiniMax H3 Max",
+      "model.prompt": "She keeps the lipstick raised, turns the tube slowly so the label catches the light, then lowers it and leans toward the lens with a small smile; the camera drifts a few centimetres closer, the same bright room, white flowers and soft daylight stay unchanged behind her, same handheld rhythm, no cuts.",
+      "model.duration": 5,
+      "model.resolution": "768P",
+      "model.aspect_ratio": "auto",
+      "model.output": "extended",
+      "model.prompt_expansion": true,
+      "model.seed": 42,
+      "control_after_generate": "randomize"
+     }
+    },
+    {
+     "id": 3,
+     "type": "SaveVideo",
+     "pos": [
+      1000.0,
+      130.0
+     ],
+     "size": [
+      453.8,
+      300.0
+     ],
+     "flags": {},
+     "order": 2,
+     "mode": 0,
+     "inputs": [
+      {
+       "name": "video",
+       "type": "VIDEO",
+       "link": 2
+      }
+     ],
+     "outputs": [
+      {
+       "name": "video",
+       "type": "VIDEO",
+       "links": null
+      }
+     ],
+     "properties": {},
+     "widgets_values": [
+      "api_minimax_h3_max_extend",
+      "auto",
+      "auto",
+      "auto"
+     ],
+     "widgets_values_named": {
+      "filename_prefix": "api_minimax_h3_max_extend",
+      "format": "auto",
+      "format.codec": "auto",
+      "codec": "auto"
+     }
+    },
+    {
+     "id": 4,
+     "type": "MarkdownNote",
+     "pos": [
+      -300.0,
+      760.0
+     ],
+     "size": [
+      1120.0,
+      900.0
+     ],
+     "flags": {},
+     "order": 3,
+     "mode": 0,
+     "inputs": [],
+     "outputs": [],
+     "properties": {},
+     "widgets_values": [
+      "## Extend a Clip: MiniMax H3 Max\n\n**Keep the shot rolling.** Extend continues a finished clip with new footage the model generates from your prompt, so a 5 second ad becomes a 10 second one without a second shoot and without a cut. The source clip is the reference for lighting, wardrobe, framing and motion.\n\n---\n\n### What this graph does\n\n1. **Load Video**: the source clip. 1.625 to 60 seconds, up to 50 MB, aspect ratio between 0.4 and 2.5.\n2. **MiniMax H3 Max Extend Video**: generates `duration` seconds of new footage that continues the clip, guided by `prompt`.\n3. **Save Video**: writes the MP4.\n\n**Input Assets:** [api_minimax_h3_max_extend_input.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_minimax_h3_max_extend_input.mp4) — 1280 x 720, 5.04 seconds at 24 fps.\n\n---\n\n### Writing the prompt\n\nDescribe **what happens next**, not what is already in the clip. The model can see the source, so repeating the wardrobe or the room wastes the prompt; name the new action, the new camera move and what has to stay the same.\n\n- `She keeps the lipstick raised, turns the tube slowly so the label catches the light, then lowers it and leans toward the lens with a small smile; the camera drifts a few centimetres closer...`\n- A walk-out: `She sets the cup down, picks up her bag and walks out of frame right; the camera holds, the same room stays lit the same way.`\n\n---\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `model` | `MiniMax H3 Max` or `MiniMax H3 Max Turbo` |\n| `prompt` | What happens in the new footage |\n| `duration` | Seconds of new footage to add, 1 to 15, default 5 |\n| `resolution` | `480P`, `768P`, `1080P` or `2K`, default `768P` |\n| `aspect_ratio` | `auto` follows the source; other values crop to the chosen ratio |\n| `output` | `extended` returns the whole clip re-rendered plus the new footage; `continuation` returns only the new footage, opening with a 1.6 second repeat of the source ending |\n| `prompt_expansion` | Rewrites the prompt against the source video for consistency; turn it off for reproducible seeds |\n| `seed` | Same prompt and seed give similar, not identical, results |\n| `reference_audios` | Optional audio references for the new footage, `@Audio1` to `@Audio3`, at least 2 seconds each and 14.5 seconds in total |\n\nThe optional `reference_audios` sockets are on the node but not wired in this graph. Add a **Load Audio** node and connect it to `reference_audios.audio_1` when the continuation needs to match a voice or a music bed, then refer to it in the prompt as `@Audio1`.\n\n---\n\n### Gotchas\n\n- `extended` re-renders the whole clip at the chosen `resolution`, so a 5.04 second source plus 5 seconds of new footage comes back as roughly 10 seconds at 768P. Budget for the full length, not just the added seconds.\n- `continuation` does not give you a clean join on its own: it starts with a 1.6 second repeat of the source ending, which you trim or cross-fade in an editor.\n- The source must be at least 1.625 seconds long. Shorter clips are rejected before generation.\n- Keep `prompt_expansion` on while you are still exploring; turn it off once you have a prompt you want to reproduce with a fixed seed.\n"
+     ],
+     "widgets_values_named": {
+      "text": "## Extend a Clip: MiniMax H3 Max\n\n**Keep the shot rolling.** Extend continues a finished clip with new footage the model generates from your prompt, so a 5 second ad becomes a 10 second one without a second shoot and without a cut. The source clip is the reference for lighting, wardrobe, framing and motion.\n\n---\n\n### What this graph does\n\n1. **Load Video**: the source clip. 1.625 to 60 seconds, up to 50 MB, aspect ratio between 0.4 and 2.5.\n2. **MiniMax H3 Max Extend Video**: generates `duration` seconds of new footage that continues the clip, guided by `prompt`.\n3. **Save Video**: writes the MP4.\n\n**Input Assets:** [api_minimax_h3_max_extend_input.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_minimax_h3_max_extend_input.mp4) — 1280 x 720, 5.04 seconds at 24 fps.\n\n---\n\n### Writing the prompt\n\nDescribe **what happens next**, not what is already in the clip. The model can see the source, so repeating the wardrobe or the room wastes the prompt; name the new action, the new camera move and what has to stay the same.\n\n- `She keeps the lipstick raised, turns the tube slowly so the label catches the light, then lowers it and leans toward the lens with a small smile; the camera drifts a few centimetres closer...`\n- A walk-out: `She sets the cup down, picks up her bag and walks out of frame right; the camera holds, the same room stays lit the same way.`\n\n---\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `model` | `MiniMax H3 Max` or `MiniMax H3 Max Turbo` |\n| `prompt` | What happens in the new footage |\n| `duration` | Seconds of new footage to add, 1 to 15, default 5 |\n| `resolution` | `480P`, `768P`, `1080P` or `2K`, default `768P` |\n| `aspect_ratio` | `auto` follows the source; other values crop to the chosen ratio |\n| `output` | `extended` returns the whole clip re-rendered plus the new footage; `continuation` returns only the new footage, opening with a 1.6 second repeat of the source ending |\n| `prompt_expansion` | Rewrites the prompt against the source video for consistency; turn it off for reproducible seeds |\n| `seed` | Same prompt and seed give similar, not identical, results |\n| `reference_audios` | Optional audio references for the new footage, `@Audio1` to `@Audio3`, at least 2 seconds each and 14.5 seconds in total |\n\nThe optional `reference_audios` sockets are on the node but not wired in this graph. Add a **Load Audio** node and connect it to `reference_audios.audio_1` when the continuation needs to match a voice or a music bed, then refer to it in the prompt as `@Audio1`.\n\n---\n\n### Gotchas\n\n- `extended` re-renders the whole clip at the chosen `resolution`, so a 5.04 second source plus 5 seconds of new footage comes back as roughly 10 seconds at 768P. Budget for the full length, not just the added seconds.\n- `continuation` does not give you a clean join on its own: it starts with a 1.6 second repeat of the source ending, which you trim or cross-fade in an editor.\n- The source must be at least 1.625 seconds long. Shorter clips are rejected before generation.\n- Keep `prompt_expansion` on while you are still exploring; turn it off once you have a prompt you want to reproduce with a fixed seed.\n"
+     }
+    }
+   ],
+   "links": [
+    [
+     1,
+     1,
+     0,
+     2,
+     0,
+     "VIDEO"
+    ],
+    [
+     2,
+     2,
+     0,
+     3,
+     0,
+     "VIDEO"
+    ]
+   ],
+   "groups": [],
+   "config": {},
+   "extra": {
+    "ds": {
+     "scale": 0.5,
+     "offset": [
+      120.0,
+      -50.0
+     ]
+    },
+    "frontendVersion": "1.57.6"
+   },
+   "version": 0.4
+  }
+ }
+}
