@@ -33,6 +33,7 @@ describe('audit workflow templates with the real linkFixer', () => {
     const report: string[] = []
     let filesWithIssues = 0
     let totalPatched = 0
+    let parseFails = 0
     for (const f of files) {
       const path = join(DIR, f)
       let graph: ISerialisedGraph
@@ -40,6 +41,7 @@ describe('audit workflow templates with the real linkFixer', () => {
         graph = JSON.parse(readFileSync(path, 'utf-8')) as ISerialisedGraph
       } catch (e) {
         report.push(`${f}: PARSE FAIL ${String(e)}`)
+        parseFails++
         continue
       }
       if (typeof graph !== 'object' || graph === null || !('nodes' in graph))
@@ -60,10 +62,16 @@ describe('audit workflow templates with the real linkFixer', () => {
     }
     const out =
       `AUDIT dir=${DIR} fix=${FIX} files=${files.length} ` +
-      `withIssues=${filesWithIssues} patched=${totalPatched}\n` +
+      `withIssues=${filesWithIssues} patched=${totalPatched} ` +
+      `parseFails=${parseFails}\n` +
       report.join('\n')
     // eslint-disable-next-line no-console
     console.log(out)
     writeFileSync('/tmp/linkfix_audit.txt', out)
+    if (parseFails > 0) {
+      throw new Error(
+        `Audit failed: parseFails=${parseFails} withIssues=${filesWithIssues} patched=${totalPatched}`
+      )
+    }
   })
 })

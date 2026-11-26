@@ -32,7 +32,7 @@ How much colour a template may spend — **the default is none**, colour is only
 | group, the one core group users must find first | `#A88` red — at most one per graph | a single focal frame |
 | group, bypassed / optional path | `#444` + `mode: 4` on its nodes | "off", not a second accent |
 | `Note` / `MarkdownNote` | `color "#222"`, `bgcolor "#000"` | see below — never yellow |
-| node inside a group | no `color` / `bgcolor` keys at all | a tinted node pulls the eye out of its module |
+| node inside a group | no `color` / `bgcolor` keys (local nodes); partner/`api_node` may keep the frontend default `#432` / `#653` | a tinted local node pulls the eye out of its module; yellow is the API-node pair, not an accent |
 | one hero node, genuinely complex graph only | `#322` / `#533` red — at most one | the graph is too big to read at a glance |
 
 - **Never one colour per group.** Not per module, not per row, not green/purple/cyan frames to "separate" stages:
@@ -54,8 +54,9 @@ How much colour a template may spend — **the default is none**, colour is only
   "highlighted" local node looks like a partner node. One-off frames (`#a1309b`, `#A88` on five groups) are the other trap.
 - **Audit, don't eyeball:** `scripts/check_wf_colors.py <wf.json|dir> [--strict]` fails on a non-black note, two red
   groups, two accent colours among frames, two red hero nodes, and non-palette hexes; `--strict` also fails on a lone
-  decorative accent or any coloured node. Run it on the file you touched — the repo still ships older graphs that
-  predate the rule, so a directory-wide failure count is not a gate.
+  decorative accent, a single hero node, or any other coloured local node. API-node yellow `#432`/`#653` is reported as
+  a warning for manual review (confirm the node is a partner/API node, do not strip it). Run it on the file you
+  touched — the repo still ships older graphs that predate the rule, so a directory-wide failure count is not a gate.
 
 **Geometry**
 
@@ -89,11 +90,11 @@ How much colour a template may spend — **the default is none**, colour is only
 
 ## Group and note geometry
 
-Never hand-type a group's size; compute it from final node sizes: `grp.pos = [minX - 40, groupTop]`, `grp.size = [maxRight + 80, maxBottom - groupTop + 40]`, so every node sits inside the frame.
+Never hand-type a group's size; compute it from final node sizes: `grp.pos = [minX - 40, groupTop]`, `grp.size = [maxRight - grp.pos[0] + 80, maxBottom - groupTop + 40]`, so every node sits inside the frame.
 
 **Re-grouping a loose draft** (frames onto an existing graph): membership from the links, not the old ragged boxes; run *measure → rebuild* twice — rendered heights change with node width, so pass 1 lands gaps at 68–76 px instead of 70. Verify with `[data-node-id]` rects at `ds.scale = 1`; at runtime `g.pos` / `g.size` (`g.bounding` is serialized JSON only). **Retitle preset nodes ("Normal steps" / "Turbo CFG") rather than nesting a sub-group in a same-colour parent** (~46 px inner padding; two stacked blue frames read as a bug).
 
-**Note height: measure it, don't inherit it.** A note shorter than its rendered copy is clipped; in Nodes 2.0 the body is `.comfy-markdown-content` with `size-full` + `overflow-y-auto`, so `scrollHeight == clientHeight` and the overflow probe is useless — required height = **last child's** `getBoundingClientRect().bottom` minus the container's `top`, ÷ `canvas.ds.scale`, plus the node's chrome (`node.size[1] - containerHeight/scale`). 21-line Model Links + storage-tree + Report Issue note: 520 wide → 655 tall, 560 wide → 645 (520x530 shipped, ~120px cut off). Off-screen nodes report `0` for every rect ("measurement is impossible on this build") — center the node (`canvas.ds.offset = [cw/2 - (pos[0]+size[0]/2)*scale, ch/2 - (pos[1]+size[1]/2)*scale]`) and budget ~30–60 px of bottom slack.
+**Note height: measure it, don't inherit it.** A note shorter than its rendered copy is clipped; in Nodes 2.0 the body is `.comfy-markdown-content` with `size-full` + `overflow-y-auto`, so `scrollHeight == clientHeight` and the overflow probe is useless — required height = **last child's** `getBoundingClientRect().bottom` minus the container's `top`, ÷ `canvas.ds.scale`, plus the node's chrome (`node.size[1] - containerHeight/scale`). 21-line Model Links + storage-tree + Report Issue note: 520 wide → 655 tall, 560 wide → 645 (520x530 shipped, ~120px cut off). Off-screen nodes report `0` for every rect ("measurement is impossible on this build") — center the node in graph units (`canvas.ds.offset = [cw/(2*scale) - (pos[0]+size[0]/2), ch/(2*scale) - (pos[1]+size[1]/2)]`) and budget ~30–60 px of bottom slack.
 
 ## Node sizing
 

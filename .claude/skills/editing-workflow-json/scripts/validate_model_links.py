@@ -17,25 +17,26 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 HF_API = "https://huggingface.co/api/models"
 
-# node type -> (widget key that holds the filename, expected models/<dir>, number of files)
+# node type -> (widget keys that hold filenames in load order, expected models/<dir>)
 LOADERS = {
-    "UNETLoader": ("unet_name", "diffusion_models", 1),
-    "CLIPLoader": ("clip_name", "text_encoders", 1),
-    "DualCLIPLoader": ("clip_name1", "text_encoders", 2),
-    "TripleCLIPLoader": ("clip_name1", "text_encoders", 3),
-    "CLIPVisionLoader": ("clip_name", "clip_vision", 1),
-    "VAELoader": ("vae_name", "vae", 1),
-    "LoraLoader": ("lora_name", "loras", 1),
-    "LoraLoaderModelOnly": ("lora_name", "loras", 1),
-    "CheckpointLoaderSimple": ("ckpt_name", "checkpoints", 1),
-    "ControlNetLoader": ("control_net_name", "controlnet", 1),
-    "UpscaleModelLoader": ("model_name", "upscale_models", 1),
-    "StyleModelLoader": ("style_model_name", "style_models", 1),
-    "GLIGENLoader": ("gligen_name", "gligen", 1),
+    "UNETLoader": (("unet_name",), "diffusion_models"),
+    "CLIPLoader": (("clip_name",), "text_encoders"),
+    "DualCLIPLoader": (("clip_name1", "clip_name2"), "text_encoders"),
+    "TripleCLIPLoader": (("clip_name1", "clip_name2", "clip_name3"), "text_encoders"),
+    "CLIPVisionLoader": (("clip_name",), "clip_vision"),
+    "VAELoader": (("vae_name",), "vae"),
+    "LoraLoader": (("lora_name",), "loras"),
+    "LoraLoaderModelOnly": (("lora_name",), "loras"),
+    "CheckpointLoaderSimple": (("ckpt_name",), "checkpoints"),
+    "ControlNetLoader": (("control_net_name",), "controlnet"),
+    "UpscaleModelLoader": (("model_name",), "upscale_models"),
+    "StyleModelLoader": (("style_model_name",), "style_models"),
+    "GLIGENLoader": (("gligen_name",), "gligen"),
 }
 
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
@@ -48,19 +49,44 @@ def hf_token() -> str | None:
     return os.environ.get("HF_TOKEN")
 
 
-def get_json(url: str, token: str | None):
+def _headers(token: str | None) -> dict[str, str]:
     h = {"User-Agent": "comfy-wf-validate"}
     if token:
         h["Authorization"] = f"Bearer {token}"
-    with urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=45) as r:
-        return json.loads(r.read().decode())
+    return h
+
+
+def _next_link(link_header: str | None) -> str | None:
+    if not link_header:
+        return None
+    for part in link_header.split(","):
+        if 'rel="next"' in part:
+            start = part.find("<")
+            end = part.find(">")
+            if start >= 0 and end > start:
+                return part[start + 1:end]
+    return None
+
+
+def get_json_pages(url: str, token: str | None):
+    """Fetch a JSON list, following Link: rel=next pagination."""
+    items: list = []
+    while url:
+        with urllib.request.urlopen(
+            urllib.request.Request(url, headers=_headers(token)), timeout=45
+        ) as r:
+            batch = json.loads(r.read().decode())
+            link = r.headers.get("Link")
+        if isinstance(batch, list):
+            items.extend(batch)
+        else:
+            return batch
+        url = _next_link(link)
+    return items
 
 
 def head(url: str, token: str | None):
-    h = {"User-Agent": "comfy-wf-validate"}
-    if token:
-        h["Authorization"] = f"Bearer {token}"
-    req = urllib.request.Request(url, method="HEAD", headers=h)
+    req = urllib.request.Request(url, method="HEAD", headers=_headers(token))
     with urllib.request.urlopen(req, timeout=45) as r:
         return r.status, int(r.headers.get("Content-Length") or 0)
 
@@ -72,28 +98,33 @@ class Remote:
         self.token = token
         self.cache: dict[str, dict[str, tuple[str | None, int]]] = {}
 
-    def tree(self, repo: str):
-        if repo in self.cache:
-            return self.cache[repo]
+    def tree(self, repo: str, rev: str = "main"):
+        key = f"{repo}@{rev}"
+        if key in self.cache:
+            return self.cache[key]
         out: dict[str, tuple[str | None, int]] = {}
         try:
-            url = f"{HF_API}/{repo}/tree/main?recursive=true"
-            for item in get_json(url, self.token):
-                if item.get("type") != "file":
+            url = f"{HF_API}/{repo}/tree/{rev}?recursive=true"
+            for item in get_json_pages(url, self.token):
+                if not isinstance(item, dict) or item.get("type") != "file":
                     continue
                 oid = (item.get("lfs") or {}).get("oid") or item.get("oid")
                 out[item["path"]] = (oid, int(item.get("size") or 0))
         except Exception as e:  # noqa: BLE001 - surfaced as a check failure
             out = {"__error__": (str(e), 0)}  # type: ignore[dict-item]
-        self.cache[repo] = out
+        self.cache[key] = out
         return out
 
 
 def parse_hf_url(url: str):
+    """Return (repo, rev, path) with query/fragment stripped from path."""
     m = re.match(r"^https://huggingface\.co/([^/]+/[^/]+)/resolve/([^/]+)/(.+)$", url)
     if not m:
         return None, None, None
-    return m.group(1), m.group(2), m.group(3)
+    path = m.group(3)
+    path = path.split("?", 1)[0].split("#", 1)[0]
+    path = urllib.parse.unquote(path)
+    return m.group(1), m.group(2), path
 
 
 def widget_name(node: dict) -> dict[str, object]:
@@ -101,6 +132,16 @@ def widget_name(node: dict) -> dict[str, object]:
     if isinstance(named, dict):
         return named
     return {}
+
+
+def widget_filename(node: dict, key: str, index: int):
+    names = widget_name(node)
+    if key in names and names[key] is not None:
+        return names[key]
+    vals = node.get("widgets_values") or []
+    if index < len(vals):
+        return vals[index]
+    return None
 
 
 def check_node(node: dict, remote: Remote | None, strict: bool):
@@ -115,13 +156,13 @@ def check_node(node: dict, remote: Remote | None, strict: bool):
             errs.append(f"node {nid} ({ntype}): unmapped loader type, add it to LOADERS in this script")
         return errs, infos
 
-    key, want_dir, want_n = LOADERS[ntype]
-    names = widget_name(node)
-    fname = names.get(key) or (node.get("widgets_values") or [None])[0]
+    keys, want_dir = LOADERS[ntype]
+    want_n = len(keys)
     entries = (node.get("properties") or {}).get("models")
 
     if not entries:
-        errs.append(f"node {nid} ({ntype}): properties.models missing (loads {fname!r})")
+        fname0 = widget_filename(node, keys[0], 0)
+        errs.append(f"node {nid} ({ntype}): properties.models missing (loads {fname0!r})")
         return errs, infos
     if not isinstance(entries, list):
         errs.append(f"node {nid} ({ntype}): properties.models is not a list")
@@ -140,7 +181,8 @@ def check_node(node: dict, remote: Remote | None, strict: bool):
         name, url, directory = e.get("name"), e.get("url"), e.get("directory")
         if directory and directory != want_dir:
             errs.append(f"{tag}: directory {directory!r} != {want_dir!r} for {ntype}")
-        if name and i == 0 and fname and name != fname:
+        fname = widget_filename(node, keys[i], i) if i < len(keys) else None
+        if name and fname and name != fname:
             errs.append(f"{tag}: name {name!r} != widget value {fname!r}")
         if name and not name.endswith((".safetensors", ".ckpt", ".pt", ".pth", ".gguf", ".sft")):
             errs.append(f"{tag}: suspicious model filename {name!r}")
@@ -160,20 +202,18 @@ def check_node(node: dict, remote: Remote | None, strict: bool):
             errs.append(f"{tag}: url is not a huggingface resolve URL: {url}")
             continue
         if rev != "main":
-            infos.append(f"{tag}: pinned revision {rev!r} (library expects main)")
+            infos.append(f"{tag}: pinned revision {rev!r}")
         if name and path.rsplit("/", 1)[-1] != name:
             errs.append(f"{tag}: url filename {path.rsplit('/', 1)[-1]!r} != name {name!r}")
-        if want_dir and path.split("/")[0] != want_dir and "/" in path:
-            errs.append(f"{tag}: url directory {path.split('/')[0]!r} != {want_dir!r}")
 
         if remote is None:
             continue
-        tree = remote.tree(repo)
+        tree = remote.tree(repo, rev)
         if "__error__" in tree:
-            errs.append(f"{tag}: cannot read repo {repo}: {tree['__error__'][0]}")
+            errs.append(f"{tag}: cannot read repo {repo}@{rev}: {tree['__error__'][0]}")
             continue
         if path not in tree:
-            errs.append(f"{tag}: {path} not found in {repo}")
+            errs.append(f"{tag}: {path} not found in {repo}@{rev}")
             continue
         oid, size = tree[path]
         if oid and sha and str(sha).lower() != str(oid).lower():
@@ -199,11 +239,18 @@ def validate(path: str, remote: Remote | None, strict: bool):
     for node in data.get("nodes", []):
         e, i = check_node(node, remote, strict)
         if node.get("type") in LOADERS:
-            names = widget_name(node)
-            key, want_dir, _ = LOADERS[node["type"]]
-            fname = names.get(key) or (node.get("widgets_values") or [None])[0]
-            entries = (node.get("properties") or {}).get("models") or []
-            rows.append((node.get("id"), node["type"], fname, (entries[0].get("directory") if entries else None), "ok" if not e else "FAIL"))
+            keys, _want_dir = LOADERS[node["type"]]
+            fname = widget_filename(node, keys[0], 0)
+            entries = (node.get("properties") or {}).get("models")
+            directory = None
+            if isinstance(entries, list):
+                for ent in entries:
+                    if isinstance(ent, dict) and ent.get("directory") is not None:
+                        directory = ent.get("directory")
+                        break
+            rows.append(
+                (node.get("id"), node["type"], fname, directory, "ok" if not e else "FAIL")
+            )
         errs += e
         infos += i
     return rows, errs, infos
@@ -243,7 +290,8 @@ def main():
 
     if a.json:
         print(json.dumps(report, indent=2, ensure_ascii=False))
-    print("\nRESULT:", "FAIL" if failed else "PASS", f"({len(a.workflows)} file(s))")
+    else:
+        print("\nRESULT:", "FAIL" if failed else "PASS", f"({len(a.workflows)} file(s))")
     return 1 if failed else 0
 
 

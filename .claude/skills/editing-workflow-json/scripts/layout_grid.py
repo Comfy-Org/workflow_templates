@@ -37,8 +37,36 @@ Group membership is read from each group's CURRENT bounding box, so run this
 against a file whose groups still contain their nodes (fix membership first if
 not). Column widths are explicit so every row can share one grid.
 """
+import argparse
 import json
 import sys
+from collections import defaultdict
+
+# Nodes 2.0 chrome beyond size[1] (see references/layout-and-groups.md).
+_CHROME_BY_TYPE = {
+    "ComfySwitchNode": 56,
+    "CLIPLoader": 36,
+    "DualCLIPLoader": 36,
+    "TripleCLIPLoader": 36,
+    "CLIPVisionLoader": 36,
+    "UNETLoader": 36,
+    "VAELoader": 36,
+    "VAEDecode": 34,
+    "CheckpointLoaderSimple": 36,
+    "LoraLoader": 36,
+    "LoraLoaderModelOnly": 36,
+    "ControlNetLoader": 36,
+}
+_DEFAULT_CHROME = 30
+
+
+def chrome_of(node):
+    return _CHROME_BY_TYPE.get(node.get("type"), _DEFAULT_CHROME)
+
+
+def effective_h(node):
+    h = (node.get("size") or [0, 100])[1] or 100
+    return h + chrome_of(node)
 
 
 def rect_overlap(a, b):
@@ -56,23 +84,47 @@ def members_of(w, g, placed):
         x, y = n["pos"]
         if gx - 1 <= x < gx + gw and gy - 1 <= y < gy + gh:
             out.append(n)
-    out.sort(key=lambda n: (n["pos"][1], n["pos"][0]))
+    # Stable order by id so repeated measure/layout passes keep the same columns.
+    out.sort(key=lambda n: n["id"])
     return out
 
 
 def cap_size(node, width, node_gap):
-    """Keep the stored height but never let a display node dwarf the column."""
+    """Keep the stored height but never let a SaveImage dwarf the column."""
     h = (node.get("size") or [width, 100])[1] or 100
     if node["type"] == "SaveImage":
         h = min(h, 520)
-    if node["type"] == "ImageCompare":
-        h = min(h, 560)
+    # ImageCompare keeps its authored height (~710); do not shrink it.
     return [width, h]
 
 
+def column_chunks(members, ncols):
+    if not members:
+        return [[] for _ in range(ncols)]
+    per_col = -(-len(members) // ncols)
+    return [members[ci * per_col:(ci + 1) * per_col] for ci in range(ncols)]
+
+
+def chunk_height(chunk, inner, node_gap, mt, mb):
+    if not chunk:
+        return mt + mb
+    h = mt + mb
+    for n in chunk:
+        h += cap_size(n, inner, node_gap)[1] + chrome_of(n) + node_gap
+    return h - node_gap
+
+
 def main():
-    path, spec_path = sys.argv[1], sys.argv[2]
-    write = "--write" in sys.argv
+    ap = argparse.ArgumentParser(
+        description="Deterministic grid layout for a ComfyUI workflow JSON.")
+    ap.add_argument("workflow", help="path to the workflow JSON")
+    ap.add_argument("spec", help="path to the layout spec JSON")
+    ap.add_argument("--write", action="store_true",
+                    help="write the laid-out workflow back to disk")
+    args = ap.parse_args()
+
+    path, spec_path = args.workflow, args.spec
+    write = args.write
     w = json.load(open(path))
     spec = json.load(open(spec_path))
 
@@ -106,18 +158,15 @@ def main():
     for row in spec["rows"]:
         groups = [(g[0], g[1], (g[2] if len(g) > 2 else 1)) for g in row["groups"]]
 
-        # first pass: column heights
+        # first pass: column heights from every internal column
         heights = []
         for title, colw, ncols in groups:
             g = gmap.get(title)
             members = members_of(w, g, placed) if g else []
             inner = (colw - ml - mr - (ncols - 1) * inner_gap) // ncols
-            per_col = -(-len(members) // ncols) if members else 0
-            h = mt + mb
-            for n in members[:per_col]:
-                nw = inner
-                h += cap_size(n, nw, node_gap)[1] + node_gap
-            heights.append(max((h - node_gap) if members else 220, 220))
+            chunks = column_chunks(members, ncols)
+            col_hs = [chunk_height(ch, inner, node_gap, mt, mb) for ch in chunks]
+            heights.append(max(max(col_hs) if col_hs else 220, 220))
         row_h = max(heights)
 
         col_x = grid_x
@@ -126,15 +175,17 @@ def main():
             if g:
                 members = members_of(w, g, placed)
                 inner = (colw - ml - mr - (ncols - 1) * inner_gap) // ncols
-                per_col = -(-len(members) // ncols) if members else 0
-                for ci in range(ncols):
-                    chunk = members[ci * per_col:(ci + 1) * per_col]
-                    ny = row_y + mt
+                chunks = column_chunks(members, ncols)
+                for ci, chunk in enumerate(chunks):
+                    content_h = chunk_height(chunk, inner, node_gap, 0, 0)
+                    # Centre this column's stack inside the shared row height.
+                    avail = row_h - mt - mb
+                    ny = row_y + mt + max((avail - content_h) // 2, 0)
                     nx = col_x + ml + ci * (inner + inner_gap)
                     for n in chunk:
                         n["size"] = cap_size(n, inner, node_gap)
                         n["pos"] = [nx, ny]
-                        ny += n["size"][1] + node_gap
+                        ny += n["size"][1] + chrome_of(n) + node_gap
                         placed.add(n["id"])
                 g["bounding"] = [col_x, row_y, colw, row_h]
                 if not g.get("color"):
@@ -154,15 +205,13 @@ def main():
     for i in range(len(ids)):
         for j in range(i + 1, len(ids)):
             a, b = nodes[ids[i]], nodes[ids[j]]
-            ra = (a["pos"][0], a["pos"][1], a["size"][0], a["size"][1])
-            rb = (b["pos"][0], b["pos"][1], b["size"][0], b["size"][1])
+            ra = (a["pos"][0], a["pos"][1], a["size"][0], effective_h(a))
+            rb = (b["pos"][0], b["pos"][1], b["size"][0], effective_h(b))
             if rect_overlap(ra, rb):
                 over += 1
                 print("  OVERLAP", a["id"], a["type"], b["id"], b["type"])
     print("overlaps:", over)
 
-    # column widths must be uniform per x
-    from collections import defaultdict
     cols = defaultdict(set)
     for n in w["nodes"]:
         if n["type"] != "MarkdownNote":

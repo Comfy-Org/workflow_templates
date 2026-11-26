@@ -19,9 +19,10 @@ Rules it enforces (see references/layout-and-groups.md -> Colors):
 
   soft (exit 0, exit 1 with --strict)
     * a single decorative group accent (green / blue / cyan / purple / brown / yellow)
+    * a single red hero node (confirm the graph earns the spotlight)
     * coloured non-note nodes (list of types, so you can tell a hero node from clutter)
     * yellow `#432` / `#653` on a non-note node: correct for a partner/API node, wrong
-      as an accent on a local one — confirm by node type
+      as an accent on a local one — confirm by node type (manual review; do not strip API defaults)
 
 Usage:  python3 check_wf_colors.py a.json [b.json ...] [--strict]
         python3 check_wf_colors.py templates/            # every *.json inside
@@ -144,6 +145,12 @@ def check_graph(label: str, graph: dict) -> tuple[list[str], list[str]]:
     if len(heroes) > 1:
         types = [f"{n.get('id')}:{n.get('type')}" for n in heroes]
         errors.append(f"{len(heroes)} red hero nodes ({', '.join(types)}) — one at most")
+    elif len(heroes) == 1:
+        h = heroes[0]
+        warnings.append(
+            f"1 red hero node ({h.get('id')}:{h.get('type')}) — "
+            "confirm the graph earns a spotlight"
+        )
 
     api_yellow = [n for n in painted if (n.get("color"), n.get("bgcolor")) == API_PAIR]
     if api_yellow:

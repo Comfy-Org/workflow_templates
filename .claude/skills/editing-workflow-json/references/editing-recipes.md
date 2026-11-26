@@ -36,14 +36,14 @@ Link lives in `properties.models`.
 - `hash` = HF **LFS oid** (`GET https://huggingface.co/api/models/<repo>/tree/main?recursive=true` → `lfs.oid`) = `sha256sum`; never invent it or copy a sibling quant's unless bytes match (each quant: own hash + file, `…_bf16` ≠ `…_int8_convrot`).
 - Multi-file loaders (`DualCLIPLoader`, `TripleCLIPLoader`): **one entry per file**, in load order.
 
-Validate:
+Validate (from the repository root):
 
 ```bash
-python3 scripts/validate_model_links.py wf.json [more.json]     # structure + HF hash + HEAD 200 + size
-python3 scripts/validate_model_links.py wf.json --no-network    # fast structural pass (offline)
+python3 .claude/skills/editing-workflow-json/scripts/validate_model_links.py wf.json [more.json]     # structure + HF hash + HEAD 200 + size
+python3 .claude/skills/editing-workflow-json/scripts/validate_model_links.py wf.json --no-network    # fast structural pass (offline)
 ```
 
-Checks: `properties.models` present + right entry count; `name` == widget; `directory` == family; `hash_type: SHA256` + 64-hex; `resolve/main` URL matching directory and filename; SHA256 == repo LFS oid; `HEAD` 200 + byte size. Exit 0 clean / 1 wrong (values shown); `--strict` fails unmapped `*Loader`; gated repos: `~/.cache/huggingface/token`.
+Checks: `properties.models` present + right entry count; `name` == widget (every multi-file loader entry); `directory` == family; `hash_type: SHA256` + 64-hex; `resolve/…` URL filename matches `name` (query/fragment ignored; remote path need not match `directory`); SHA256 == repo LFS oid at the URL's revision; `HEAD` 200 + byte size. Exit 0 clean / 1 wrong (values shown); `--strict` fails unmapped `*Loader`; gated repos: `~/.cache/huggingface/token`.
 
 **Both scripts (`validate_model_links.py`, `audit_links.py`) walk TOP-LEVEL nodes only**: subgraph loaders print `(no model loader nodes)` / `files=0` and exit `PASS` / `0` (a false negative); check each `definitions.subgraphs[]` (`sg['nodes']` → `properties.models`, `name` vs widget, link invariant vs its `links[]`).
 

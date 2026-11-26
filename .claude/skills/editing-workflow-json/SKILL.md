@@ -69,7 +69,7 @@ task instead of guessing.**
 | opening the PR: template vs docs rules, translations, assets, validators, CI, what the body must contain | `references/contributing-prs.md` |
 
 Scripts (run them, don't eyeball):
-`scripts/check_wf_links.py` (links/slots of one workflow, exits non-zero on a broken invariant),
+`scripts/check_wf_links.py` (top-level `nodes`/`links` only; does not check `definitions.subgraphs[]`; exits non-zero on a broken invariant),
 `scripts/check_wf_colors.py` (colour restraint: notes, group frames, node accents; `--strict` also fails on warnings),
 `scripts/layout_grid.py` (deterministic grid layout for a whole graph),
 `scripts/audit_links.py` (structural scan across a directory of workflows),
@@ -85,9 +85,9 @@ Scripts (run them, don't eyeball):
 
 1. List all `*.json` in the target folder; `json.load` each to confirm it's a valid workflow
 2. Find existing Note nodes: `grep -c '"type": "Note"'`, then use Python to print each Note's id / title / widgets_values to spot the empty shells
-3. **Only change `widgets_values[0]`** (and `title` if needed) — leave every other field untouched
-4. Before writing back, verify lossless formatting: `json.dumps(data, indent=2, ensure_ascii=False) == original` (ComfyUI-exported files are 2-space indent + LF; the roundtrip should be byte-identical; if not, diff first, then decide)
-5. Write back with `json.dump(data, f, indent=2, ensure_ascii=False)` + trailing `f.write("\n")`
+3. **Change the note text in `widgets_values[0]`** and, for a `MarkdownNote`, in `widgets_values_named.text` (and `title` if needed) — leave every other field untouched
+4. Before editing, verify lossless formatting on the unmodified data: `json.dumps(data, indent=2, ensure_ascii=False) == original` (and record whether `original` ends with `\n`). ComfyUI-exported files are 2-space indent + LF; if the roundtrip is not byte-identical, diff first, then decide. After the edit, confirm only the intended fields changed.
+5. Write back with `json.dump(data, f, indent=2, ensure_ascii=False)` and only add a trailing newline if the original had one
 6. Re-load after writing to verify the JSON is valid, and print each Note's new content to confirm
 7. **Verify markdown actually renders** (cheap, real check): the frontend ships `marked` in
    `the ComfyUI frontend checkout's node_modules`. Run
