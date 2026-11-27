@@ -82,6 +82,26 @@ function sitemapSlugs(section: Section): Set<string> {
   return slugs;
 }
 
+function collectAllSitemapUrls(): Set<string> {
+  const urls = new Set<string>();
+  const re = /<loc>([^<]+)<\/loc>/g;
+  for (const file of fs.readdirSync(STATIC_DIR)) {
+    if (!file.startsWith('sitemap') || !file.endsWith('.xml') || file.includes('index')) continue;
+    const xml = fs.readFileSync(path.join(STATIC_DIR, file), 'utf-8');
+    for (const m of xml.matchAll(re)) {
+      const raw = m[1].trim();
+      try {
+        const parsed = new URL(raw);
+        const normPath = parsed.pathname.endsWith('/') ? parsed.pathname : `${parsed.pathname}/`;
+        urls.add(`${parsed.origin}${normPath}`);
+      } catch {
+        urls.add(raw);
+      }
+    }
+  }
+  return urls;
+}
+
 /** Prerendered sections: the built page's own robots meta is the answer. */
 function renderedIndexableSlugs(section: Section): Set<string> {
   const dir = path.join(STATIC_DIR, 'workflows', section);
@@ -90,9 +110,7 @@ function renderedIndexableSlugs(section: Section): Set<string> {
   for (const slug of fs.readdirSync(dir)) {
     const html = path.join(dir, slug, 'index.html');
     if (!fs.existsSync(html)) continue;
-    const noindex = /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i.test(
-      fs.readFileSync(html, 'utf-8')
-    );
+    const noindex = parseNoindex(fs.readFileSync(html, 'utf-8'));
     if (!noindex) slugs.add(slug);
   }
   return slugs;
@@ -234,6 +252,53 @@ async function main(): Promise<void> {
 
   const pages = collectRenderedPages();
   const origin = resolveSiteOrigin(process.env.PUBLIC_SITE_ORIGIN);
+
+  // Enforce that no rendered page listed in any sitemap carries noindex or non-self canonical tags.
+  const sitemapUrls = collectAllSitemapUrls();
+  let noindexViolations = 0;
+  let nonCanonicalViolations = 0;
+  let checked = 0;
+  for (const page of pages) {
+    const parsedPage = new URL(page.path, origin);
+    const normPagePath = parsedPage.pathname.endsWith('/')
+      ? parsedPage.pathname
+      : `${parsedPage.pathname}/`;
+    const fullUrl = `${parsedPage.origin}${normPagePath}`;
+    if (sitemapUrls.has(fullUrl)) {
+      checked++;
+      if (page.noindex) {
+        noindexViolations++;
+        problems.push(`sitemap contains noindexed page: ${fullUrl}`);
+      }
+      if (page.canonical) {
+        let canonicalUrl = page.canonical.trim();
+        try {
+          const parsed = new URL(canonicalUrl, origin);
+          const normCanonPath = parsed.pathname.endsWith('/')
+            ? parsed.pathname
+            : `${parsed.pathname}/`;
+          canonicalUrl = `${parsed.origin}${normCanonPath}${parsed.search}`;
+        } catch {
+          // Keep raw canonical URL if parsing fails
+        }
+        if (canonicalUrl !== fullUrl) {
+          nonCanonicalViolations++;
+          problems.push(
+            `sitemap contains non-self-canonical page: ${fullUrl} (canonicals to ${page.canonical})`
+          );
+        }
+      }
+    }
+  }
+  if (sitemapUrls.size > 0 && checked === 0) {
+    problems.push(
+      `sitemap indexability: no rendered page matched any of ${sitemapUrls.size} sitemap URLs (origin ${origin})`
+    );
+  }
+  console.log(
+    `  sitemap indexability: checked ${checked} of ${sitemapUrls.size} sitemap URLs (${noindexViolations} noindex, ${nonCanonicalViolations} non-canonical)`
+  );
+
   const clustered = pages.filter((p) => p.alternates.length > 0).length;
   const result = checkHreflangContract(pages, origin, LOCALES, localizedDetailIsPrerendered());
   console.log(`  hreflang: ${clustered} of ${pages.length} pages emit alternates (${origin})`);
