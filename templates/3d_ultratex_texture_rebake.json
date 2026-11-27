@@ -1,0 +1,1493 @@
+{
+ "id": "c88ed57b-2895-4025-adea-40eff686b077",
+ "revision": 0,
+ "last_node_id": 25,
+ "last_link_id": 32,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "Load3D",
+   "pos": [
+    40,
+    140
+   ],
+   "size": [
+    320,
+    470
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "links": []
+    },
+    {
+     "name": "mask",
+     "type": "MASK",
+     "links": []
+    },
+    {
+     "name": "mesh_path",
+     "type": "STRING",
+     "links": []
+    },
+    {
+     "name": "normal",
+     "type": "IMAGE",
+     "links": []
+    },
+    {
+     "name": "camera_info",
+     "type": "LOAD3D_CAMERA",
+     "links": []
+    },
+    {
+     "name": "recording_video",
+     "type": "VIDEO",
+     "links": []
+    },
+    {
+     "name": "model_3d",
+     "type": "FILE_3D",
+     "links": [
+      1
+     ]
+    },
+    {
+     "name": "model_3d_info",
+     "type": "LOAD3D_MODEL_INFO",
+     "links": []
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "Load3D",
+    "models": [
+     {
+      "name": "3d/3d_ultratex_texture_rebake_input_2.glb",
+      "directory": "input"
+     }
+    ]
+   },
+   "widgets_values": [
+    "3d/3d_ultratex_texture_rebake_input_2.glb",
+    {
+     "image": "3d_ultratex_texture_rebake_input.png",
+     "mask": "3d_ultratex_texture_rebake_input.png",
+     "normal": "3d_ultratex_texture_rebake_input.png",
+     "recording": "",
+     "camera_info": {},
+     "model_3d_info": []
+    },
+    1024,
+    1024
+   ]
+  },
+  {
+   "id": 2,
+   "type": "Get3DComponents",
+   "pos": [
+    40,
+    680
+   ],
+   "size": [
+    320,
+    90
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model_3d",
+     "type": "FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_STL,FILE_3D",
+     "link": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "mesh",
+     "type": "MESH",
+     "links": [
+      2
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "Get3DComponents"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 3,
+   "type": "UnwrapMesh",
+   "pos": [
+    40,
+    830
+   ],
+   "size": [
+    320,
+    170
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "mesh",
+     "type": "MESH",
+     "link": 2
+    }
+   ],
+   "outputs": [
+    {
+     "name": "MESH",
+     "type": "MESH",
+     "links": [
+      6,
+      7,
+      21,
+      24
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "UnwrapMesh"
+   },
+   "widgets_values": [
+    "pec",
+    1024,
+    1,
+    0.0
+   ]
+  },
+  {
+   "id": 4,
+   "type": "CreateCameraInfo",
+   "pos": [
+    420,
+    140
+   ],
+   "size": [
+    320,
+    320
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "camera_info",
+     "type": "LOAD3D_CAMERA",
+     "links": [
+      3
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "CreateCameraInfo"
+   },
+   "widgets_values": [
+    "orbit",
+    0.0,
+    0.0,
+    6.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    35.0,
+    1.0,
+    "perspective"
+   ]
+  },
+  {
+   "id": 5,
+   "type": "CreateCameraOrbit",
+   "pos": [
+    420,
+    520
+   ],
+   "size": [
+    320,
+    180
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "camera_info",
+     "type": "LOAD3D_CAMERA",
+     "link": 3
+    }
+   ],
+   "outputs": [
+    {
+     "name": "camera_info",
+     "type": "LOAD3D_CAMERA",
+     "links": [
+      4,
+      5,
+      23,
+      27
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "CreateCameraOrbit"
+   },
+   "widgets_values": [
+    4,
+    360.0,
+    0.0,
+    "top and bottom"
+   ]
+  },
+  {
+   "id": 6,
+   "type": "RenderMesh",
+   "pos": [
+    800,
+    140
+   ],
+   "size": [
+    320,
+    180
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "mesh",
+     "type": "MESH",
+     "link": 6
+    },
+    {
+     "name": "camera_info",
+     "type": "LOAD3D_CAMERA",
+     "link": 4
+    }
+   ],
+   "outputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "links": [
+      10
+     ]
+    },
+    {
+     "name": "mask",
+     "type": "MASK",
+     "links": [
+      11
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "RenderMesh"
+   },
+   "widgets_values": [
+    "world normal",
+    768,
+    768,
+    "#000000"
+   ]
+  },
+  {
+   "id": 7,
+   "type": "RenderMesh",
+   "pos": [
+    800,
+    380
+   ],
+   "size": [
+    320,
+    180
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "mesh",
+     "type": "MESH",
+     "link": 7
+    },
+    {
+     "name": "camera_info",
+     "type": "LOAD3D_CAMERA",
+     "link": 5
+    }
+   ],
+   "outputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "links": [
+      32
+     ]
+    },
+    {
+     "name": "mask",
+     "type": "MASK",
+     "links": []
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "RenderMesh"
+   },
+   "widgets_values": [
+    "auto",
+    768,
+    768,
+    "#000000"
+   ],
+   "title": "Render Mesh (before)"
+  },
+  {
+   "id": 8,
+   "type": "ConditioningLoader",
+   "pos": [
+    1180,
+    140
+   ],
+   "size": [
+    320,
+    80
+   ],
+   "flags": {},
+   "order": 8,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "CONDITIONING",
+     "type": "CONDITIONING",
+     "links": [
+      8
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "ConditioningLoader",
+    "models": [
+     {
+      "name": "flux-2-klein-9b_empty_prompt.safetensors",
+      "directory": "embeddings",
+      "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/embeddings/flux-2-klein-9b_empty_prompt.safetensors"
+     }
+    ]
+   },
+   "widgets_values": [
+    "flux-2-klein-9b_empty_prompt.safetensors"
+   ]
+  },
+  {
+   "id": 9,
+   "type": "LoadImage",
+   "pos": [
+    1180,
+    270
+   ],
+   "size": [
+    320,
+    380
+   ],
+   "flags": {},
+   "order": 9,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      12
+     ]
+    },
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": []
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "LoadImage",
+    "models": [
+     {
+      "name": "3d_ultratex_texture_rebake_input.png",
+      "directory": "input"
+     }
+    ]
+   },
+   "widgets_values": [
+    "3d_ultratex_texture_rebake_input.png",
+    "image"
+   ],
+   "title": "Reference material"
+  },
+  {
+   "id": 10,
+   "type": "UNETLoader",
+   "pos": [
+    1180,
+    700
+   ],
+   "size": [
+    320,
+    100
+   ],
+   "flags": {},
+   "order": 10,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      13
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "UNETLoader",
+    "models": [
+     {
+      "name": "flux-2-klein-base-9b_int8_convrot.safetensors",
+      "directory": "diffusion_models",
+      "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/diffusion_models/flux-2-klein-base-9b_int8_convrot.safetensors"
+     }
+    ]
+   },
+   "widgets_values": [
+    "flux-2-klein-base-9b_int8_convrot.safetensors",
+    "default"
+   ]
+  },
+  {
+   "id": 11,
+   "type": "VAELoader",
+   "pos": [
+    1180,
+    850
+   ],
+   "size": [
+    320,
+    90
+   ],
+   "flags": {},
+   "order": 11,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "VAE",
+     "type": "VAE",
+     "links": [
+      9,
+      20
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "VAELoader",
+    "models": [
+     {
+      "name": "ultratex_flux2_vae_fp32.safetensors",
+      "directory": "vae",
+      "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/vae/ultratex_flux2_vae_fp32.safetensors"
+     }
+    ]
+   },
+   "widgets_values": [
+    "ultratex_flux2_vae_fp32.safetensors"
+   ]
+  },
+  {
+   "id": 12,
+   "type": "LoraLoaderModelOnly",
+   "pos": [
+    1180,
+    990
+   ],
+   "size": [
+    320,
+    110
+   ],
+   "flags": {},
+   "order": 12,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 13
+    }
+   ],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      14
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "LoraLoaderModelOnly",
+    "models": [
+     {
+      "name": "flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors",
+      "directory": "loras",
+      "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors"
+     }
+    ]
+   },
+   "widgets_values": [
+    "flux-2-klein-9b_distill_lora_avg_rank_345_bf16.safetensors",
+    1.0
+   ]
+  },
+  {
+   "id": 13,
+   "type": "LoraLoaderModelOnly",
+   "pos": [
+    1180,
+    1150
+   ],
+   "size": [
+    320,
+    110
+   ],
+   "flags": {},
+   "order": 13,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 14
+    }
+   ],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      15
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "LoraLoaderModelOnly",
+    "models": [
+     {
+      "name": "ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors",
+      "directory": "loras",
+      "url": "https://huggingface.co/Comfy-Org/UltraTex/resolve/main/loras/ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors"
+     }
+    ]
+   },
+   "widgets_values": [
+    "ultratex_flux2_klein_9b_albedo_lora_bf16.safetensors",
+    1.0
+   ],
+   "title": "UltraTex albedo LoRA"
+  },
+  {
+   "id": 14,
+   "type": "UltraTexConditioning",
+   "pos": [
+    1560,
+    140
+   ],
+   "size": [
+    360,
+    300
+   ],
+   "flags": {},
+   "order": 14,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "conditioning",
+     "type": "CONDITIONING",
+     "link": 8
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 9
+    },
+    {
+     "name": "normals",
+     "type": "IMAGE",
+     "link": 10
+    },
+    {
+     "name": "masks",
+     "type": "MASK",
+     "link": 11
+    },
+    {
+     "name": "reference",
+     "type": "IMAGE",
+     "link": 12
+    },
+    {
+     "name": "reference_mask",
+     "type": "MASK",
+     "link": null
+    },
+    {
+     "name": "extra_views",
+     "type": "COMFY_DYNAMICCOMBO_V3",
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "name": "CONDITIONING",
+     "type": "CONDITIONING",
+     "links": [
+      16,
+      17
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "UltraTexConditioning"
+   },
+   "widgets_values": [
+    "off"
+   ]
+  },
+  {
+   "id": 15,
+   "type": "EmptyFlux2LatentImage",
+   "pos": [
+    1560,
+    490
+   ],
+   "size": [
+    320,
+    130
+   ],
+   "flags": {},
+   "order": 15,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      18
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "EmptyFlux2LatentImage"
+   },
+   "widgets_values": [
+    768,
+    768,
+    6
+   ]
+  },
+  {
+   "id": 16,
+   "type": "KSampler",
+   "pos": [
+    1560,
+    670
+   ],
+   "size": [
+    320,
+    300
+   ],
+   "flags": {},
+   "order": 16,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 15
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 16
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 17
+    },
+    {
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 18
+    }
+   ],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      19
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "KSampler"
+   },
+   "widgets_values": [
+    0,
+    "fixed",
+    8,
+    1.0,
+    "euler",
+    "simple",
+    1.0
+   ]
+  },
+  {
+   "id": 17,
+   "type": "VAEDecode",
+   "pos": [
+    1560,
+    1020
+   ],
+   "size": [
+    320,
+    80
+   ],
+   "flags": {},
+   "order": 17,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 19
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 20
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      22,
+      31
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "VAEDecode"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 18,
+   "type": "BakeTextureFromViews",
+   "pos": [
+    1940,
+    140
+   ],
+   "size": [
+    360,
+    230
+   ],
+   "flags": {},
+   "order": 18,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "mesh",
+     "type": "MESH",
+     "link": 21
+    },
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 22
+    },
+    {
+     "name": "camera_info",
+     "type": "LOAD3D_CAMERA",
+     "link": 23
+    },
+    {
+     "name": "mask",
+     "type": "MASK",
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "name": "base_color",
+     "type": "IMAGE",
+     "links": [
+      25,
+      30
+     ]
+    },
+    {
+     "name": "confidence",
+     "type": "MASK",
+     "links": []
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "BakeTextureFromViews"
+   },
+   "widgets_values": [
+    1024,
+    4.0,
+    true
+   ]
+  },
+  {
+   "id": 19,
+   "type": "ApplyTextureToMesh",
+   "pos": [
+    1940,
+    420
+   ],
+   "size": [
+    360,
+    120
+   ],
+   "flags": {},
+   "order": 19,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "mesh",
+     "type": "MESH",
+     "link": 24
+    },
+    {
+     "name": "base_color",
+     "type": "IMAGE",
+     "link": 25
+    }
+   ],
+   "outputs": [
+    {
+     "name": "mesh",
+     "type": "MESH",
+     "links": [
+      26,
+      28
+     ]
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "ApplyTextureToMesh"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 20,
+   "type": "RenderMesh",
+   "pos": [
+    1940,
+    590
+   ],
+   "size": [
+    320,
+    180
+   ],
+   "flags": {},
+   "order": 20,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "mesh",
+     "type": "MESH",
+     "link": 26
+    },
+    {
+     "name": "camera_info",
+     "type": "LOAD3D_CAMERA",
+     "link": 27
+    }
+   ],
+   "outputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "links": [
+      29
+     ]
+    },
+    {
+     "name": "mask",
+     "type": "MASK",
+     "links": []
+    }
+   ],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "RenderMesh"
+   },
+   "widgets_values": [
+    "texture",
+    768,
+    768,
+    "#000000"
+   ],
+   "title": "Render Mesh (result)"
+  },
+  {
+   "id": 21,
+   "type": "SaveGLB",
+   "pos": [
+    1940,
+    820
+   ],
+   "size": [
+    320,
+    90
+   ],
+   "flags": {},
+   "order": 21,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "mesh",
+     "type": "MESH",
+     "link": 28
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "SaveGLB"
+   },
+   "widgets_values": [
+    "3d/ultratex_rebake"
+   ]
+  },
+  {
+   "id": 22,
+   "type": "SaveImage",
+   "pos": [
+    2320,
+    140
+   ],
+   "size": [
+    400,
+    300
+   ],
+   "flags": {},
+   "order": 22,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 29
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "3d_ultratex_texture_rebake"
+   ],
+   "title": "Save result views"
+  },
+  {
+   "id": 23,
+   "type": "SaveImage",
+   "pos": [
+    2320,
+    480
+   ],
+   "size": [
+    400,
+    300
+   ],
+   "flags": {},
+   "order": 23,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 30
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "3d_ultratex_texture_rebake_texture"
+   ],
+   "title": "Save baked texture"
+  },
+  {
+   "id": 24,
+   "type": "SaveImage",
+   "pos": [
+    2320,
+    820
+   ],
+   "size": [
+    400,
+    300
+   ],
+   "flags": {},
+   "order": 24,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 31
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "3d_ultratex_texture_rebake_views"
+   ],
+   "title": "Save painted views"
+  },
+  {
+   "id": 25,
+   "type": "SaveImage",
+   "pos": [
+    2740,
+    140
+   ],
+   "size": [
+    400,
+    300
+   ],
+   "flags": {},
+   "order": 25,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 32
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "cnr_id": "comfy-core",
+    "ver": "0.45.0",
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "3d_ultratex_texture_rebake_before"
+   ],
+   "title": "Save input mesh views"
+  }
+ ],
+ "links": [
+  [
+   1,
+   1,
+   6,
+   2,
+   0,
+   "FILE_3D"
+  ],
+  [
+   2,
+   2,
+   0,
+   3,
+   0,
+   "MESH"
+  ],
+  [
+   3,
+   4,
+   0,
+   5,
+   0,
+   "LOAD3D_CAMERA"
+  ],
+  [
+   4,
+   5,
+   0,
+   6,
+   1,
+   "LOAD3D_CAMERA"
+  ],
+  [
+   5,
+   5,
+   0,
+   7,
+   1,
+   "LOAD3D_CAMERA"
+  ],
+  [
+   6,
+   3,
+   0,
+   6,
+   0,
+   "MESH"
+  ],
+  [
+   7,
+   3,
+   0,
+   7,
+   0,
+   "MESH"
+  ],
+  [
+   8,
+   8,
+   0,
+   14,
+   0,
+   "CONDITIONING"
+  ],
+  [
+   9,
+   11,
+   0,
+   14,
+   1,
+   "VAE"
+  ],
+  [
+   10,
+   6,
+   0,
+   14,
+   2,
+   "IMAGE"
+  ],
+  [
+   11,
+   6,
+   1,
+   14,
+   3,
+   "MASK"
+  ],
+  [
+   12,
+   9,
+   0,
+   14,
+   4,
+   "IMAGE"
+  ],
+  [
+   13,
+   10,
+   0,
+   12,
+   0,
+   "MODEL"
+  ],
+  [
+   14,
+   12,
+   0,
+   13,
+   0,
+   "MODEL"
+  ],
+  [
+   15,
+   13,
+   0,
+   16,
+   0,
+   "MODEL"
+  ],
+  [
+   16,
+   14,
+   0,
+   16,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   17,
+   14,
+   0,
+   16,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   18,
+   15,
+   0,
+   16,
+   3,
+   "LATENT"
+  ],
+  [
+   19,
+   16,
+   0,
+   17,
+   0,
+   "LATENT"
+  ],
+  [
+   20,
+   11,
+   0,
+   17,
+   1,
+   "VAE"
+  ],
+  [
+   21,
+   3,
+   0,
+   18,
+   0,
+   "MESH"
+  ],
+  [
+   22,
+   17,
+   0,
+   18,
+   1,
+   "IMAGE"
+  ],
+  [
+   23,
+   5,
+   0,
+   18,
+   2,
+   "LOAD3D_CAMERA"
+  ],
+  [
+   24,
+   3,
+   0,
+   19,
+   0,
+   "MESH"
+  ],
+  [
+   25,
+   18,
+   0,
+   19,
+   1,
+   "IMAGE"
+  ],
+  [
+   26,
+   19,
+   0,
+   20,
+   0,
+   "MESH"
+  ],
+  [
+   27,
+   5,
+   0,
+   20,
+   1,
+   "LOAD3D_CAMERA"
+  ],
+  [
+   28,
+   19,
+   0,
+   21,
+   0,
+   "MESH"
+  ],
+  [
+   29,
+   20,
+   0,
+   22,
+   0,
+   "IMAGE"
+  ],
+  [
+   30,
+   18,
+   0,
+   23,
+   0,
+   "IMAGE"
+  ],
+  [
+   31,
+   17,
+   0,
+   24,
+   0,
+   "IMAGE"
+  ],
+  [
+   32,
+   7,
+   0,
+   25,
+   0,
+   "IMAGE"
+  ]
+ ],
+ "groups": [
+  {
+   "id": 1,
+   "title": "Step 1 - Load and unwrap the mesh",
+   "bounding": [
+    20,
+    60,
+    360,
+    960
+   ],
+   "color": "#3f789e",
+   "font_size": 24,
+   "flags": {}
+  },
+  {
+   "id": 2,
+   "title": "Step 2 - Camera orbit and 6 view renders",
+   "bounding": [
+    400,
+    60,
+    740,
+    700
+   ],
+   "color": "#3f789e",
+   "font_size": 24,
+   "flags": {}
+  },
+  {
+   "id": 3,
+   "title": "Step 3 - Models and reference material",
+   "bounding": [
+    1160,
+    60,
+    360,
+    1220
+   ],
+   "color": "#3f789e",
+   "font_size": 24,
+   "flags": {}
+  },
+  {
+   "id": 4,
+   "title": "Step 4 - UltraTex conditioning and sampling",
+   "bounding": [
+    1540,
+    60,
+    400,
+    1060
+   ],
+   "color": "#3f789e",
+   "font_size": 24,
+   "flags": {}
+  },
+  {
+   "id": 5,
+   "title": "Step 5 - Bake, apply and save",
+   "bounding": [
+    1920,
+    60,
+    1240,
+    1080
+   ],
+   "color": "#3f789e",
+   "font_size": 24,
+   "flags": {}
+  }
+ ],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 0.75,
+   "offset": [
+    0,
+    0
+   ]
+  }
+ },
+ "version": 0.4
+}
