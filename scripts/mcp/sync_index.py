@@ -312,6 +312,65 @@ _HAS_VIDEO = [
     "FFMPEGVideoCombine",
 ]
 
+# Loaders and savers per medium. When the task-name table has no branch for a
+# template and no AI cache entry matches its source hash, the io used to fall
+# back to "text: Prompt" in and an image/video guess out — which is why audio,
+# video and 3D templates were advertised as image generators. These sets let the
+# graph itself decide.
+_AUDIO_IN_NODES = {
+    "LoadAudio",
+    "LoadAudioUpload",
+    "VHS_LoadAudio",
+    "VHS_LoadAudioUpload",
+    "RecordAudio",
+}
+_VIDEO_IN_NODES = {
+    "LoadVideo",
+    "LoadVideoUpload",
+    "VHS_LoadVideo",
+    "VHS_LoadVideoPath",
+    "VHS_LoadVideoFFmpeg",
+    "VHS_LoadVideoFFmpegPath",
+}
+_IMAGE_IN_NODES = {"LoadImage", "LoadImageMask", "LoadImageOutput"}
+_TEXT_IN_NODE_PREFIXES = ("PrimitiveString",)
+_TEXT_IN_NODES = {
+    "StringConstant",
+    "CLIPTextEncode",
+    "CLIPTextEncodeFlux",
+    "TextEncodeQwenImageEdit",
+}
+_AUDIO_OUT_PREFIXES = ("SaveAudio", "PreviewAudio")
+_VIDEO_OUT_NODES = {
+    "SaveVideo",
+    "VHS_SaveVideo",
+    "CreateVideo",
+    "SaveWEBM",
+    "VideoCombineNode",
+    "VHS_VideoCombine",
+    "VHS_VideoComb",
+    "VHS_VideoCombineNode",
+    "FFMPEGVideoCombine",
+}
+_IMAGE_OUT_NODES = {
+    "SaveImage",
+    "SaveImageAdvanced",
+    "PreviewImage",
+    "SaveAnimatedWEBP",
+    "ImageCompare",
+}
+_MODEL_OUT_NODES = {
+    "SaveGLB",
+    "Save3DModel",
+    "Save3DAdvanced",
+    "Preview3D",
+    "Preview3DAdvanced",
+}
+_TEXT_OUT_NODES = {"SaveText", "PreviewAny"}
+
+# "chat" as a word: `audio-chatterbox_vc` is a voice converter, not an LLM template.
+_CHAT_TOKEN_RE = re.compile(r"(^|[_.\-])chat($|[_.\-])")
+
 
 def infer_task(name: str, group_type: str, tags: list[str]) -> str:
     name_l = name.lower()
@@ -346,7 +405,7 @@ def infer_task(name: str, group_type: str, tags: list[str]) -> str:
         (["audio_to_audio", "audio-to-audio", "a2a"], "Audio to Audio"),
         (["voice_conversion", "voice_convert"], "Voice Conversion"),
         (["audio_edit"], "Audio Editing"),
-        (["text_gen", "llm", "chat"], "Text Generation"),
+        (["text_gen", "llm"], "Text Generation"),
         (["batch"], "Batch Processing"),
         (["stitch", "combine", "merge"], "Image Composition"),
         (["color"], "Color Adjustment"),
@@ -404,7 +463,7 @@ def infer_task_type(name: str) -> str:
         return "tts"
     if any(x in name_l for x in ["text_to_audio", "text-to-audio", "text_to_music", "text-to-music"]):
         return "t2a"
-    if any(x in name_l for x in ["text_gen", "llm", "chat"]):
+    if any(x in name_l for x in ["text_gen", "llm"]) or _CHAT_TOKEN_RE.search(name_l):
         return "llm"
     if any(x in name_l for x in ["rembg", "birefnet", "bi-refnet", "background"]):
         return "remove"
@@ -479,7 +538,52 @@ def normalize_io(io: dict | None, fallback: dict | None = None) -> dict | None:
     return normalized
 
 
-def infer_io(task_type: str, node_types: list[str]) -> dict:
+def _graph_media_io(node_types: list[str], wants_text: bool = False) -> dict:
+    """Infer io media slots from the loaders and savers present in a graph.
+
+    Used only when the task-name table has no branch and no AI cache entry
+    matched, so it must stay conservative: one slot per medium actually present
+    in the graph, plus a text prompt when the graph reads text or the template's
+    own name/task says it takes text (partner nodes carry the prompt in a widget,
+    so no text node appears in the graph).
+    """
+    types = set(node_types)
+    has_text_in = (
+        wants_text
+        or bool(types & _TEXT_IN_NODES)
+        or any(t.startswith(_TEXT_IN_NODE_PREFIXES) for t in types)
+    )
+    def count(group: set[str]) -> int:
+        return sum(1 for node in node_types if node in group)
+
+    inputs: list[str] = []
+    images = count(_IMAGE_IN_NODES)
+    videos = count(_VIDEO_IN_NODES)
+    audios = count(_AUDIO_IN_NODES)
+    if images:
+        inputs.append(_encode_slot("image", "Input image", images))
+    if videos:
+        inputs.append(_encode_slot("video", "Input video", videos))
+    if audios:
+        inputs.append(_encode_slot("audio", "Input audio", audios))
+    if has_text_in:
+        inputs.append(_encode_slot("text", "Prompt"))
+
+    outputs: list[str] = []
+    if any(t.startswith(_AUDIO_OUT_PREFIXES) for t in types):
+        outputs.append(_encode_slot("audio", "Generated audio"))
+    if types & _VIDEO_OUT_NODES:
+        outputs.append(_encode_slot("video", "Generated video"))
+    if types & _MODEL_OUT_NODES:
+        outputs.append(_encode_slot("model", "Generated 3D model"))
+    if types & _IMAGE_OUT_NODES:
+        outputs.append(_encode_slot("image", "Generated image"))
+    if not outputs and types & _TEXT_OUT_NODES:
+        outputs.append(_encode_slot("text", "Output text"))
+    return _io(inputs=inputs, outputs=outputs)
+
+
+def infer_io(task_type: str, node_types: list[str], *, name: str = "", task: str = "") -> dict:
     has_mask = any("mask" in n.lower() for n in node_types)
     has_vid = any(n in node_types for n in _HAS_VIDEO)
     if task_type == "t2i":
@@ -586,6 +690,19 @@ def infer_io(task_type: str, node_types: list[str]) -> dict:
             inputs=[_encode_slot("audio", "Audio to transcribe")],
             outputs=[_encode_slot("text", "Transcription")],
         )
+    inferred = _graph_media_io(
+        node_types,
+        wants_text="text" in f"{name} {task}".lower()
+        or "prompt" in f"{name} {task}".lower(),
+    )
+    if inferred["outputs"] or inferred["inputs"]:
+        # Never leave a side empty: a graph whose saver type is not recognised
+        # still produces something, and an empty list reads as "no output".
+        if not inferred["outputs"]:
+            inferred["outputs"] = [_encode_slot("video" if has_vid else "image", "Generated output")]
+        if not inferred["inputs"]:
+            inferred["inputs"] = [_encode_slot("text", "Prompt")]
+        return inferred
     out_type = "video" if has_vid else "image"
     return _io(
         inputs=[_encode_slot("text", "Prompt")],
@@ -706,7 +823,7 @@ def build_template_entry(
     task_type = infer_task_type(name)
 
     cached = template_cache or {}
-    io_info = infer_io(task_type, node_types)
+    io_info = infer_io(task_type, node_types, name=name, task=task)
     desc = tpl.get("description") or auto_description(name, task, model, is_api)
 
     override_row = (metadata_overrides or {}).get("templates", {}).get(name) or {}
@@ -737,7 +854,9 @@ def build_template_entry(
         entry["capabilities"] = capabilities
     if cached.get("io") and cache_matches_workflow(name, cached):
         normalized = normalize_io(cached["io"])
-        if normalized:
+        # An AI pass that filled the cache with the generic stub is no better
+        # than the graph-derived inference, so it does not override it.
+        if normalized and not is_placeholder_io(normalized):
             entry["io"] = normalized
     return apply_template_overlay(entry, cached, name)
 
@@ -745,13 +864,16 @@ def build_template_entry(
 def preserve_published_io(
     new_data: list[dict],
     existing: dict[str, dict],
+    templates_cache: dict[str, dict[str, Any]] | None = None,
 ) -> list[str]:
-    """Keep the io already published in index.mcp.json when sync would stub it.
+    """Keep the io already published in index.mcp.json unless the cache refreshed it.
 
-    Templates fall back to `["text: Prompt"]` / `["image: Generated output"]`
-    whenever the AI cache entry is missing or stale. Losing curated io on a sync
-    is always a regression for the consumer, so the previous value wins until
-    `npm run mcp:ai` writes a fresh one.
+    A sync can only produce better io than what is published when the AI cache
+    entry matches the current workflow hash. Otherwise the freshly inferred value
+    is a machine guess — the legacy placeholder, or the media slots inferred from
+    the graph's loaders and savers — and it must not overwrite io that was
+    curated and published. Published placeholders are fair game, which is how the
+    graph-derived inference reaches the entries that only ever had the stub.
     """
     kept: list[str] = []
     for group in new_data:
@@ -760,9 +882,12 @@ def preserve_published_io(
             previous = (existing.get(name) or {}).get("io")
             if not previous or is_placeholder_io(previous):
                 continue
-            if is_placeholder_io(template.get("io")):
-                template["io"] = previous
-                kept.append(name)
+            if cache_matches_workflow(name, (templates_cache or {}).get(name)):
+                continue
+            if template.get("io") == previous:
+                continue
+            template["io"] = previous
+            kept.append(name)
     return kept
 
 
@@ -853,7 +978,7 @@ def sync(
         new_data.append(new_entry)
 
     apply_template_cache_to_mcp(new_data, template_cache)
-    kept_io = preserve_published_io(new_data, existing)
+    kept_io = preserve_published_io(new_data, existing, templates_cache)
     if kept_io:
         warnings.append(
             f"Kept the previously published io for {len(kept_io)} template(s) "
