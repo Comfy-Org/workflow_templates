@@ -23,6 +23,14 @@ name: Release Full Scan
 # core node *removed* upstream is not reported here. Detecting removals needs a
 # runtime `/object_info` baseline, which validate-widget-types already builds by
 # starting ComfyUI on CPU.
+#
+# Manifest freshness is also part of the sweep: `validate-manifests` fails when
+# packages/core/.../manifest.json does not match templates/. That is a release
+# gate by design (see validate-manifests.yml) — a template-only PR may leave the
+# manifest stale until a version bump regenerates it — so run this scan on the
+# version-bump PR, where version-check.yml has already refreshed the manifest.
+# Adding the label earlier than that can legitimately report the manifest as
+# stale.
 
 on:
   pull_request:
