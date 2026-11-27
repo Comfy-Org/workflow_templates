@@ -34,12 +34,15 @@ on:
 jobs:
   zod-schema:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       FRONTEND_REF: ${{ github.event.inputs.frontend_ref || vars.FRONTEND_SCHEMA_REF || 'main' }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v7
       with:
+        persist-credentials: false
         sparse-checkout: |
           templates/
           scripts/validate/frontend_schema.mts
@@ -50,26 +53,36 @@ jobs:
       with:
         node-version: '22'
 
+    # Resolve once: downloading the four files straight from a branch name lets
+    # the branch move between requests and mixes schema sources from different
+    # commits. Fail closed if the ref cannot be resolved.
+    - name: Resolve frontend ref
+      id: ref
+      run: |
+        set -euo pipefail
+        sha=$(curl -sSf \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H 'Accept: application/vnd.github+json' \
+          "https://api.github.com/repos/Comfy-Org/ComfyUI_frontend/commits/${FRONTEND_REF}" \
+          | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')
+        echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+        echo "Resolved ${FRONTEND_REF} -> ${sha}"
+        echo "::notice title=Frontend schema ref::${FRONTEND_REF} (${sha})"
+
     - name: Fetch frontend schema sources
+      env:
+        FRONTEND_SHA: ${{ steps.ref.outputs.sha }}
       run: |
         set -euo pipefail
         dir="$RUNNER_TEMP/frontend-schema"
         mkdir -p "$dir/packages/graph-model/src"
         printf '{"name":"frontend-schema","private":true,"type":"module"}\n' > "$dir/package.json"
-        echo "Frontend ref: ${FRONTEND_REF}"
         for file in workflowSchema.ts widgets.ts linkId.ts rerouteId.ts; do
           curl -sSfL \
-            "https://raw.githubusercontent.com/Comfy-Org/ComfyUI_frontend/${FRONTEND_REF}/packages/graph-model/src/${file}" \
+            "https://raw.githubusercontent.com/Comfy-Org/ComfyUI_frontend/${FRONTEND_SHA}/packages/graph-model/src/${file}" \
             -o "$dir/packages/graph-model/src/${file}"
           printf '  %s  %s\n' "$(sha256sum "$dir/packages/graph-model/src/${file}" | cut -c1-16)" "$file"
         done
-        resolved=$(curl -sSf \
-          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          -H 'Accept: application/vnd.github+json' \
-          "https://api.github.com/repos/Comfy-Org/ComfyUI_frontend/commits/${FRONTEND_REF}" \
-          | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])' 2>/dev/null || echo 'unresolved')
-        echo "Resolved frontend commit: ${resolved}"
-        echo "::notice title=Frontend schema ref::${FRONTEND_REF} (${resolved})"
         cd "$dir"
         npm install --silent --no-audit --no-fund zod zod-validation-error tsx
 
