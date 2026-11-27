@@ -84,7 +84,9 @@ Per-template AI copy in **`scripts/data/mcp/template_cache.json`**. Model profil
 }
 ```
 
-**Versioning:** `source_hash` is SHA-256 of `templates/{name}.json`. When the workflow file changes, hash mismatch → `enhance_descriptions.py` targets that template on the next run. Sync/apply only merge entries with a matching hash.
+**Versioning:** `source_hash` is SHA-256 of `templates/{name}.json`. When the workflow file changes, hash mismatch → `enhance_descriptions.py` targets that template on the next run. Sync/apply only merge *descriptions* with a matching hash.
+
+**io is kept when it would regress to the stub:** a stale cache entry (or a workflow-only edit such as a note tweak) must not drop curated `io` back to `["text: Prompt"]` / `["image: Generated output"]`, because that stub is useless to MCP consumers. Sync therefore keeps the cached `io` on a hash miss, and keeps the value already in `index.mcp.json` when the inferred one is the stub. Both are replaced for real the next time `npm run mcp:ai` refreshes the entry.
 
 | Script | Role |
 |--------|------|

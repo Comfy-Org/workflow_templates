@@ -207,8 +207,9 @@ Templates in `bundles.json` map to Python packages:
 | `media-image` | Image generation/editing      | **Frozen** (0.3.160, **85.3 MB** on PyPI) |
 | `media-video` | Video generation              | **Frozen** (0.3.101, **99.5 MB** on PyPI) |
 | `media-other` | Audio, 3D, utilities          | **Frozen** (0.3.229, **85.0 MB** on PyPI) |
-| `media-assets-01` | Template thumbnails/media (shard 01) | **Frozen** (0.1.47, **89.8 MB** on PyPI) |
-| `media-assets-02` | **New** template thumbnails/media | Active |
+| `media-assets-01` | Template thumbnails/media (shard 01) | **Frozen** (0.1.48, **89.8 MB** on PyPI) |
+| `media-assets-02` | Template thumbnails/media (shard 02) | **Frozen** (0.1.36, **91.3 MB** on PyPI) |
+| `media-assets-03` | **New** template thumbnails/media | Active — new media goes here, never into a frozen bundle |
 
 Frozen media bundles: [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md) (why frozen, CI, publishing).
 

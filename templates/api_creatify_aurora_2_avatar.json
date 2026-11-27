@@ -1,0 +1,516 @@
+{
+  "id": "b7e3d9a2-15c4-4f88-a1c6-9c2b0d5e7a12",
+  "revision": 0,
+  "last_node_id": 13,
+  "last_link_id": 7,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        -180,
+        150
+      ],
+      "size": [
+        290,
+        400
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "glitter_girl_portrait.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "glitter_girl_portrait.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 3,
+      "type": "CreatifyAurora2AvatarNode",
+      "pos": [
+        530,
+        90
+      ],
+      "size": [
+        440,
+        420
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreatifyAurora2AvatarNode"
+      },
+      "widgets_values": [
+        "720p",
+        "Front-facing medium close-up, framed as in the photo. Glitter make-up catches the light, hands stay raised near the face and barely move. Confident, slightly playful delivery straight into the lens, natural blinks and small head movement. Soft key light from the front-left with a crisp specular pop on the glitter, gentle fill from the right, dark neutral backdrop falling off behind her, fixed camera, no cuts.",
+        42,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "resolution": "720p",
+        "text_prompt": "Front-facing medium close-up, framed as in the photo. Glitter make-up catches the light, hands stay raised near the face and barely move. Confident, slightly playful delivery straight into the lens, natural blinks and small head movement. Soft key light from the front-left with a crisp specular pop on the glitter, gentle fill from the right, dark neutral backdrop falling off behind her, fixed camera, no cuts.",
+        "seed": 42,
+        "control_after_generate": "fixed"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "SaveVideo",
+      "pos": [
+        1060,
+        90
+      ],
+      "size": [
+        760,
+        940
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_creatify_aurora_2_avatar",
+        "mp4",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_creatify_aurora_2_avatar",
+        "format": "mp4",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "MarkdownNote",
+      "pos": [
+        -1020,
+        90
+      ],
+      "size": [
+        440,
+        1160
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Input Assets",
+      "properties": {},
+      "widgets_values": [
+        "## Creatify Aurora 2.0 Avatar\n\n**Turn one portrait and one voice track into a talking or singing clip.** Aurora 2.0 animates the mouth and the upper body from the audio, passes the audio through unchanged, and returns a clip exactly as long as the audio — stage the performance with an optional text prompt instead of a second model.\n\n**Input assets (demo):**\n- [glitter_girl_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/glitter_girl_portrait.png) — 896 x 1152 front-facing portrait, glitter make-up, mouth visible (required workflow input).\n- [glitter_girl_speech.flac](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/glitter_girl_speech.flac) — 10.0 s speech track; the clip is exactly this long (required workflow input).\n\n### What this graph does\n\n1. **Load Image**: the portrait. It needs at least 256 px on each side and an aspect ratio between 1:4 and 4:1; the portrait's aspect ratio also sets the frame shape of the clip.\n2. **Audio**: three input paths; the sample track ships connected, so switching to another one is a rewire.\n   - **Load Audio** (default): the sample track above, already wired into the avatar node's `audio` input.\n   - **Record Audio**: shipped **Bypassed**. Select it, press **Ctrl+B** to enable it and record a line, then replace the avatar's `audio` link with its AUDIO output.\n   - **Breeze Text to Speech** group (`Breeze Voice Selector` → `Breeze Text to Speech` → `Save Audio Advanced`): shipped **Bypassed**. Enable the group with **Ctrl+B** to synthesize the typed line; its AUDIO output only feeds `Save Audio Advanced`, so replace the avatar's `audio` link with the `Breeze Text to Speech` AUDIO output to hear it in the clip.\n   - **Breeze Voice Clone**: shipped **Bypassed**, with nothing wired into its AUDIO input. Enable it, connect a reference recording you have the rights to use, then replace the `Breeze Voice Selector` → `voice` link with the clone's voice output to speak in the cloned voice.\n3. **Creatify Aurora 2.0 Avatar**: animates the performance. `text_prompt` is optional staging direction for scene, camera, lighting, expression and motion.\n4. **Save Video**: writes the MP4.\n\n---\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `resolution` | `480p`, `720p` (default), `1080p` or `2k`. Billed per started second. |\n| `text_prompt` | Optional scene, camera, lighting, expression or motion direction. |\n| `seed` | Controls whether the node re-runs; results are non-deterministic regardless of seed. |\n\n---\n\n### Limitations\n\n- Clip length equals audio length: the 10.0 s sample renders a 10.0 s clip. Trim the audio to the length you want; there is no duration widget.\n- Audio ceiling is 60 s at 480p, 720p and 1080p, and 14 s at 2k. Longer input is refused.\n- Billing is per started second of output at the chosen resolution.\n- Renders are non-deterministic: the seed only decides whether the node re-runs, it does not reproduce an earlier clip.\n- The node animates the face and the upper body, it does not relight the shot, so start from a portrait that is already lit the way you want it.\n\n---\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare the input assets.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Creatify Aurora 2.0 Avatar\n\n**Turn one portrait and one voice track into a talking or singing clip.** Aurora 2.0 animates the mouth and the upper body from the audio, passes the audio through unchanged, and returns a clip exactly as long as the audio — stage the performance with an optional text prompt instead of a second model.\n\n**Input assets (demo):**\n- [glitter_girl_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/glitter_girl_portrait.png) — 896 x 1152 front-facing portrait, glitter make-up, mouth visible (required workflow input).\n- [glitter_girl_speech.flac](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/glitter_girl_speech.flac) — 10.0 s speech track; the clip is exactly this long (required workflow input).\n\n### What this graph does\n\n1. **Load Image**: the portrait. It needs at least 256 px on each side and an aspect ratio between 1:4 and 4:1; the portrait's aspect ratio also sets the frame shape of the clip.\n2. **Audio**: three input paths; the sample track ships connected, so switching to another one is a rewire.\n   - **Load Audio** (default): the sample track above, already wired into the avatar node's `audio` input.\n   - **Record Audio**: shipped **Bypassed**. Select it, press **Ctrl+B** to enable it and record a line, then replace the avatar's `audio` link with its AUDIO output.\n   - **Breeze Text to Speech** group (`Breeze Voice Selector` → `Breeze Text to Speech` → `Save Audio Advanced`): shipped **Bypassed**. Enable the group with **Ctrl+B** to synthesize the typed line; its AUDIO output only feeds `Save Audio Advanced`, so replace the avatar's `audio` link with the `Breeze Text to Speech` AUDIO output to hear it in the clip.\n   - **Breeze Voice Clone**: shipped **Bypassed**, with nothing wired into its AUDIO input. Enable it, connect a reference recording you have the rights to use, then replace the `Breeze Voice Selector` → `voice` link with the clone's voice output to speak in the cloned voice.\n3. **Creatify Aurora 2.0 Avatar**: animates the performance. `text_prompt` is optional staging direction for scene, camera, lighting, expression and motion.\n4. **Save Video**: writes the MP4.\n\n---\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `resolution` | `480p`, `720p` (default), `1080p` or `2k`. Billed per started second. |\n| `text_prompt` | Optional scene, camera, lighting, expression or motion direction. |\n| `seed` | Controls whether the node re-runs; results are non-deterministic regardless of seed. |\n\n---\n\n### Limitations\n\n- Clip length equals audio length: the 10.0 s sample renders a 10.0 s clip. Trim the audio to the length you want; there is no duration widget.\n- Audio ceiling is 60 s at 480p, 720p and 1080p, and 14 s at 2k. Longer input is refused.\n- Billing is per started second of output at the chosen resolution.\n- Renders are non-deterministic: the seed only decides whether the node re-runs, it does not reproduce an earlier clip.\n- The node animates the face and the upper body, it does not relight the shot, so start from a portrait that is already lit the way you want it.\n\n---\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare the input assets.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 6,
+      "type": "BreezeTextToSpeech",
+      "pos": [
+        -95,
+        1036
+      ],
+      "size": [
+        400,
+        256
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "voice",
+          "type": "BREEZE_VOICE",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BreezeTextToSpeech"
+      },
+      "widgets_values": [
+        "Aurora 2 takes a single photo and one voice line, then animates the face to match every word — no reshoots, no rigging.\n",
+        "English",
+        "Breeze TTS 2",
+        "neutral",
+        false,
+        1,
+        1948281968,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "text": "Aurora 2 takes a single photo and one voice line, then animates the face to match every word — no reshoots, no rigging.\n",
+        "language": "English",
+        "language.model": "Breeze TTS 2",
+        "delivery": "neutral",
+        "delivery.speaker_boost": false,
+        "speed": 1,
+        "seed": 1948281968,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 7,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        -95,
+        1376
+      ],
+      "size": [
+        400,
+        149.93435974121095
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "audio/ComfyUI",
+        "flac"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "audio/ComfyUI",
+        "format": "flac"
+      }
+    },
+    {
+      "id": 9,
+      "type": "BreezeVoiceSelector",
+      "pos": [
+        -475,
+        1046
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "voice",
+          "type": "BREEZE_VOICE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BreezeVoiceSelector"
+      },
+      "widgets_values": [
+        "English",
+        "Elizabeth"
+      ],
+      "widgets_values_named": {
+        "language": "English",
+        "language.voice": "Elizabeth"
+      }
+    },
+    {
+      "id": 10,
+      "type": "BreezeVoiceClone",
+      "pos": [
+        -475,
+        1236
+      ],
+      "size": [
+        316.349609375,
+        126
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voice",
+          "type": "BREEZE_VOICE",
+          "links": null
+        },
+        {
+          "name": "preview",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BreezeVoiceClone"
+      },
+      "widgets_values": [
+        false,
+        183124303,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "remove_background_noise": false,
+        "seed": 183124303,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 11,
+      "type": "LoadAudio",
+      "pos": [
+        -90,
+        688
+      ],
+      "size": [
+        460,
+        161.9437755237926
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "glitter_girl_speech.flac",
+        ""
+      ],
+      "widgets_values_named": {
+        "audio": "glitter_girl_speech.flac",
+        "upload": ""
+      }
+    },
+    {
+      "id": 13,
+      "type": "RecordAudio",
+      "pos": [
+        -480,
+        698
+      ],
+      "size": [
+        270,
+        112
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RecordAudio"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ],
+      "widgets_values_named": {
+        "audio": "",
+        "audio#1": ""
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "VIDEO"
+    ],
+    [
+      4,
+      6,
+      0,
+      7,
+      0,
+      "AUDIO"
+    ],
+    [
+      6,
+      9,
+      0,
+      6,
+      0,
+      "BREEZE_VOICE"
+    ],
+    [
+      7,
+      11,
+      0,
+      3,
+      1,
+      "AUDIO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Audio input · Option 2 - Use TTS model (select and Ctrl+B to enable)",
+      "bounding": [
+        -525,
+        956,
+        970,
+        710
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Load Avatar Image here",
+      "bounding": [
+        -525,
+        60,
+        970,
+        510
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Audio input · Option 1 - load or record an audio",
+      "bounding": [
+        -525,
+        588,
+        970,
+        350
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7513148009015781,
+      "offset": [
+        912.9879909832938,
+        112.06513360813871
+      ]
+    },
+    "frontendVersion": "1.59.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
