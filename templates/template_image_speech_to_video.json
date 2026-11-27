@@ -351,7 +351,7 @@
     },
     {
       "id": 445,
-      "type": "SaveAudioMP3",
+      "type": "SaveAudioAdvanced",
       "pos": [
         -840,
         1560
@@ -372,9 +372,15 @@
           "link": 875
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
       "properties": {
-        "Node name for S&R": "SaveAudioMP3",
+        "Node name for S&R": "SaveAudioAdvanced",
         "cnr_id": "comfy-core",
         "ver": "0.18.1",
         "enableTabs": false,
@@ -392,12 +398,13 @@
       },
       "widgets_values": [
         "audio/text2speech2video",
+        "mp3",
         "V0"
       ]
     },
     {
       "id": 441,
-      "type": "GeminiNode",
+      "type": "GeminiNodeV3",
       "pos": [
         -1730,
         840
@@ -414,26 +421,27 @@
       "showAdvanced": true,
       "inputs": [
         {
-          "name": "images",
-          "shape": 7,
+          "name": "model.images.image_1",
           "type": "IMAGE",
           "link": 872
         },
         {
-          "name": "audio",
-          "shape": 7,
+          "name": "model.images.image_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model.audio.audio_1",
           "type": "AUDIO",
           "link": null
         },
         {
-          "name": "video",
-          "shape": 7,
+          "name": "model.video.video_1",
           "type": "VIDEO",
           "link": null
         },
         {
-          "name": "files",
-          "shape": 7,
+          "name": "model.files",
           "type": "GEMINI_INPUT_FILES",
           "link": null
         }
@@ -450,7 +458,7 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "GeminiNode",
+        "Node name for S&R": "GeminiNodeV3",
         "cnr_id": "comfy-core",
         "ver": "0.18.1",
         "enableTabs": false,
@@ -467,9 +475,13 @@
         }
       },
       "widgets_values": [
-        "",
-        "gemini-3-1-pro",
-        967822922709019,
+        "Gemini 3.1 Pro",
+        "Generate the two-part prompt described by the system instructions from the provided image.",
+        "HIGH",
+        1.0,
+        0.95,
+        32768,
+        1435130000,
         "randomize",
         "Role: You are a professional prompt writer for Eleven Labs v3 two-part generation.\n\nTask: Generate a two-part prompt from the user’s input.\n\nStrict Output Constraint (IMPORTANT):\n\nReturn the output as RAW PLAIN TEXT only.\nDO NOT use Markdown code blocks.\nDO NOT use any headers, labels, or bold text outside of the generated two-part output.\nUse ONLY the separator --- to divide the two parts.\nPart 1: spoken dialogue/performance text only, optimized for Eleven v3.\nPart 2: a structured scene breakdown in short field lines.\nDo NOT output anything before Part 1 or after Part 2.\n\nGlobal Length Rule:\n\nKeep the final generated prompt short enough to produce about 10 seconds of audio.\nAim for roughly 20 to 35 spoken words in Part 1 unless the user explicitly asks otherwise.\nCondense long inputs aggressively while preserving the core meaning, tone, and key message.\nPrioritize brevity, clarity, speakability, and a strong opening hook over completeness.\nRemove repetition, side details, filler, and nonessential context.\nIf the input is too long, compress it into a concise spoken version rather than preserving everything.\nDo not create Part 1 output that would likely exceed about 10 seconds of speech.\n\nPart 1 Rules:\n\nPart 1 must contain ONLY the words meant to be spoken aloud.\nDo NOT begin Part 1 with visual description, scene-setting narration, character description, or action description.\nStart immediately with the most attention-grabbing, high-impact spoken hook.\nThe hook should appear as early as possible, ideally in the first sentence or phrase.\nDo NOT describe what the character looks like, where they are, what they are wearing, what they are holding, or what is happening visually unless that information is spoken by the character as part of the dialogue itself.\nPart 1 should read like a real spoken performance, monologue, ad read, or direct address.\nPart 1 may use Eleven v3-compatible vocal tags in square brackets, such as [laughs], [whispers], [sighs], [excited], [curious], [sarcastic], [exhales], [crying], [snorts], [mischievously], [sings], when helpful.\nUse punctuation, ellipses, pauses, and selective capitalization to improve spoken delivery when useful.\nDo NOT use SSML.\nDo NOT use non-voice tags such as music, ambience, sound effects, camera notes, or technical markup.\nCompress long user text into the shortest strong spoken version that preserves the selling point or core message.\nPrefer one clear hook, one core benefit, and one short closing beat.\n\nPart 2 Rules:\n\nPart 2 must transform the same idea into a compact structured format.\nPart 2 must strongly bias toward UGC-style action and framing and prnounce the character is talking into the camera.\nPart 2 must describe the subject as if they are casually filming a real user-generated testimonial, ad, or selfie-style clip.\nPrioritize natural human behavior such as:\ntalking directly to camera\nhandheld or phone-like framing\ncasual presenting of product\nnatural gestures\nauthentic facial expression\nslight body movement\nconversational delivery\nAvoid cinematic, polished commercial, theatrical, or overly staged action unless the user explicitly asks for that.\nKeep the action grounded, believable, and creator-like rather than scripted or broadcast-like.\nEach line should follow this pattern: field name, colon, content.\nUse only concise production-style descriptors.\nKeep Part 2 aligned with Part 1 and do not introduce unrelated ideas.\nPrefer fields such as:\nscene:\ncharacter:\naction:\ncamera:\ntone:\nUse action: to emphasize the UGC performance behavior most strongly.\nUse camera: to emphasize casual capture style, such as handheld, selfie framing, direct-to-camera, slight natural movement, or eye-level creator framing.\nKeep wardrobe and appearance brief unless they are essential to the concept.\nKeep Part 2 compact and production-friendly.\n\nUGC Bias Rules for Part 2:\n\nDefault to direct-to-camera testimonial energy unless the user asks otherwise.\nDefault to natural handheld realism unless the user asks otherwise.\nDefault to real-person creator behavior instead of actor blocking unless the user asks otherwise.\nPrefer verbs like:\ntalking, holding, showing, gesturing, reacting, smiling, leaning in, presenting, pointing\nAvoid verbs like:\nposing, performing choreography, dramatically turning, stylized modeling\nMake the structured breakdown help the model generate believable UGC action, not just static appearance.\n\nConsistency Rules:\n\nPart 1 and Part 2 must describe the same scene and intent.\nPart 2 is a clean structural breakdown of Part 1.\nDo not make Part 1 and Part 2 feel like separate concepts.\nPreserve the user’s intent, subject, tone, setting, and spoken energy across both parts.\n\nSafety and Quality Rules:\n\nDo not introduce sensitive, explicit, hateful, political, or unsafe content that was not already in the user input.\nKeep vocal tags contextually appropriate and naturally speakable.\nUse expressive enhancements sparingly and intentionally.\nEnsure the final output always contains exactly two parts separated by ---."
       ],
@@ -2681,7 +2693,7 @@
           },
           {
             "id": 294,
-            "type": "ResizeImagesByLongerEdge",
+            "type": "ImageScaleToMaxDimension",
             "pos": [
               910,
               4520
@@ -2697,16 +2709,14 @@
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "images",
-                "name": "images",
+                "name": "image",
                 "type": "IMAGE",
                 "link": 659
               }
             ],
             "outputs": [
               {
-                "localized_name": "images",
-                "name": "images",
+                "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
                   667
@@ -2714,7 +2724,7 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "ResizeImagesByLongerEdge",
+              "Node name for S&R": "ImageScaleToMaxDimension",
               "cnr_id": "comfy-core",
               "ver": "0.5.1",
               "enableTabs": false,
@@ -2731,6 +2741,7 @@
               }
             },
             "widgets_values": [
+              "lanczos",
               1536
             ]
           },

@@ -37,6 +37,7 @@ OUTPUT_NODE_TYPES = [
     "SaveGLB",
     "SaveImageAdvanced",
     "Preview3D",
+    "Preview3DAdvanced",
     "PreviewAudio"
     # Note: PreviewImage is excluded as it's for debugging only
 ]

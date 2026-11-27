@@ -1843,7 +1843,7 @@
           },
           {
             "id": 306,
-            "type": "GeminiNode",
+            "type": "GeminiNodeV3",
             "pos": [
               7850,
               -80
@@ -1857,37 +1857,33 @@
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "images",
-                "name": "images",
-                "shape": 7,
+                "name": "model.images.image_1",
                 "type": "IMAGE",
                 "link": 323
               },
               {
-                "localized_name": "audio",
-                "name": "audio",
-                "shape": 7,
+                "name": "model.images.image_2",
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "name": "model.audio.audio_1",
                 "type": "AUDIO",
                 "link": null
               },
               {
-                "localized_name": "video",
-                "name": "video",
-                "shape": 7,
+                "name": "model.video.video_1",
                 "type": "VIDEO",
                 "link": null
               },
               {
-                "localized_name": "files",
-                "name": "files",
-                "shape": 7,
+                "name": "model.files",
                 "type": "GEMINI_INPUT_FILES",
                 "link": null
               }
             ],
             "outputs": [
               {
-                "localized_name": "STRING",
                 "name": "STRING",
                 "type": "STRING",
                 "links": [
@@ -1897,13 +1893,17 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "GeminiNode",
+              "Node name for S&R": "GeminiNodeV3",
               "cnr_id": "comfy-core",
               "ver": "0.3.76"
             },
             "widgets_values": [
+              "Gemini 3.1 Flash-Lite",
               "STEP 1: ANALYZE BOTH IMAGES\nBefore crafting the prompt, analyze both images to understand:\n\n\nCamera distance (wide shot, medium, close-up, extreme close-up, macro)\nCamera angle (low-angle, high-angle, eye-level, overhead, Dutch, worm's eye, bird's eye)\nCamera position relative to subject (front, side profile, 3/4 view, back, overhead)\nFraming (full body, torso, chest-up, face only, detail/macro)\nSubject position and pose\nLighting setup and direction\nBackground elements and depth\nFocal length characteristics (wide-angle distortion vs telephoto compression)\n\nSTEP 2: DETERMINE CAMERA MOVEMENT\nBased on the differences between images, identify the primary camera movement:\n\n\nDistance change: Dolly-in (closer) or Dolly-out (farther)\nVertical angle change: Tilt up/down or Crane up/down\nHorizontal angle change: Pan left/right or Orbit/Arc around subject\nHeight change: Crane/Pedestal up or down\nLateral movement: Truck/Track left or right\n\nSTEP 3: OUTPUT ONLY THE PROMPT\nDo not include explanations, commentary, or additional text.\nOutput ONLY the transition prompt in this format:\n\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nCore Principle\n\nFor transitions where the subject/scene remains consistent and only the camera position changes, use this structured approach to ensure smooth, cinematic results.\n\n\nPrompt Structure Template\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nComponent Breakdown\n\n1. CAMERA MOVEMENT TYPES\nDolly-in/Push-in: Camera moves forward toward subject\nDolly-out/Pull-back: Camera moves backward away from subject\nOrbit/Arc: Camera circles around subject (specify left/right)\nTilt: Camera angles up or down on fixed position\nPan: Camera swivels left or right horizontally\nCrane/Pedestal: Camera moves vertically up or down\nTracking/Trucking: Camera moves parallel to subject\n\n2. POSITION DESCRIPTORS\nDistance: wide shot, medium shot, close-up, extreme close-up, macro\nAngle: low-angle, high-angle, eye-level, overhead, Dutch angle, worm's eye view, bird's eye view\nFraming: full body, three-quarter, torso, chest-up, face, detail\n\n3. MOVEMENT VERBS (choose intensity)\nSlowly, steadily, smoothly, gradually, fluidly\nRapidly, dynamically, swiftly\nElegantly, dramatically, confidently\n\n4. FOCUS BEHAVIOR\nSharp focus throughout\nRack focus from [A] to [B]\nMaintains focus on [element]\nShallow depth of field\nDeep focus\nProgressive focus shift\n\n5. BACKGROUND BEHAVIOR\nStays consistent\nBlurs to bokeh\nSharpens into view\nFades to [color]\nRemains sharp throughout\n\n6. TECHNICAL SPECS (standard cinematic quality)\nCinematic depth of field\nStable gimbal/dolly movement\nProfessional commercial grade\n24fps (or 30fps, 60fps for slow-motion feel)\nClean sensor, no grain (or \"film grain\" if desired)\n\n\nExample Prompts by Movement Type\n\nDOLLY-IN (Wide → Close-up)\nSmooth camera dolly-in from wide establishing shot to extreme close-up. Subject remains stationary. Camera pushes forward steadily, transitioning focus from [background element] to [detail]. Lighting stays constant, background softly blurs to bokeh. Cinematic depth of field, stable gimbal movement\n\nDOLLY-OUT (Close-up → Wide)\nSmooth camera pull-back from extreme close-up to wide establishing shot. Subject remains centered and stationary. Camera retreats steadily, revealing environment progressively. Focus maintains on subject while background sharpens into view. Even lighting, cinematic depth of field\n\nORBIT (Circular movement)\nSmooth camera orbit from front view to side profile. Subject remains stationary at center. Camera arcs left fluidly in 90-degree rotation, maintaining constant distance and eye-level angle. Lighting stays consistent, sharp focus throughout. Gimbal stabilized circular tracking\n\nTILT (Vertical angle change)\nSmooth camera tilt from low-angle to high-angle. Subject remains stationary. Camera tilts upward gradually, shifting perspective from worm's eye view to bird's eye view. Distance stays constant, lighting consistent. Stable tripod tilt, cinematic framing\n\nPAN (Horizontal swivel)\nSmooth camera pan from left profile to right profile. Subject remains stationary. Camera swivels horizontally across 180 degrees, maintaining constant distance and eye-level. Sharp focus throughout, even lighting. Fluid tripod pan\n\nCRANE UP/DOWN\nSmooth camera crane from ground-level to overhead view. Subject remains stationary at center. Camera elevates vertically, angle shifting from eye-level to bird's eye view. Distance adjusts proportionally, lighting consistent. Stabilized crane movement\n\nKey Rules for Camera-Only Transitions\n\nAlways specify subject remains stationary - This prevents unwanted morphing\nDescribe start AND end positions clearly - Gives model clear targets\nUse specific movement verbs - \"Dolly-in\" is clearer than \"moves closer\"\nLock down what DOESN'T change - Lighting, subject, clothing, expression\nInclude technical quality markers - Gimbal, cinematic, stable\nNegative prompts are critical - Prevents warping/morphing/distortion\nKeep prompts under 75 words - Model weights early words heavier\nOne primary movement per transition - Don't combine dolly + pan + tilt\n\nAdvanced Techniques\n\nSpeed Ramping:\n\"Camera begins slow dolly-in, accelerates midway, then decelerates smoothly into final close-up\"\n\nCombined Movements (use sparingly):\n\"Camera dollies in while simultaneously tilting down, maintaining subject center-frame\"\n\nFocus Pulls:\n\"Rack focus from foreground [element] to background [element] as camera remains locked\"\n\nLens Simulation:\n\"Wide-angle 24mm distortion gradually compresses to telephoto 85mm compression\"\n\n\nCritical Output Rule\n\nOUTPUT ONLY THE PROMPT. LIMIT THE OUTPUT TO 500 CHARACTERS. NO EXPLANATIONS. NO COMMENTARY. NO ADDITIONAL TEXT.",
-              "gemini-3-1-flash-lite",
+              "LOW",
+              1.0,
+              0.95,
+              32768,
               1,
               "fixed",
               ""
@@ -2063,7 +2063,7 @@
             "origin_slot": 0,
             "target_id": 302,
             "target_slot": 0,
-            "type": "*"
+            "type": "STRING"
           },
           {
             "id": 127,
@@ -2368,7 +2368,7 @@
           },
           {
             "id": 342,
-            "type": "GeminiNode",
+            "type": "GeminiNodeV3",
             "pos": [
               7850,
               -80
@@ -2382,37 +2382,33 @@
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "images",
-                "name": "images",
-                "shape": 7,
+                "name": "model.images.image_1",
                 "type": "IMAGE",
                 "link": 326
               },
               {
-                "localized_name": "audio",
-                "name": "audio",
-                "shape": 7,
+                "name": "model.images.image_2",
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "name": "model.audio.audio_1",
                 "type": "AUDIO",
                 "link": null
               },
               {
-                "localized_name": "video",
-                "name": "video",
-                "shape": 7,
+                "name": "model.video.video_1",
                 "type": "VIDEO",
                 "link": null
               },
               {
-                "localized_name": "files",
-                "name": "files",
-                "shape": 7,
+                "name": "model.files",
                 "type": "GEMINI_INPUT_FILES",
                 "link": null
               }
             ],
             "outputs": [
               {
-                "localized_name": "STRING",
                 "name": "STRING",
                 "type": "STRING",
                 "links": [
@@ -2422,13 +2418,17 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "GeminiNode",
+              "Node name for S&R": "GeminiNodeV3",
               "cnr_id": "comfy-core",
               "ver": "0.3.76"
             },
             "widgets_values": [
+              "Gemini 3.1 Flash-Lite",
               "STEP 1: ANALYZE BOTH IMAGES\nBefore crafting the prompt, analyze both images to understand:\n\n\nCamera distance (wide shot, medium, close-up, extreme close-up, macro)\nCamera angle (low-angle, high-angle, eye-level, overhead, Dutch, worm's eye, bird's eye)\nCamera position relative to subject (front, side profile, 3/4 view, back, overhead)\nFraming (full body, torso, chest-up, face only, detail/macro)\nSubject position and pose\nLighting setup and direction\nBackground elements and depth\nFocal length characteristics (wide-angle distortion vs telephoto compression)\n\nSTEP 2: DETERMINE CAMERA MOVEMENT\nBased on the differences between images, identify the primary camera movement:\n\n\nDistance change: Dolly-in (closer) or Dolly-out (farther)\nVertical angle change: Tilt up/down or Crane up/down\nHorizontal angle change: Pan left/right or Orbit/Arc around subject\nHeight change: Crane/Pedestal up or down\nLateral movement: Truck/Track left or right\n\nSTEP 3: OUTPUT ONLY THE PROMPT\nDo not include explanations, commentary, or additional text.\nOutput ONLY the transition prompt in this format:\n\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nCore Principle\n\nFor transitions where the subject/scene remains consistent and only the camera position changes, use this structured approach to ensure smooth, cinematic results.\n\n\nPrompt Structure Template\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nComponent Breakdown\n\n1. CAMERA MOVEMENT TYPES\nDolly-in/Push-in: Camera moves forward toward subject\nDolly-out/Pull-back: Camera moves backward away from subject\nOrbit/Arc: Camera circles around subject (specify left/right)\nTilt: Camera angles up or down on fixed position\nPan: Camera swivels left or right horizontally\nCrane/Pedestal: Camera moves vertically up or down\nTracking/Trucking: Camera moves parallel to subject\n\n2. POSITION DESCRIPTORS\nDistance: wide shot, medium shot, close-up, extreme close-up, macro\nAngle: low-angle, high-angle, eye-level, overhead, Dutch angle, worm's eye view, bird's eye view\nFraming: full body, three-quarter, torso, chest-up, face, detail\n\n3. MOVEMENT VERBS (choose intensity)\nSlowly, steadily, smoothly, gradually, fluidly\nRapidly, dynamically, swiftly\nElegantly, dramatically, confidently\n\n4. FOCUS BEHAVIOR\nSharp focus throughout\nRack focus from [A] to [B]\nMaintains focus on [element]\nShallow depth of field\nDeep focus\nProgressive focus shift\n\n5. BACKGROUND BEHAVIOR\nStays consistent\nBlurs to bokeh\nSharpens into view\nFades to [color]\nRemains sharp throughout\n\n6. TECHNICAL SPECS (standard cinematic quality)\nCinematic depth of field\nStable gimbal/dolly movement\nProfessional commercial grade\n24fps (or 30fps, 60fps for slow-motion feel)\nClean sensor, no grain (or \"film grain\" if desired)\n\n\nExample Prompts by Movement Type\n\nDOLLY-IN (Wide → Close-up)\nSmooth camera dolly-in from wide establishing shot to extreme close-up. Subject remains stationary. Camera pushes forward steadily, transitioning focus from [background element] to [detail]. Lighting stays constant, background softly blurs to bokeh. Cinematic depth of field, stable gimbal movement\n\nDOLLY-OUT (Close-up → Wide)\nSmooth camera pull-back from extreme close-up to wide establishing shot. Subject remains centered and stationary. Camera retreats steadily, revealing environment progressively. Focus maintains on subject while background sharpens into view. Even lighting, cinematic depth of field\n\nORBIT (Circular movement)\nSmooth camera orbit from front view to side profile. Subject remains stationary at center. Camera arcs left fluidly in 90-degree rotation, maintaining constant distance and eye-level angle. Lighting stays consistent, sharp focus throughout. Gimbal stabilized circular tracking\n\nTILT (Vertical angle change)\nSmooth camera tilt from low-angle to high-angle. Subject remains stationary. Camera tilts upward gradually, shifting perspective from worm's eye view to bird's eye view. Distance stays constant, lighting consistent. Stable tripod tilt, cinematic framing\n\nPAN (Horizontal swivel)\nSmooth camera pan from left profile to right profile. Subject remains stationary. Camera swivels horizontally across 180 degrees, maintaining constant distance and eye-level. Sharp focus throughout, even lighting. Fluid tripod pan\n\nCRANE UP/DOWN\nSmooth camera crane from ground-level to overhead view. Subject remains stationary at center. Camera elevates vertically, angle shifting from eye-level to bird's eye view. Distance adjusts proportionally, lighting consistent. Stabilized crane movement\n\nKey Rules for Camera-Only Transitions\n\nAlways specify subject remains stationary - This prevents unwanted morphing\nDescribe start AND end positions clearly - Gives model clear targets\nUse specific movement verbs - \"Dolly-in\" is clearer than \"moves closer\"\nLock down what DOESN'T change - Lighting, subject, clothing, expression\nInclude technical quality markers - Gimbal, cinematic, stable\nNegative prompts are critical - Prevents warping/morphing/distortion\nKeep prompts under 75 words - Model weights early words heavier\nOne primary movement per transition - Don't combine dolly + pan + tilt\n\nAdvanced Techniques\n\nSpeed Ramping:\n\"Camera begins slow dolly-in, accelerates midway, then decelerates smoothly into final close-up\"\n\nCombined Movements (use sparingly):\n\"Camera dollies in while simultaneously tilting down, maintaining subject center-frame\"\n\nFocus Pulls:\n\"Rack focus from foreground [element] to background [element] as camera remains locked\"\n\nLens Simulation:\n\"Wide-angle 24mm distortion gradually compresses to telephoto 85mm compression\"\n\n\nCritical Output Rule\n\nOUTPUT ONLY THE PROMPT. LIMIT THE OUTPUT TO 500 CHARACTERS. NO EXPLANATIONS. NO COMMENTARY. NO ADDITIONAL TEXT.",
-              "gemini-3-1-flash-lite",
+              "LOW",
+              1.0,
+              0.95,
+              32768,
               2,
               "fixed",
               ""
@@ -2590,7 +2590,7 @@
             "origin_slot": 0,
             "target_id": 338,
             "target_slot": 0,
-            "type": "*"
+            "type": "STRING"
           },
           {
             "id": 127,
@@ -2895,7 +2895,7 @@
           },
           {
             "id": 350,
-            "type": "GeminiNode",
+            "type": "GeminiNodeV3",
             "pos": [
               7850,
               -80
@@ -2909,37 +2909,33 @@
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "images",
-                "name": "images",
-                "shape": 7,
+                "name": "model.images.image_1",
                 "type": "IMAGE",
                 "link": 329
               },
               {
-                "localized_name": "audio",
-                "name": "audio",
-                "shape": 7,
+                "name": "model.images.image_2",
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "name": "model.audio.audio_1",
                 "type": "AUDIO",
                 "link": null
               },
               {
-                "localized_name": "video",
-                "name": "video",
-                "shape": 7,
+                "name": "model.video.video_1",
                 "type": "VIDEO",
                 "link": null
               },
               {
-                "localized_name": "files",
-                "name": "files",
-                "shape": 7,
+                "name": "model.files",
                 "type": "GEMINI_INPUT_FILES",
                 "link": null
               }
             ],
             "outputs": [
               {
-                "localized_name": "STRING",
                 "name": "STRING",
                 "type": "STRING",
                 "links": [
@@ -2949,13 +2945,17 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "GeminiNode",
+              "Node name for S&R": "GeminiNodeV3",
               "cnr_id": "comfy-core",
               "ver": "0.3.76"
             },
             "widgets_values": [
+              "Gemini 3.1 Flash-Lite",
               "STEP 1: ANALYZE BOTH IMAGES\nBefore crafting the prompt, analyze both images to understand:\n\n\nCamera distance (wide shot, medium, close-up, extreme close-up, macro)\nCamera angle (low-angle, high-angle, eye-level, overhead, Dutch, worm's eye, bird's eye)\nCamera position relative to subject (front, side profile, 3/4 view, back, overhead)\nFraming (full body, torso, chest-up, face only, detail/macro)\nSubject position and pose\nLighting setup and direction\nBackground elements and depth\nFocal length characteristics (wide-angle distortion vs telephoto compression)\n\nSTEP 2: DETERMINE CAMERA MOVEMENT\nBased on the differences between images, identify the primary camera movement:\n\n\nDistance change: Dolly-in (closer) or Dolly-out (farther)\nVertical angle change: Tilt up/down or Crane up/down\nHorizontal angle change: Pan left/right or Orbit/Arc around subject\nHeight change: Crane/Pedestal up or down\nLateral movement: Truck/Track left or right\n\nSTEP 3: OUTPUT ONLY THE PROMPT\nDo not include explanations, commentary, or additional text.\nOutput ONLY the transition prompt in this format:\n\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nCore Principle\n\nFor transitions where the subject/scene remains consistent and only the camera position changes, use this structured approach to ensure smooth, cinematic results.\n\n\nPrompt Structure Template\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nComponent Breakdown\n\n1. CAMERA MOVEMENT TYPES\nDolly-in/Push-in: Camera moves forward toward subject\nDolly-out/Pull-back: Camera moves backward away from subject\nOrbit/Arc: Camera circles around subject (specify left/right)\nTilt: Camera angles up or down on fixed position\nPan: Camera swivels left or right horizontally\nCrane/Pedestal: Camera moves vertically up or down\nTracking/Trucking: Camera moves parallel to subject\n\n2. POSITION DESCRIPTORS\nDistance: wide shot, medium shot, close-up, extreme close-up, macro\nAngle: low-angle, high-angle, eye-level, overhead, Dutch angle, worm's eye view, bird's eye view\nFraming: full body, three-quarter, torso, chest-up, face, detail\n\n3. MOVEMENT VERBS (choose intensity)\nSlowly, steadily, smoothly, gradually, fluidly\nRapidly, dynamically, swiftly\nElegantly, dramatically, confidently\n\n4. FOCUS BEHAVIOR\nSharp focus throughout\nRack focus from [A] to [B]\nMaintains focus on [element]\nShallow depth of field\nDeep focus\nProgressive focus shift\n\n5. BACKGROUND BEHAVIOR\nStays consistent\nBlurs to bokeh\nSharpens into view\nFades to [color]\nRemains sharp throughout\n\n6. TECHNICAL SPECS (standard cinematic quality)\nCinematic depth of field\nStable gimbal/dolly movement\nProfessional commercial grade\n24fps (or 30fps, 60fps for slow-motion feel)\nClean sensor, no grain (or \"film grain\" if desired)\n\n\nExample Prompts by Movement Type\n\nDOLLY-IN (Wide → Close-up)\nSmooth camera dolly-in from wide establishing shot to extreme close-up. Subject remains stationary. Camera pushes forward steadily, transitioning focus from [background element] to [detail]. Lighting stays constant, background softly blurs to bokeh. Cinematic depth of field, stable gimbal movement\n\nDOLLY-OUT (Close-up → Wide)\nSmooth camera pull-back from extreme close-up to wide establishing shot. Subject remains centered and stationary. Camera retreats steadily, revealing environment progressively. Focus maintains on subject while background sharpens into view. Even lighting, cinematic depth of field\n\nORBIT (Circular movement)\nSmooth camera orbit from front view to side profile. Subject remains stationary at center. Camera arcs left fluidly in 90-degree rotation, maintaining constant distance and eye-level angle. Lighting stays consistent, sharp focus throughout. Gimbal stabilized circular tracking\n\nTILT (Vertical angle change)\nSmooth camera tilt from low-angle to high-angle. Subject remains stationary. Camera tilts upward gradually, shifting perspective from worm's eye view to bird's eye view. Distance stays constant, lighting consistent. Stable tripod tilt, cinematic framing\n\nPAN (Horizontal swivel)\nSmooth camera pan from left profile to right profile. Subject remains stationary. Camera swivels horizontally across 180 degrees, maintaining constant distance and eye-level. Sharp focus throughout, even lighting. Fluid tripod pan\n\nCRANE UP/DOWN\nSmooth camera crane from ground-level to overhead view. Subject remains stationary at center. Camera elevates vertically, angle shifting from eye-level to bird's eye view. Distance adjusts proportionally, lighting consistent. Stabilized crane movement\n\nKey Rules for Camera-Only Transitions\n\nAlways specify subject remains stationary - This prevents unwanted morphing\nDescribe start AND end positions clearly - Gives model clear targets\nUse specific movement verbs - \"Dolly-in\" is clearer than \"moves closer\"\nLock down what DOESN'T change - Lighting, subject, clothing, expression\nInclude technical quality markers - Gimbal, cinematic, stable\nNegative prompts are critical - Prevents warping/morphing/distortion\nKeep prompts under 75 words - Model weights early words heavier\nOne primary movement per transition - Don't combine dolly + pan + tilt\n\nAdvanced Techniques\n\nSpeed Ramping:\n\"Camera begins slow dolly-in, accelerates midway, then decelerates smoothly into final close-up\"\n\nCombined Movements (use sparingly):\n\"Camera dollies in while simultaneously tilting down, maintaining subject center-frame\"\n\nFocus Pulls:\n\"Rack focus from foreground [element] to background [element] as camera remains locked\"\n\nLens Simulation:\n\"Wide-angle 24mm distortion gradually compresses to telephoto 85mm compression\"\n\n\nCritical Output Rule\n\nOUTPUT ONLY THE PROMPT. LIMIT THE OUTPUT TO 500 CHARACTERS. NO EXPLANATIONS. NO COMMENTARY. NO ADDITIONAL TEXT.",
-              "gemini-3-1-flash-lite",
+              "LOW",
+              1.0,
+              0.95,
+              32768,
               3,
               "fixed",
               ""
@@ -3117,7 +3117,7 @@
             "origin_slot": 0,
             "target_id": 346,
             "target_slot": 0,
-            "type": "*"
+            "type": "STRING"
           },
           {
             "id": 127,
@@ -3422,7 +3422,7 @@
           },
           {
             "id": 358,
-            "type": "GeminiNode",
+            "type": "GeminiNodeV3",
             "pos": [
               7850,
               -80
@@ -3436,37 +3436,33 @@
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "images",
-                "name": "images",
-                "shape": 7,
+                "name": "model.images.image_1",
                 "type": "IMAGE",
                 "link": 332
               },
               {
-                "localized_name": "audio",
-                "name": "audio",
-                "shape": 7,
+                "name": "model.images.image_2",
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "name": "model.audio.audio_1",
                 "type": "AUDIO",
                 "link": null
               },
               {
-                "localized_name": "video",
-                "name": "video",
-                "shape": 7,
+                "name": "model.video.video_1",
                 "type": "VIDEO",
                 "link": null
               },
               {
-                "localized_name": "files",
-                "name": "files",
-                "shape": 7,
+                "name": "model.files",
                 "type": "GEMINI_INPUT_FILES",
                 "link": null
               }
             ],
             "outputs": [
               {
-                "localized_name": "STRING",
                 "name": "STRING",
                 "type": "STRING",
                 "links": [
@@ -3476,13 +3472,17 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "GeminiNode",
+              "Node name for S&R": "GeminiNodeV3",
               "cnr_id": "comfy-core",
               "ver": "0.3.76"
             },
             "widgets_values": [
+              "Gemini 3.1 Flash-Lite",
               "STEP 1: ANALYZE BOTH IMAGES\nBefore crafting the prompt, analyze both images to understand:\n\n\nCamera distance (wide shot, medium, close-up, extreme close-up, macro)\nCamera angle (low-angle, high-angle, eye-level, overhead, Dutch, worm's eye, bird's eye)\nCamera position relative to subject (front, side profile, 3/4 view, back, overhead)\nFraming (full body, torso, chest-up, face only, detail/macro)\nSubject position and pose\nLighting setup and direction\nBackground elements and depth\nFocal length characteristics (wide-angle distortion vs telephoto compression)\n\nSTEP 2: DETERMINE CAMERA MOVEMENT\nBased on the differences between images, identify the primary camera movement:\n\n\nDistance change: Dolly-in (closer) or Dolly-out (farther)\nVertical angle change: Tilt up/down or Crane up/down\nHorizontal angle change: Pan left/right or Orbit/Arc around subject\nHeight change: Crane/Pedestal up or down\nLateral movement: Truck/Track left or right\n\nSTEP 3: OUTPUT ONLY THE PROMPT\nDo not include explanations, commentary, or additional text.\nOutput ONLY the transition prompt in this format:\n\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nCore Principle\n\nFor transitions where the subject/scene remains consistent and only the camera position changes, use this structured approach to ensure smooth, cinematic results.\n\n\nPrompt Structure Template\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nComponent Breakdown\n\n1. CAMERA MOVEMENT TYPES\nDolly-in/Push-in: Camera moves forward toward subject\nDolly-out/Pull-back: Camera moves backward away from subject\nOrbit/Arc: Camera circles around subject (specify left/right)\nTilt: Camera angles up or down on fixed position\nPan: Camera swivels left or right horizontally\nCrane/Pedestal: Camera moves vertically up or down\nTracking/Trucking: Camera moves parallel to subject\n\n2. POSITION DESCRIPTORS\nDistance: wide shot, medium shot, close-up, extreme close-up, macro\nAngle: low-angle, high-angle, eye-level, overhead, Dutch angle, worm's eye view, bird's eye view\nFraming: full body, three-quarter, torso, chest-up, face, detail\n\n3. MOVEMENT VERBS (choose intensity)\nSlowly, steadily, smoothly, gradually, fluidly\nRapidly, dynamically, swiftly\nElegantly, dramatically, confidently\n\n4. FOCUS BEHAVIOR\nSharp focus throughout\nRack focus from [A] to [B]\nMaintains focus on [element]\nShallow depth of field\nDeep focus\nProgressive focus shift\n\n5. BACKGROUND BEHAVIOR\nStays consistent\nBlurs to bokeh\nSharpens into view\nFades to [color]\nRemains sharp throughout\n\n6. TECHNICAL SPECS (standard cinematic quality)\nCinematic depth of field\nStable gimbal/dolly movement\nProfessional commercial grade\n24fps (or 30fps, 60fps for slow-motion feel)\nClean sensor, no grain (or \"film grain\" if desired)\n\n\nExample Prompts by Movement Type\n\nDOLLY-IN (Wide → Close-up)\nSmooth camera dolly-in from wide establishing shot to extreme close-up. Subject remains stationary. Camera pushes forward steadily, transitioning focus from [background element] to [detail]. Lighting stays constant, background softly blurs to bokeh. Cinematic depth of field, stable gimbal movement\n\nDOLLY-OUT (Close-up → Wide)\nSmooth camera pull-back from extreme close-up to wide establishing shot. Subject remains centered and stationary. Camera retreats steadily, revealing environment progressively. Focus maintains on subject while background sharpens into view. Even lighting, cinematic depth of field\n\nORBIT (Circular movement)\nSmooth camera orbit from front view to side profile. Subject remains stationary at center. Camera arcs left fluidly in 90-degree rotation, maintaining constant distance and eye-level angle. Lighting stays consistent, sharp focus throughout. Gimbal stabilized circular tracking\n\nTILT (Vertical angle change)\nSmooth camera tilt from low-angle to high-angle. Subject remains stationary. Camera tilts upward gradually, shifting perspective from worm's eye view to bird's eye view. Distance stays constant, lighting consistent. Stable tripod tilt, cinematic framing\n\nPAN (Horizontal swivel)\nSmooth camera pan from left profile to right profile. Subject remains stationary. Camera swivels horizontally across 180 degrees, maintaining constant distance and eye-level. Sharp focus throughout, even lighting. Fluid tripod pan\n\nCRANE UP/DOWN\nSmooth camera crane from ground-level to overhead view. Subject remains stationary at center. Camera elevates vertically, angle shifting from eye-level to bird's eye view. Distance adjusts proportionally, lighting consistent. Stabilized crane movement\n\nKey Rules for Camera-Only Transitions\n\nAlways specify subject remains stationary - This prevents unwanted morphing\nDescribe start AND end positions clearly - Gives model clear targets\nUse specific movement verbs - \"Dolly-in\" is clearer than \"moves closer\"\nLock down what DOESN'T change - Lighting, subject, clothing, expression\nInclude technical quality markers - Gimbal, cinematic, stable\nNegative prompts are critical - Prevents warping/morphing/distortion\nKeep prompts under 75 words - Model weights early words heavier\nOne primary movement per transition - Don't combine dolly + pan + tilt\n\nAdvanced Techniques\n\nSpeed Ramping:\n\"Camera begins slow dolly-in, accelerates midway, then decelerates smoothly into final close-up\"\n\nCombined Movements (use sparingly):\n\"Camera dollies in while simultaneously tilting down, maintaining subject center-frame\"\n\nFocus Pulls:\n\"Rack focus from foreground [element] to background [element] as camera remains locked\"\n\nLens Simulation:\n\"Wide-angle 24mm distortion gradually compresses to telephoto 85mm compression\"\n\n\nCritical Output Rule\n\nOUTPUT ONLY THE PROMPT. LIMIT THE OUTPUT TO 500 CHARACTERS. NO EXPLANATIONS. NO COMMENTARY. NO ADDITIONAL TEXT.",
-              "gemini-3-1-flash-lite",
+              "LOW",
+              1.0,
+              0.95,
+              32768,
               4,
               "fixed",
               ""
@@ -3644,7 +3644,7 @@
             "origin_slot": 0,
             "target_id": 354,
             "target_slot": 0,
-            "type": "*"
+            "type": "STRING"
           },
           {
             "id": 127,
@@ -3949,7 +3949,7 @@
           },
           {
             "id": 366,
-            "type": "GeminiNode",
+            "type": "GeminiNodeV3",
             "pos": [
               7850,
               -80
@@ -3963,37 +3963,33 @@
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "images",
-                "name": "images",
-                "shape": 7,
+                "name": "model.images.image_1",
                 "type": "IMAGE",
                 "link": 333
               },
               {
-                "localized_name": "audio",
-                "name": "audio",
-                "shape": 7,
+                "name": "model.images.image_2",
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "name": "model.audio.audio_1",
                 "type": "AUDIO",
                 "link": null
               },
               {
-                "localized_name": "video",
-                "name": "video",
-                "shape": 7,
+                "name": "model.video.video_1",
                 "type": "VIDEO",
                 "link": null
               },
               {
-                "localized_name": "files",
-                "name": "files",
-                "shape": 7,
+                "name": "model.files",
                 "type": "GEMINI_INPUT_FILES",
                 "link": null
               }
             ],
             "outputs": [
               {
-                "localized_name": "STRING",
                 "name": "STRING",
                 "type": "STRING",
                 "links": [
@@ -4003,13 +3999,17 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "GeminiNode",
+              "Node name for S&R": "GeminiNodeV3",
               "cnr_id": "comfy-core",
               "ver": "0.3.76"
             },
             "widgets_values": [
+              "Gemini 3.1 Flash-Lite",
               "STEP 1: ANALYZE BOTH IMAGES\nBefore crafting the prompt, analyze both images to understand:\n\n\nCamera distance (wide shot, medium, close-up, extreme close-up, macro)\nCamera angle (low-angle, high-angle, eye-level, overhead, Dutch, worm's eye, bird's eye)\nCamera position relative to subject (front, side profile, 3/4 view, back, overhead)\nFraming (full body, torso, chest-up, face only, detail/macro)\nSubject position and pose\nLighting setup and direction\nBackground elements and depth\nFocal length characteristics (wide-angle distortion vs telephoto compression)\n\nSTEP 2: DETERMINE CAMERA MOVEMENT\nBased on the differences between images, identify the primary camera movement:\n\n\nDistance change: Dolly-in (closer) or Dolly-out (farther)\nVertical angle change: Tilt up/down or Crane up/down\nHorizontal angle change: Pan left/right or Orbit/Arc around subject\nHeight change: Crane/Pedestal up or down\nLateral movement: Truck/Track left or right\n\nSTEP 3: OUTPUT ONLY THE PROMPT\nDo not include explanations, commentary, or additional text.\nOutput ONLY the transition prompt in this format:\n\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nCore Principle\n\nFor transitions where the subject/scene remains consistent and only the camera position changes, use this structured approach to ensure smooth, cinematic results.\n\n\nPrompt Structure Template\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nComponent Breakdown\n\n1. CAMERA MOVEMENT TYPES\nDolly-in/Push-in: Camera moves forward toward subject\nDolly-out/Pull-back: Camera moves backward away from subject\nOrbit/Arc: Camera circles around subject (specify left/right)\nTilt: Camera angles up or down on fixed position\nPan: Camera swivels left or right horizontally\nCrane/Pedestal: Camera moves vertically up or down\nTracking/Trucking: Camera moves parallel to subject\n\n2. POSITION DESCRIPTORS\nDistance: wide shot, medium shot, close-up, extreme close-up, macro\nAngle: low-angle, high-angle, eye-level, overhead, Dutch angle, worm's eye view, bird's eye view\nFraming: full body, three-quarter, torso, chest-up, face, detail\n\n3. MOVEMENT VERBS (choose intensity)\nSlowly, steadily, smoothly, gradually, fluidly\nRapidly, dynamically, swiftly\nElegantly, dramatically, confidently\n\n4. FOCUS BEHAVIOR\nSharp focus throughout\nRack focus from [A] to [B]\nMaintains focus on [element]\nShallow depth of field\nDeep focus\nProgressive focus shift\n\n5. BACKGROUND BEHAVIOR\nStays consistent\nBlurs to bokeh\nSharpens into view\nFades to [color]\nRemains sharp throughout\n\n6. TECHNICAL SPECS (standard cinematic quality)\nCinematic depth of field\nStable gimbal/dolly movement\nProfessional commercial grade\n24fps (or 30fps, 60fps for slow-motion feel)\nClean sensor, no grain (or \"film grain\" if desired)\n\n\nExample Prompts by Movement Type\n\nDOLLY-IN (Wide → Close-up)\nSmooth camera dolly-in from wide establishing shot to extreme close-up. Subject remains stationary. Camera pushes forward steadily, transitioning focus from [background element] to [detail]. Lighting stays constant, background softly blurs to bokeh. Cinematic depth of field, stable gimbal movement\n\nDOLLY-OUT (Close-up → Wide)\nSmooth camera pull-back from extreme close-up to wide establishing shot. Subject remains centered and stationary. Camera retreats steadily, revealing environment progressively. Focus maintains on subject while background sharpens into view. Even lighting, cinematic depth of field\n\nORBIT (Circular movement)\nSmooth camera orbit from front view to side profile. Subject remains stationary at center. Camera arcs left fluidly in 90-degree rotation, maintaining constant distance and eye-level angle. Lighting stays consistent, sharp focus throughout. Gimbal stabilized circular tracking\n\nTILT (Vertical angle change)\nSmooth camera tilt from low-angle to high-angle. Subject remains stationary. Camera tilts upward gradually, shifting perspective from worm's eye view to bird's eye view. Distance stays constant, lighting consistent. Stable tripod tilt, cinematic framing\n\nPAN (Horizontal swivel)\nSmooth camera pan from left profile to right profile. Subject remains stationary. Camera swivels horizontally across 180 degrees, maintaining constant distance and eye-level. Sharp focus throughout, even lighting. Fluid tripod pan\n\nCRANE UP/DOWN\nSmooth camera crane from ground-level to overhead view. Subject remains stationary at center. Camera elevates vertically, angle shifting from eye-level to bird's eye view. Distance adjusts proportionally, lighting consistent. Stabilized crane movement\n\nKey Rules for Camera-Only Transitions\n\nAlways specify subject remains stationary - This prevents unwanted morphing\nDescribe start AND end positions clearly - Gives model clear targets\nUse specific movement verbs - \"Dolly-in\" is clearer than \"moves closer\"\nLock down what DOESN'T change - Lighting, subject, clothing, expression\nInclude technical quality markers - Gimbal, cinematic, stable\nNegative prompts are critical - Prevents warping/morphing/distortion\nKeep prompts under 75 words - Model weights early words heavier\nOne primary movement per transition - Don't combine dolly + pan + tilt\n\nAdvanced Techniques\n\nSpeed Ramping:\n\"Camera begins slow dolly-in, accelerates midway, then decelerates smoothly into final close-up\"\n\nCombined Movements (use sparingly):\n\"Camera dollies in while simultaneously tilting down, maintaining subject center-frame\"\n\nFocus Pulls:\n\"Rack focus from foreground [element] to background [element] as camera remains locked\"\n\nLens Simulation:\n\"Wide-angle 24mm distortion gradually compresses to telephoto 85mm compression\"\n\n\nCritical Output Rule\n\nOUTPUT ONLY THE PROMPT. LIMIT THE OUTPUT TO 500 CHARACTERS. NO EXPLANATIONS. NO COMMENTARY. NO ADDITIONAL TEXT.",
-              "gemini-3-1-flash-lite",
+              "LOW",
+              1.0,
+              0.95,
+              32768,
               5,
               "fixed",
               ""
@@ -4171,7 +4171,7 @@
             "origin_slot": 0,
             "target_id": 362,
             "target_slot": 0,
-            "type": "*"
+            "type": "STRING"
           },
           {
             "id": 127,
@@ -4476,7 +4476,7 @@
           },
           {
             "id": 374,
-            "type": "GeminiNode",
+            "type": "GeminiNodeV3",
             "pos": [
               7850,
               -80
@@ -4490,37 +4490,33 @@
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "images",
-                "name": "images",
-                "shape": 7,
+                "name": "model.images.image_1",
                 "type": "IMAGE",
                 "link": 338
               },
               {
-                "localized_name": "audio",
-                "name": "audio",
-                "shape": 7,
+                "name": "model.images.image_2",
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "name": "model.audio.audio_1",
                 "type": "AUDIO",
                 "link": null
               },
               {
-                "localized_name": "video",
-                "name": "video",
-                "shape": 7,
+                "name": "model.video.video_1",
                 "type": "VIDEO",
                 "link": null
               },
               {
-                "localized_name": "files",
-                "name": "files",
-                "shape": 7,
+                "name": "model.files",
                 "type": "GEMINI_INPUT_FILES",
                 "link": null
               }
             ],
             "outputs": [
               {
-                "localized_name": "STRING",
                 "name": "STRING",
                 "type": "STRING",
                 "links": [
@@ -4530,13 +4526,17 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "GeminiNode",
+              "Node name for S&R": "GeminiNodeV3",
               "cnr_id": "comfy-core",
               "ver": "0.3.76"
             },
             "widgets_values": [
+              "Gemini 3.1 Flash-Lite",
               "STEP 1: ANALYZE BOTH IMAGES\nBefore crafting the prompt, analyze both images to understand:\n\n\nCamera distance (wide shot, medium, close-up, extreme close-up, macro)\nCamera angle (low-angle, high-angle, eye-level, overhead, Dutch, worm's eye, bird's eye)\nCamera position relative to subject (front, side profile, 3/4 view, back, overhead)\nFraming (full body, torso, chest-up, face only, detail/macro)\nSubject position and pose\nLighting setup and direction\nBackground elements and depth\nFocal length characteristics (wide-angle distortion vs telephoto compression)\n\nSTEP 2: DETERMINE CAMERA MOVEMENT\nBased on the differences between images, identify the primary camera movement:\n\n\nDistance change: Dolly-in (closer) or Dolly-out (farther)\nVertical angle change: Tilt up/down or Crane up/down\nHorizontal angle change: Pan left/right or Orbit/Arc around subject\nHeight change: Crane/Pedestal up or down\nLateral movement: Truck/Track left or right\n\nSTEP 3: OUTPUT ONLY THE PROMPT\nDo not include explanations, commentary, or additional text.\nOutput ONLY the transition prompt in this format:\n\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nCore Principle\n\nFor transitions where the subject/scene remains consistent and only the camera position changes, use this structured approach to ensure smooth, cinematic results.\n\n\nPrompt Structure Template\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nComponent Breakdown\n\n1. CAMERA MOVEMENT TYPES\nDolly-in/Push-in: Camera moves forward toward subject\nDolly-out/Pull-back: Camera moves backward away from subject\nOrbit/Arc: Camera circles around subject (specify left/right)\nTilt: Camera angles up or down on fixed position\nPan: Camera swivels left or right horizontally\nCrane/Pedestal: Camera moves vertically up or down\nTracking/Trucking: Camera moves parallel to subject\n\n2. POSITION DESCRIPTORS\nDistance: wide shot, medium shot, close-up, extreme close-up, macro\nAngle: low-angle, high-angle, eye-level, overhead, Dutch angle, worm's eye view, bird's eye view\nFraming: full body, three-quarter, torso, chest-up, face, detail\n\n3. MOVEMENT VERBS (choose intensity)\nSlowly, steadily, smoothly, gradually, fluidly\nRapidly, dynamically, swiftly\nElegantly, dramatically, confidently\n\n4. FOCUS BEHAVIOR\nSharp focus throughout\nRack focus from [A] to [B]\nMaintains focus on [element]\nShallow depth of field\nDeep focus\nProgressive focus shift\n\n5. BACKGROUND BEHAVIOR\nStays consistent\nBlurs to bokeh\nSharpens into view\nFades to [color]\nRemains sharp throughout\n\n6. TECHNICAL SPECS (standard cinematic quality)\nCinematic depth of field\nStable gimbal/dolly movement\nProfessional commercial grade\n24fps (or 30fps, 60fps for slow-motion feel)\nClean sensor, no grain (or \"film grain\" if desired)\n\n\nExample Prompts by Movement Type\n\nDOLLY-IN (Wide → Close-up)\nSmooth camera dolly-in from wide establishing shot to extreme close-up. Subject remains stationary. Camera pushes forward steadily, transitioning focus from [background element] to [detail]. Lighting stays constant, background softly blurs to bokeh. Cinematic depth of field, stable gimbal movement\n\nDOLLY-OUT (Close-up → Wide)\nSmooth camera pull-back from extreme close-up to wide establishing shot. Subject remains centered and stationary. Camera retreats steadily, revealing environment progressively. Focus maintains on subject while background sharpens into view. Even lighting, cinematic depth of field\n\nORBIT (Circular movement)\nSmooth camera orbit from front view to side profile. Subject remains stationary at center. Camera arcs left fluidly in 90-degree rotation, maintaining constant distance and eye-level angle. Lighting stays consistent, sharp focus throughout. Gimbal stabilized circular tracking\n\nTILT (Vertical angle change)\nSmooth camera tilt from low-angle to high-angle. Subject remains stationary. Camera tilts upward gradually, shifting perspective from worm's eye view to bird's eye view. Distance stays constant, lighting consistent. Stable tripod tilt, cinematic framing\n\nPAN (Horizontal swivel)\nSmooth camera pan from left profile to right profile. Subject remains stationary. Camera swivels horizontally across 180 degrees, maintaining constant distance and eye-level. Sharp focus throughout, even lighting. Fluid tripod pan\n\nCRANE UP/DOWN\nSmooth camera crane from ground-level to overhead view. Subject remains stationary at center. Camera elevates vertically, angle shifting from eye-level to bird's eye view. Distance adjusts proportionally, lighting consistent. Stabilized crane movement\n\nKey Rules for Camera-Only Transitions\n\nAlways specify subject remains stationary - This prevents unwanted morphing\nDescribe start AND end positions clearly - Gives model clear targets\nUse specific movement verbs - \"Dolly-in\" is clearer than \"moves closer\"\nLock down what DOESN'T change - Lighting, subject, clothing, expression\nInclude technical quality markers - Gimbal, cinematic, stable\nNegative prompts are critical - Prevents warping/morphing/distortion\nKeep prompts under 75 words - Model weights early words heavier\nOne primary movement per transition - Don't combine dolly + pan + tilt\n\nAdvanced Techniques\n\nSpeed Ramping:\n\"Camera begins slow dolly-in, accelerates midway, then decelerates smoothly into final close-up\"\n\nCombined Movements (use sparingly):\n\"Camera dollies in while simultaneously tilting down, maintaining subject center-frame\"\n\nFocus Pulls:\n\"Rack focus from foreground [element] to background [element] as camera remains locked\"\n\nLens Simulation:\n\"Wide-angle 24mm distortion gradually compresses to telephoto 85mm compression\"\n\n\nCritical Output Rule\n\nOUTPUT ONLY THE PROMPT. LIMIT THE OUTPUT TO 500 CHARACTERS. NO EXPLANATIONS. NO COMMENTARY. NO ADDITIONAL TEXT.",
-              "gemini-3-1-flash-lite",
+              "LOW",
+              1.0,
+              0.95,
+              32768,
               6,
               "fixed",
               ""
@@ -4698,7 +4698,7 @@
             "origin_slot": 0,
             "target_id": 370,
             "target_slot": 0,
-            "type": "*"
+            "type": "STRING"
           },
           {
             "id": 127,
@@ -5003,7 +5003,7 @@
           },
           {
             "id": 382,
-            "type": "GeminiNode",
+            "type": "GeminiNodeV3",
             "pos": [
               7849.999881592279,
               -79.99999647637992
@@ -5017,37 +5017,33 @@
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "images",
-                "name": "images",
-                "shape": 7,
+                "name": "model.images.image_1",
                 "type": "IMAGE",
                 "link": 341
               },
               {
-                "localized_name": "audio",
-                "name": "audio",
-                "shape": 7,
+                "name": "model.images.image_2",
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "name": "model.audio.audio_1",
                 "type": "AUDIO",
                 "link": null
               },
               {
-                "localized_name": "video",
-                "name": "video",
-                "shape": 7,
+                "name": "model.video.video_1",
                 "type": "VIDEO",
                 "link": null
               },
               {
-                "localized_name": "files",
-                "name": "files",
-                "shape": 7,
+                "name": "model.files",
                 "type": "GEMINI_INPUT_FILES",
                 "link": null
               }
             ],
             "outputs": [
               {
-                "localized_name": "STRING",
                 "name": "STRING",
                 "type": "STRING",
                 "links": [
@@ -5057,13 +5053,17 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "GeminiNode",
+              "Node name for S&R": "GeminiNodeV3",
               "cnr_id": "comfy-core",
               "ver": "0.3.76"
             },
             "widgets_values": [
+              "Gemini 3.1 Flash-Lite",
               "STEP 1: ANALYZE BOTH IMAGES\nBefore crafting the prompt, analyze both images to understand:\n\n\nCamera distance (wide shot, medium, close-up, extreme close-up, macro)\nCamera angle (low-angle, high-angle, eye-level, overhead, Dutch, worm's eye, bird's eye)\nCamera position relative to subject (front, side profile, 3/4 view, back, overhead)\nFraming (full body, torso, chest-up, face only, detail/macro)\nSubject position and pose\nLighting setup and direction\nBackground elements and depth\nFocal length characteristics (wide-angle distortion vs telephoto compression)\n\nSTEP 2: DETERMINE CAMERA MOVEMENT\nBased on the differences between images, identify the primary camera movement:\n\n\nDistance change: Dolly-in (closer) or Dolly-out (farther)\nVertical angle change: Tilt up/down or Crane up/down\nHorizontal angle change: Pan left/right or Orbit/Arc around subject\nHeight change: Crane/Pedestal up or down\nLateral movement: Truck/Track left or right\n\nSTEP 3: OUTPUT ONLY THE PROMPT\nDo not include explanations, commentary, or additional text.\nOutput ONLY the transition prompt in this format:\n\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nCore Principle\n\nFor transitions where the subject/scene remains consistent and only the camera position changes, use this structured approach to ensure smooth, cinematic results.\n\n\nPrompt Structure Template\n\n[CAMERA MOVEMENT] from [START POSITION] to [END POSITION]. Subject remains stationary and consistent throughout. Camera [MOVEMENT VERB] fluidly, maintaining [FOCUS BEHAVIOR] on [KEY ELEMENT]. Lighting stays constant, background [BACKGROUND BEHAVIOR]. [TECHNICAL SPECS].\n\nComponent Breakdown\n\n1. CAMERA MOVEMENT TYPES\nDolly-in/Push-in: Camera moves forward toward subject\nDolly-out/Pull-back: Camera moves backward away from subject\nOrbit/Arc: Camera circles around subject (specify left/right)\nTilt: Camera angles up or down on fixed position\nPan: Camera swivels left or right horizontally\nCrane/Pedestal: Camera moves vertically up or down\nTracking/Trucking: Camera moves parallel to subject\n\n2. POSITION DESCRIPTORS\nDistance: wide shot, medium shot, close-up, extreme close-up, macro\nAngle: low-angle, high-angle, eye-level, overhead, Dutch angle, worm's eye view, bird's eye view\nFraming: full body, three-quarter, torso, chest-up, face, detail\n\n3. MOVEMENT VERBS (choose intensity)\nSlowly, steadily, smoothly, gradually, fluidly\nRapidly, dynamically, swiftly\nElegantly, dramatically, confidently\n\n4. FOCUS BEHAVIOR\nSharp focus throughout\nRack focus from [A] to [B]\nMaintains focus on [element]\nShallow depth of field\nDeep focus\nProgressive focus shift\n\n5. BACKGROUND BEHAVIOR\nStays consistent\nBlurs to bokeh\nSharpens into view\nFades to [color]\nRemains sharp throughout\n\n6. TECHNICAL SPECS (standard cinematic quality)\nCinematic depth of field\nStable gimbal/dolly movement\nProfessional commercial grade\n24fps (or 30fps, 60fps for slow-motion feel)\nClean sensor, no grain (or \"film grain\" if desired)\n\n\nExample Prompts by Movement Type\n\nDOLLY-IN (Wide → Close-up)\nSmooth camera dolly-in from wide establishing shot to extreme close-up. Subject remains stationary. Camera pushes forward steadily, transitioning focus from [background element] to [detail]. Lighting stays constant, background softly blurs to bokeh. Cinematic depth of field, stable gimbal movement\n\nDOLLY-OUT (Close-up → Wide)\nSmooth camera pull-back from extreme close-up to wide establishing shot. Subject remains centered and stationary. Camera retreats steadily, revealing environment progressively. Focus maintains on subject while background sharpens into view. Even lighting, cinematic depth of field\n\nORBIT (Circular movement)\nSmooth camera orbit from front view to side profile. Subject remains stationary at center. Camera arcs left fluidly in 90-degree rotation, maintaining constant distance and eye-level angle. Lighting stays consistent, sharp focus throughout. Gimbal stabilized circular tracking\n\nTILT (Vertical angle change)\nSmooth camera tilt from low-angle to high-angle. Subject remains stationary. Camera tilts upward gradually, shifting perspective from worm's eye view to bird's eye view. Distance stays constant, lighting consistent. Stable tripod tilt, cinematic framing\n\nPAN (Horizontal swivel)\nSmooth camera pan from left profile to right profile. Subject remains stationary. Camera swivels horizontally across 180 degrees, maintaining constant distance and eye-level. Sharp focus throughout, even lighting. Fluid tripod pan\n\nCRANE UP/DOWN\nSmooth camera crane from ground-level to overhead view. Subject remains stationary at center. Camera elevates vertically, angle shifting from eye-level to bird's eye view. Distance adjusts proportionally, lighting consistent. Stabilized crane movement\n\nKey Rules for Camera-Only Transitions\n\nAlways specify subject remains stationary - This prevents unwanted morphing\nDescribe start AND end positions clearly - Gives model clear targets\nUse specific movement verbs - \"Dolly-in\" is clearer than \"moves closer\"\nLock down what DOESN'T change - Lighting, subject, clothing, expression\nInclude technical quality markers - Gimbal, cinematic, stable\nNegative prompts are critical - Prevents warping/morphing/distortion\nKeep prompts under 75 words - Model weights early words heavier\nOne primary movement per transition - Don't combine dolly + pan + tilt\n\nAdvanced Techniques\n\nSpeed Ramping:\n\"Camera begins slow dolly-in, accelerates midway, then decelerates smoothly into final close-up\"\n\nCombined Movements (use sparingly):\n\"Camera dollies in while simultaneously tilting down, maintaining subject center-frame\"\n\nFocus Pulls:\n\"Rack focus from foreground [element] to background [element] as camera remains locked\"\n\nLens Simulation:\n\"Wide-angle 24mm distortion gradually compresses to telephoto 85mm compression\"\n\n\nCritical Output Rule\n\nOUTPUT ONLY THE PROMPT. LIMIT THE OUTPUT TO 500 CHARACTERS. NO EXPLANATIONS. NO COMMENTARY. NO ADDITIONAL TEXT.",
-              "gemini-3-1-flash-lite",
+              "LOW",
+              1.0,
+              0.95,
+              32768,
               7,
               "fixed",
               ""
@@ -5225,7 +5225,7 @@
             "origin_slot": 0,
             "target_id": 378,
             "target_slot": 0,
-            "type": "*"
+            "type": "STRING"
           },
           {
             "id": 127,
