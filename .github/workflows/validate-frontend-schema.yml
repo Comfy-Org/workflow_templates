@@ -1,0 +1,92 @@
+name: Validate Frontend Schema
+
+# Runs the frontend's own zod schema (packages/graph-model/src/workflowSchema.ts)
+# against every template registered in templates/index.json. The schema is
+# fetched from Comfy-Org/ComfyUI_frontend at FRONTEND_REF on every run, so this
+# gate tracks the real frontend code instead of a vendored copy: four source
+# files (~45 KB) plus `zod`/`zod-validation-error`, no clone and no pnpm install
+# of the frontend monorepo.
+#
+# FRONTEND_REF defaults to `main` (live). Set the repository variable
+# FRONTEND_SCHEMA_REF to a tag or commit SHA to pin the gate while a frontend
+# change is being fixed, and unset it again afterwards.
+
+on:
+  push:
+    branches: [ main, spec ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main ]
+    paths:
+      - 'templates/**'
+      - 'scripts/validate/frontend_schema.mts'
+      - '.github/workflows/validate-frontend-schema.yml'
+  schedule:
+    # Nightly: catch frontend schema drift before it blocks someone's PR.
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      frontend_ref:
+        description: 'ComfyUI_frontend ref to validate against (tag or SHA)'
+        required: false
+        default: ''
+
+jobs:
+  zod-schema:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      FRONTEND_REF: ${{ github.event.inputs.frontend_ref || vars.FRONTEND_SCHEMA_REF || 'main' }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+        sparse-checkout: |
+          templates/
+          scripts/validate/frontend_schema.mts
+        sparse-checkout-cone-mode: false
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    # Resolve once: downloading the four files straight from a branch name lets
+    # the branch move between requests and mixes schema sources from different
+    # commits. Fail closed if the ref cannot be resolved.
+    - name: Resolve frontend ref
+      id: ref
+      run: |
+        set -euo pipefail
+        sha=$(curl -sSf \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H 'Accept: application/vnd.github+json' \
+          "https://api.github.com/repos/Comfy-Org/ComfyUI_frontend/commits/${FRONTEND_REF}" \
+          | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')
+        echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+        echo "Resolved ${FRONTEND_REF} -> ${sha}"
+        echo "::notice title=Frontend schema ref::${FRONTEND_REF} (${sha})"
+
+    - name: Fetch frontend schema sources
+      env:
+        FRONTEND_SHA: ${{ steps.ref.outputs.sha }}
+      run: |
+        set -euo pipefail
+        dir="$RUNNER_TEMP/frontend-schema"
+        mkdir -p "$dir/packages/graph-model/src"
+        printf '{"name":"frontend-schema","private":true,"type":"module"}\n' > "$dir/package.json"
+        for file in workflowSchema.ts widgets.ts linkId.ts rerouteId.ts; do
+          curl -sSfL \
+            "https://raw.githubusercontent.com/Comfy-Org/ComfyUI_frontend/${FRONTEND_SHA}/packages/graph-model/src/${file}" \
+            -o "$dir/packages/graph-model/src/${file}"
+          printf '  %s  %s\n' "$(sha256sum "$dir/packages/graph-model/src/${file}" | cut -c1-16)" "$file"
+        done
+        cd "$dir"
+        npm install --silent --no-audit --no-fund zod zod-validation-error tsx
+
+    - name: Validate templates against the frontend schema
+      run: |
+        dir="$RUNNER_TEMP/frontend-schema"
+        "$dir/node_modules/.bin/tsx" scripts/validate/frontend_schema.mts --frontend-dir "$dir"
