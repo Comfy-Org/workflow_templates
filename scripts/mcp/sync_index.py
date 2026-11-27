@@ -58,6 +58,7 @@ from template_cache import (  # noqa: E402
     apply_template_cache_to_mcp,
     apply_template_overlay,
     cache_matches_workflow,
+    is_placeholder_io,
     load_template_cache,
 )
 from template_overrides import load_template_overrides, resolve_recommend  # noqa: E402
@@ -741,6 +742,30 @@ def build_template_entry(
     return apply_template_overlay(entry, cached, name)
 
 
+def preserve_published_io(
+    new_data: list[dict],
+    existing: dict[str, dict],
+) -> list[str]:
+    """Keep the io already published in index.mcp.json when sync would stub it.
+
+    Templates fall back to `["text: Prompt"]` / `["image: Generated output"]`
+    whenever the AI cache entry is missing or stale. Losing curated io on a sync
+    is always a regression for the consumer, so the previous value wins until
+    `npm run mcp:ai` writes a fresh one.
+    """
+    kept: list[str] = []
+    for group in new_data:
+        for template in group.get("templates", []):
+            name = template.get("name", "")
+            previous = (existing.get(name) or {}).get("io")
+            if not previous or is_placeholder_io(previous):
+                continue
+            if is_placeholder_io(template.get("io")):
+                template["io"] = previous
+                kept.append(name)
+    return kept
+
+
 def sync(
     node_index: dict[str, dict[str, Any]],
 ) -> tuple[list[dict], list[str], list[str], list[str], list[str], list[tuple[str, list[str]]]]:
@@ -828,6 +853,12 @@ def sync(
         new_data.append(new_entry)
 
     apply_template_cache_to_mcp(new_data, template_cache)
+    kept_io = preserve_published_io(new_data, existing)
+    if kept_io:
+        warnings.append(
+            f"Kept the previously published io for {len(kept_io)} template(s) "
+            "whose AI cache is stale (run `npm run mcp:ai` to refresh)"
+        )
     return new_data, added, removed, warnings, skipped_local, multi_api_skips
 
 
