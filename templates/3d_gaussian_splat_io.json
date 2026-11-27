@@ -1,0 +1,1112 @@
+{
+ "id": "00000000-0000-0000-0000-000000000000",
+ "revision": 0,
+ "last_node_id": 901,
+ "last_link_id": 20,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "UNETLoader",
+   "pos": [
+    1340,
+    70
+   ],
+   "size": [
+    300,
+    80
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      8
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "UNETLoader",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "triposplat_fp16.safetensors",
+    "default"
+   ]
+  },
+  {
+   "id": 2,
+   "type": "CLIPVisionLoader",
+   "pos": [
+    1340,
+    190
+   ],
+   "size": [
+    300,
+    60
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "CLIP_VISION",
+     "type": "CLIP_VISION",
+     "links": [
+      5
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPVisionLoader",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "dino_v3_vit_h_bf16.safetensors"
+   ]
+  },
+  {
+   "id": 3,
+   "type": "VAELoader",
+   "pos": [
+    1340,
+    290
+   ],
+   "size": [
+    300,
+    60
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "VAE",
+     "type": "VAE",
+     "links": [
+      6
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAELoader",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "flux2-vae.safetensors"
+   ]
+  },
+  {
+   "id": 4,
+   "type": "VAELoader",
+   "pos": [
+    1340,
+    390
+   ],
+   "size": [
+    300,
+    60
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "VAE",
+     "type": "VAE",
+     "links": [
+      13
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAELoader",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "triposplat_vae_decoder_fp16.safetensors"
+   ]
+  },
+  {
+   "id": 5,
+   "type": "LoadBackgroundRemovalModel",
+   "pos": [
+    1340,
+    490
+   ],
+   "size": [
+    300,
+    60
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "BACKGROUND_REMOVAL",
+     "type": "BACKGROUND_REMOVAL",
+     "links": [
+      1
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoadBackgroundRemovalModel",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "birefnet.safetensors"
+   ]
+  },
+  {
+   "id": 6,
+   "type": "LoadImage",
+   "pos": [
+    1720,
+    70
+   ],
+   "size": [
+    340,
+    360
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      2,
+      3
+     ],
+     "slot_index": 0
+    },
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": null,
+     "slot_index": 1
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoadImage",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "3d_gaussian_splat_io_input.png",
+    "image"
+   ]
+  },
+  {
+   "id": 7,
+   "type": "RemoveBackground",
+   "pos": [
+    2140,
+    70
+   ],
+   "size": [
+    320,
+    110
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "bg_removal_model",
+     "type": "BACKGROUND_REMOVAL",
+     "link": 1
+    },
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": 2
+    }
+   ],
+   "outputs": [
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": [
+      4
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "RemoveBackground",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 8,
+   "type": "TripoSplatPreprocessImage",
+   "pos": [
+    2140,
+    220
+   ],
+   "size": [
+    320,
+    150
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": 3
+    },
+    {
+     "name": "mask",
+     "type": "MASK",
+     "link": 4
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      7
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "TripoSplatPreprocessImage",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    1,
+    1024
+   ]
+  },
+  {
+   "id": 9,
+   "type": "TripoSplatConditioning",
+   "pos": [
+    2540,
+    70
+   ],
+   "size": [
+    320,
+    170
+   ],
+   "flags": {},
+   "order": 8,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "clip_vision",
+     "type": "CLIP_VISION",
+     "link": 5
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 6
+    },
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": 7
+    }
+   ],
+   "outputs": [
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "links": [
+      9
+     ],
+     "slot_index": 0
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "links": [
+      10
+     ],
+     "slot_index": 1
+    },
+    {
+     "name": "latent",
+     "type": "LATENT",
+     "links": [
+      11
+     ],
+     "slot_index": 2
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "TripoSplatConditioning",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 10,
+   "type": "KSampler",
+   "pos": [
+    2540,
+    280
+   ],
+   "size": [
+    320,
+    300
+   ],
+   "flags": {},
+   "order": 9,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 8
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 9
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 10
+    },
+    {
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 11
+    }
+   ],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      12
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "KSampler",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    46,
+    "fixed",
+    20,
+    3.0,
+    "dpmpp_2m",
+    "simple",
+    1.0
+   ]
+  },
+  {
+   "id": 11,
+   "type": "VAEDecodeTripoSplat",
+   "pos": [
+    2540,
+    620
+   ],
+   "size": [
+    320,
+    150
+   ],
+   "flags": {},
+   "order": 10,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 12
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 13
+    }
+   ],
+   "outputs": [
+    {
+     "name": "SPLAT",
+     "type": "SPLAT",
+     "links": [
+      14
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEDecodeTripoSplat",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    262144,
+    780101,
+    "fixed"
+   ]
+  },
+  {
+   "id": 12,
+   "type": "TransformSplat",
+   "pos": [
+    2940,
+    70
+   ],
+   "size": [
+    320,
+    260
+   ],
+   "flags": {},
+   "order": 11,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "splat",
+     "type": "SPLAT",
+     "link": 14
+    }
+   ],
+   "outputs": [
+    {
+     "name": "SPLAT",
+     "type": "SPLAT",
+     "links": [
+      15,
+      18
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "TransformSplat",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    205.0,
+    0.0,
+    1.15,
+    1.15,
+    1.15
+   ]
+  },
+  {
+   "id": 17,
+   "type": "RenderSplat",
+   "pos": [
+    2940,
+    370
+   ],
+   "size": [
+    340,
+    210
+   ],
+   "flags": {},
+   "order": 12,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "splat",
+     "type": "SPLAT",
+     "link": 15
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      16
+     ],
+     "slot_index": 0
+    },
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": null,
+     "slot_index": 1
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "RenderSplat",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    1024,
+    1024,
+    1,
+    1.0,
+    2.0,
+    0.0,
+    0.0,
+    "color",
+    "#1b1b1b"
+   ]
+  },
+  {
+   "id": 18,
+   "type": "SaveImage",
+   "pos": [
+    2940,
+    620
+   ],
+   "size": [
+    340,
+    300
+   ],
+   "flags": {},
+   "order": 13,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 16
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "SaveImage",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "3d_gaussian_splat_io/splat_render"
+   ]
+  },
+  {
+   "id": 13,
+   "type": "SaveGaussianSplat",
+   "pos": [
+    3360,
+    70
+   ],
+   "size": [
+    340,
+    420
+   ],
+   "flags": {},
+   "order": 14,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model_3d",
+     "type": "FILE_3D_SPLAT_ANY",
+     "link": 17
+    }
+   ],
+   "outputs": [
+    {
+     "name": "model_3d",
+     "type": "FILE_3D_SPLAT_ANY",
+     "links": null,
+     "slot_index": 0
+    },
+    {
+     "name": "model_3d_info",
+     "type": "LOAD3D_MODEL_INFO",
+     "links": null,
+     "slot_index": 1
+    },
+    {
+     "name": "camera_info",
+     "type": "LOAD3D_CAMERA",
+     "links": null,
+     "slot_index": 2
+    },
+    {
+     "name": "width",
+     "type": "INT",
+     "links": null,
+     "slot_index": 3
+    },
+    {
+     "name": "height",
+     "type": "INT",
+     "links": null,
+     "slot_index": 4
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SaveGaussianSplat",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "3d_gaussian_splat_io/splat",
+    "",
+    1024,
+    1024
+   ]
+  },
+  {
+   "id": 14,
+   "type": "SplatToFile3D",
+   "pos": [
+    3360,
+    530
+   ],
+   "size": [
+    320,
+    90
+   ],
+   "flags": {},
+   "order": 15,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "splat",
+     "type": "SPLAT",
+     "link": 18
+    }
+   ],
+   "outputs": [
+    {
+     "name": "FILE_3D_SPLAT_ANY",
+     "type": "FILE_3D_SPLAT_ANY",
+     "links": [
+      17,
+      19,
+      20
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SplatToFile3D",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "ply"
+   ]
+  },
+  {
+   "id": 15,
+   "type": "SaveGLB",
+   "pos": [
+    3780,
+    70
+   ],
+   "size": [
+    320,
+    90
+   ],
+   "flags": {},
+   "order": 16,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "mesh",
+     "type": "FILE_3D_SPLAT_ANY",
+     "link": 19
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "SaveGLB",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "3d_gaussian_splat_io/splat_file",
+    ""
+   ]
+  },
+  {
+   "id": 16,
+   "type": "PreviewGaussianSplat",
+   "pos": [
+    3780,
+    200
+   ],
+   "size": [
+    340,
+    420
+   ],
+   "flags": {},
+   "order": 17,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model_3d",
+     "type": "FILE_3D_SPLAT_ANY",
+     "link": 20
+    }
+   ],
+   "outputs": [
+    {
+     "name": "model_3d",
+     "type": "FILE_3D_SPLAT_ANY",
+     "links": null,
+     "slot_index": 0
+    },
+    {
+     "name": "model_3d_info",
+     "type": "LOAD3D_MODEL_INFO",
+     "links": null,
+     "slot_index": 1
+    },
+    {
+     "name": "camera_info",
+     "type": "LOAD3D_CAMERA",
+     "links": null,
+     "slot_index": 2
+    },
+    {
+     "name": "width",
+     "type": "INT",
+     "links": null,
+     "slot_index": 3
+    },
+    {
+     "name": "height",
+     "type": "INT",
+     "links": null,
+     "slot_index": 4
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "PreviewGaussianSplat",
+    "cnr_id": "comfy-core"
+   },
+   "widgets_values": [
+    "",
+    1024,
+    1024
+   ]
+  },
+  {
+   "id": 900,
+   "type": "MarkdownNote",
+   "pos": [
+    0,
+    0
+   ],
+   "size": [
+    620,
+    520
+   ],
+   "flags": {},
+   "order": 99,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [],
+   "title": "Note: About",
+   "color": "#222",
+   "bgcolor": "#000",
+   "properties": {
+    "Node name for S&R": "MarkdownNote"
+   },
+   "widgets_values": [
+    "## Gaussian splat I/O — transform, export, preview\n\nImage → TripoSplat → splat, then a small transform step and three ways to consume the splat.\n\n**Pipeline**\n1. `Remove Background (BiRefNet)` → `TripoSplat Preprocess Image` (1024 px).\n2. `TripoSplat Conditioning` + `KSampler` (20 steps, cfg 3.0, dpmpp_2m / simple) → `VAE Decode TripoSplat`\n   (262,144 gaussians).\n3. **`Transform Splat`**: rotate 205° on Y (turn the generated shell to face the camera) and scale 1.15 on all axes (a non-destructive check that the\n   splat is a real 3D asset, not a baked image).\n4. `Splat To File 3D` (PLY) packs the splat for the file-based nodes: **`Save Gaussian Splat`** writes the\n   native splat + viewport, **`Save GLB`** writes the packed file, **`Preview Gaussian Splat`** gives the\n   interactive viewport (the two viewers take a *file*, not the raw `SPLAT` type).\n\n**Render**: `Render Splat` draws the transformed splat to a still image so the transform is visible without\nopening a 3D viewer.\n\n**Why transform first**: downstream engines expect a specific up-axis and unit scale. Rotating/scaling here\nproves the export keeps its own coordinate frame; set `rotate_y = 0`, `scale = 1` to export as generated."
+   ]
+  },
+  {
+   "id": 901,
+   "type": "MarkdownNote",
+   "pos": [
+    660,
+    0
+   ],
+   "size": [
+    620,
+    520
+   ],
+   "flags": {},
+   "order": 99,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [],
+   "title": "Note: Model Link",
+   "color": "#222",
+   "bgcolor": "#000",
+   "properties": {
+    "Node name for S&R": "MarkdownNote"
+   },
+   "widgets_values": [
+    "## Model Links\n\n- [Hugging Face:Comfy-Org/TripoSplat](https://huggingface.co/Comfy-Org/TripoSplat)\n- Original: [VAST-AI-Research/TripoSplat](https://github.com/VAST-AI-Research/TripoSplat)\n- [Hugging Face:Comfy-Org/BiRefNet](https://huggingface.co/Comfy-Org/BiRefNet)\n\nWeights: `diffusion_models/triposplat_fp16`, `vae/triposplat_vae_decoder_fp16`,\n`clip_vision/dino_v3_vit_h_bf16`, `vae/flux2-vae`, `background_removal/birefnet`"
+   ]
+  }
+ ],
+ "links": [
+  [
+   1,
+   5,
+   0,
+   7,
+   0,
+   "BACKGROUND_REMOVAL"
+  ],
+  [
+   2,
+   6,
+   0,
+   7,
+   1,
+   "IMAGE"
+  ],
+  [
+   3,
+   6,
+   0,
+   8,
+   0,
+   "IMAGE"
+  ],
+  [
+   4,
+   7,
+   0,
+   8,
+   1,
+   "MASK"
+  ],
+  [
+   5,
+   2,
+   0,
+   9,
+   0,
+   "CLIP_VISION"
+  ],
+  [
+   6,
+   3,
+   0,
+   9,
+   1,
+   "VAE"
+  ],
+  [
+   7,
+   8,
+   0,
+   9,
+   2,
+   "IMAGE"
+  ],
+  [
+   8,
+   1,
+   0,
+   10,
+   0,
+   "MODEL"
+  ],
+  [
+   9,
+   9,
+   0,
+   10,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   10,
+   9,
+   1,
+   10,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   11,
+   9,
+   2,
+   10,
+   3,
+   "LATENT"
+  ],
+  [
+   12,
+   10,
+   0,
+   11,
+   0,
+   "LATENT"
+  ],
+  [
+   13,
+   4,
+   0,
+   11,
+   1,
+   "VAE"
+  ],
+  [
+   14,
+   11,
+   0,
+   12,
+   0,
+   "SPLAT"
+  ],
+  [
+   15,
+   12,
+   0,
+   17,
+   0,
+   "SPLAT"
+  ],
+  [
+   16,
+   17,
+   0,
+   18,
+   0,
+   "IMAGE"
+  ],
+  [
+   17,
+   14,
+   0,
+   13,
+   0,
+   "FILE_3D_SPLAT_ANY"
+  ],
+  [
+   18,
+   12,
+   0,
+   14,
+   0,
+   "SPLAT"
+  ],
+  [
+   19,
+   14,
+   0,
+   15,
+   0,
+   "FILE_3D_SPLAT_ANY"
+  ],
+  [
+   20,
+   14,
+   0,
+   16,
+   0,
+   "FILE_3D_SPLAT_ANY"
+  ]
+ ],
+ "groups": [
+  {
+   "id": 1,
+   "title": "Step 1 - Load models",
+   "bounding": [
+    1320,
+    0,
+    340,
+    940
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  },
+  {
+   "id": 2,
+   "title": "Step 2 - Upload image",
+   "bounding": [
+    1700,
+    0,
+    380,
+    940
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  },
+  {
+   "id": 3,
+   "title": "Step 3 - Segment & preprocess",
+   "bounding": [
+    2120,
+    0,
+    360,
+    940
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  },
+  {
+   "id": 4,
+   "title": "Step 4 - Sample",
+   "bounding": [
+    2520,
+    0,
+    360,
+    940
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  },
+  {
+   "id": 5,
+   "title": "Step 5 - Transform & render",
+   "bounding": [
+    2920,
+    0,
+    380,
+    940
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  },
+  {
+   "id": 6,
+   "title": "Step 6 - Save splat",
+   "bounding": [
+    3340,
+    0,
+    380,
+    940
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  },
+  {
+   "id": 7,
+   "title": "Step 7 - GLB & preview",
+   "bounding": [
+    3760,
+    0,
+    380,
+    940
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  }
+ ],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 0.6,
+   "offset": [
+    200,
+    200
+   ]
+  }
+ },
+ "version": 0.4
+}
