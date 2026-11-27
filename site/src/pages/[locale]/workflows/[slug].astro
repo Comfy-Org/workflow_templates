@@ -16,8 +16,11 @@
  *    not per page, because holds are normal — workflows are published to the hub
  *    between translation runs.
  *
- * With INDEXABLE_LOCALES empty, every page is non-indexable, so canonicals all
- * point at English and the Google-facing output is unchanged.
+ * Indexable localized pages self-canonical and join the sitemap/hreflang
+ * cluster; held pages canonical to English. Either way this page embeds the
+ * same preview clip as its English sibling, so it emits `max-video-preview:0`
+ * (see `suppressVideoPreview` below) — the English URL stays the sole video
+ * "watch page" for that clip.
  *
  * The SSR `[locale]/workflows/[username].astro` catches everything not generated
  * here (creator profiles, and detail slugs for workflows added since the build).
@@ -47,6 +50,7 @@ import {
 } from '../../../lib/structured-data';
 import { getWorkflowEntityGraph } from '../../../data/workflow-entity-graphs';
 import { buildToolbarLabels } from '../../../lib/toolbar';
+import { isVideoFile } from '../../../lib/media-utils';
 import { localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { resolveLocalizedWorkflow, indexableAlternateLocales } from '../../../lib/i18n/resolver';
@@ -181,6 +185,13 @@ const hreflangLocales = data.shareId
 const thumbnails = data.thumbnails;
 const primaryThumbnail = thumbnails[0] || null;
 const heroPreload = detailHeroPreload(thumbnails, data.mediaSubtype, data.thumbnailVariant);
+
+// A localized detail page is a translation of one workflow, not a distinct
+// video: it embeds the same clip as its English sibling. Keep the English URL
+// as the sole video "watch page" for that clip by telling Google not to build a
+// video preview here. (Held pages are already noindex + English-canonical; this
+// also covers the indexable ones, which self-canonical.)
+const suppressVideoPreview = thumbnails.some((thumb) => isVideoFile(thumb));
 const ogImage = workflowOgUrl(
   data.title || data.name,
   primaryThumbnail ? primaryThumbnail : undefined,
@@ -263,6 +274,7 @@ const toolbarLabels = buildToolbarLabels(locale);
   hreflangBasePath={`/workflows/${urlSlug}/`}
   hreflangLocales={hreflangLocales}
   noindex={!isIndexable}
+  suppressVideoPreview={suppressVideoPreview}
   locale={locale}
   theme="dark"
   hideDefaultFooter
