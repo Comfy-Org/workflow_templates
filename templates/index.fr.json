@@ -12071,6 +12071,80 @@
         "thumbnail": ["input/dancer_field_pose.mp4"]
       },
       {
+        "name": "video_minimax_h3_latent_upscale",
+        "title": "Upscale latent : MiniMax H3",
+        "description": "Générez un plan de 5 secondes en 864x480, agrandissez-le dans l'espace latent avec l'upscaler latent MiniMax H3, puis lancez une seconde passe à demi-planning en 1728x960 pour restituer le détail. Le VAE vidéo ne s'exécute qu'une seule fois, à la taille finale, ce qui évite à la pipeline un aller-retour décodage, upscale en pixels et réencodage.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["ControlNet","Int8"],
+        "models": ["MiniMax H3"],
+        "minComfyUIVersion": "0.35.0",
+        "date": "2026-09-07",
+        "openSource": true,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 7,
+              "nodeType": "LoadImage",
+              "file": "h3_latent_upscale_startframe.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 22,
+              "nodeType": "SaveVideo",
+              "file": "video_minimax_h3_latent_upscale.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "thumbnail": ["output/video_minimax_h3_latent_upscale.mp4"],
+        "logos": []
+      },
+      {
+        "name": "video_minimax_h3_context_windows",
+        "title": "Plan long : fenêtres de contexte MiniMax H3",
+        "description": "Générez une prise continue de 10 secondes avec MiniMax H3 en découpant le latent audio-vidéo en fenêtres de contexte qui se chevauchent, puis en les refusionnant, de sorte que le sampler ne voie jamais une fenêtre plus longue que celle sur laquelle le modèle a été entraîné. La longueur de fenêtre et le chevauchement sont des nombres d'images réels sur la grille de 17 images de H3, ce qui garde la vidéo et l'audio synchronisés au niveau des raccords.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["ControlNet","Int8"],
+        "models": ["MiniMax H3"],
+        "minComfyUIVersion": "0.35.0",
+        "date": "2026-09-07",
+        "openSource": true,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 18,
+              "nodeType": "LoadImage",
+              "file": "sunset_boulevard_walk.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 19,
+              "nodeType": "SaveVideo",
+              "file": "video_minimax_h3_context_windows.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "thumbnail": ["output/video_minimax_h3_context_windows.mp4"],
+        "logos": []
+      },
+      {
         "name": "api_heygen_video_1_r2v",
         "title": "HeyGen Video 1.0 : référence vers vidéo",
         "description": "Générer une Vidéo de 5 à 15 secondes avec dialogue et son à partir d'un prompt ainsi que jusqu'à neuf images, trois Vidéos et trois clips audio en utilisant HeyGen Video 1.0, référencés dans le prompt sous @Image1, @Video1 et @Audio1. Une Vidéo est générée en Sortie, avec les personnes, produits et lieux que vous fournissez qui pilotent la Scène. Idéal pour les démos produit, les clips de style UGC qui maintiennent la cohérence d'un présentateur ou d'un produit, et pour placer votre produit dans une Scène qui vous est propre.",
