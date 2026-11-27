@@ -20,7 +20,10 @@ _lib_dir = Path(__file__).resolve().parent.parent / "lib"
 if str(_lib_dir) not in sys.path:
     sys.path.insert(0, str(_lib_dir))
 
-from locale_index_files import TEMPLATES_NON_WORKFLOW_FILES  # noqa: E402
+from locale_index_files import (  # noqa: E402
+    LANGUAGE_FILES,
+    TEMPLATES_NON_WORKFLOW_FILES,
+)
 
 
 def load_json(file_path: Path) -> Dict:
@@ -99,11 +102,13 @@ def check_file_consistency(index_data: List[Dict], templates_dir: Path) -> Tuple
     workflow_files = {f for f in all_files if f.endswith('.json')}
     media_files = all_files - workflow_files
     
-    # Check for orphaned workflows
-    orphaned_workflows = workflow_files - referenced_workflows
-    for orphan in orphaned_workflows:
-        warnings.append(f"Workflow file not referenced in index.json: {orphan}")
-    
+    # Check for orphaned workflows.
+    # An error, not a warning: `/templates/<name>.json` is served from this
+    # directory while the browser lists only what index.json names, so an
+    # unindexed workflow file is loadable by name and invisible in the UI.
+    for orphan in sorted(workflow_files - referenced_workflows):
+        errors.append(f"Workflow file not referenced in index.json: {orphan}")
+
     # Check for orphaned media files
     # For media files, we need to check if they match the pattern name-N.ext
     potential_orphans = []
@@ -122,6 +127,59 @@ def check_file_consistency(index_data: List[Dict], templates_dir: Path) -> Tuple
         warnings.append(f"Media file not referenced in index.json: {orphan}")
     
     return len(errors) == 0, errors, warnings
+
+
+def template_names(index_data: List[Dict]) -> Set[str]:
+    """Template names an index file advertises, across all of its categories."""
+    return {
+        template['name']
+        for category in index_data
+        for template in category.get('templates', [])
+        if template.get('name')
+    }
+
+
+def check_index_parity(main_index_data: List[Dict], templates_dir: Path) -> Tuple[bool, List[str]]:
+    """Check that every served index names the same templates as index.json.
+
+    `index.json` is not the only catalog shipped from this directory. The
+    frontend serves `index.<locale>.json` to non-English clients and the
+    agent/MCP surface reads `index.mcp.json`, so a name set that drifts from
+    `index.json` makes a template reachable on one surface and invisible on
+    another even though the workflow file itself is served fine.
+
+    A locale index must match `index.json` exactly — it is the same catalog
+    with translated copy. `index.mcp.json` is a deliberate subset (its sync
+    skips instructional categories), so only names it adds are an error.
+    """
+    errors = []
+    main_names = template_names(main_index_data)
+
+    for locale_file in sorted(LANGUAGE_FILES.values()):
+        locale_path = templates_dir / locale_file
+        if not locale_path.exists():
+            continue
+        try:
+            locale_names = template_names(load_json(locale_path))
+        except Exception as e:
+            errors.append(f"{locale_file}: failed to load - {e}")
+            continue
+        for name in sorted(main_names - locale_names):
+            errors.append(f"{locale_file}: template in index.json is missing: {name}")
+        for name in sorted(locale_names - main_names):
+            errors.append(f"{locale_file}: template is not in index.json: {name}")
+
+    mcp_path = templates_dir / 'index.mcp.json'
+    if mcp_path.exists():
+        try:
+            mcp_names = template_names(load_json(mcp_path))
+        except Exception as e:
+            errors.append(f"index.mcp.json: failed to load - {e}")
+        else:
+            for name in sorted(mcp_names - main_names):
+                errors.append(f"index.mcp.json: template is not in index.json: {name}")
+
+    return len(errors) == 0, errors
 
 
 def check_duplicate_names(index_data: List[Dict]) -> Tuple[bool, List[str]]:
@@ -761,7 +819,15 @@ def main():
     all_errors.extend(errors)
     all_warnings.extend(warnings)
     
-    print("\n3️⃣  Checking for duplicate names...")
+    print("\n3️⃣  Checking index parity across locales and the MCP index...")
+    valid, errors = check_index_parity(main_index_data, templates_dir)
+    if valid:
+        print("   ✅ All served indexes agree with index.json")
+    else:
+        print("   ❌ A served index drifts from index.json")
+        all_errors.extend(errors)
+
+    print("\n4️⃣  Checking for duplicate names...")
     valid, errors = check_duplicate_names(main_index_data)
     if valid:
         print("   ✅ No duplicate names found")
@@ -769,7 +835,7 @@ def main():
         print("   ❌ Duplicate names found")
         all_errors.extend(errors)
     
-    print("\n4️⃣  Checking required thumbnails...")
+    print("\n5️⃣  Checking required thumbnails...")
     valid, errors = check_required_thumbnails(main_index_data, templates_dir)
     if valid:
         print("   ✅ All templates have thumbnails")
@@ -777,7 +843,7 @@ def main():
         print("   ❌ Missing thumbnails")
         all_errors.extend(errors)
     
-    print("\n5️⃣  Checking model metadata format...")
+    print("\n6️⃣  Checking model metadata format...")
     valid, errors = check_model_metadata_format(main_index_data, templates_dir)
     if valid:
         print("   ✅ All templates use correct model metadata format")
@@ -785,7 +851,7 @@ def main():
         print("   ❌ Templates using deprecated top-level models format found")
         all_errors.extend(errors)
     
-    print("\n6️⃣  Checking logo references...")
+    print("\n7️⃣  Checking logo references...")
     valid, errors = check_logo_references(main_index_data, templates_dir)
     if valid:
         print("   ✅ All logo provider references are valid")
@@ -793,7 +859,7 @@ def main():
         print("   ❌ Invalid logo references found")
         all_errors.extend(errors)
 
-    print("\n7️⃣  Validating workflow JSON structure (ComfyUI 0.4 schema)...")
+    print("\n8️⃣  Validating workflow JSON structure (ComfyUI 0.4 schema)...")
     valid, errors = check_workflow_schema(main_index_data, templates_dir)
     if valid:
         print("   ✅ All workflow files pass schema validation")
