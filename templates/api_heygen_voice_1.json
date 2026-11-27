@@ -22,10 +22,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## HeyGen Voice 1.0\n\nClone a voice from one recording, then speak any script in that voice.\n\n### How to use\n\n1. Sign in with your ComfyUI account before queueing: this node runs on Comfy's servers.\n2. Record or load **one speaker**, at least 10 seconds of clear speech. Only the first 3 minutes are used.\n3. In **Instant Clone**, set `language` to the language spoken in the recording. `similarity` controls how closely the voice follows the recording; change `seed` to clone again and get a slightly different voice.\n4. Connect `voice_id` to **Voice 1.0 Text to Speech**.\n5. Write the script in `text` (up to 5000 characters; about 12 minutes of speech, so split very long Chinese or Japanese text).\n6. Set `language` when auto-detection can confuse closely related languages such as Serbian or Malay.\n7. `expressiveness_boost` 0.0 stays close to the original recording, 1.0 adds more emotion.\n8. Queue the prompt, then save the audio.\n\n### Writing the script\n\n- **Plain prose**, 1 to 5000 characters. Anything else is rejected.\n- Instant voices ignore `seed`, `speed` and `pitch`. `expressiveness_boost` (0.0-1.0) is the only delivery control.\n\n### Notes\n\n- `heygen-voice-1-turbo` in the model list is faster than `heygen-voice-1`.\n- Official docs: [HeyGen Voice](https://developers.heygen.com/docs/models/heygen-voice) and [Text to Speech](https://developers.heygen.com/docs/voices/speech).\n\n### Saving the voice ID\n\nThe **SaveText** node writes the cloned `voice_id` to `output/HeyGen_Voice_id/` as a small text file, so you can reuse the same voice in a later session without cloning again.\n\nIts `filename_prefix` accepts date tokens: `%year%`, `%month%`, `%day%`, `%hour%`, `%minute%`, `%second%`. The default here is `HeyGen_Voice_id/HeyGen_voice1_%year%-%month%-%day%`, which gives one file per day and never overwrites yesterday's clone. Paste the saved ID into a Text to Speech node's `custom_voice_id` (or link it straight to `voice_id`) when you come back to it."
+        "## HeyGen Voice 1.0\n\nClone a voice from one recording and read any script in it, in a single node: the audio goes in, the speech comes out.\n\n### How to use\n\n1. Sign in with your ComfyUI account before queueing: this node runs on Comfy's servers and bills per use.\n2. Record or load **one speaker**, at least 10 seconds of clear speech. Only the first 3 minutes are used, and `remove_background_noise` strips background noise.\n3. Write the script in `text` (up to 5000 characters; about 12 minutes of speech, so split very long Chinese or Japanese text).\n4. `language` is the language of the text. Set it when auto-detection can confuse closely related languages such as Serbian or Malay.\n5. `recording_language` is the language spoken in the recording, `auto` by default.\n6. `similarity` controls how closely the voice follows the recording: `medium`, `high`, `extra_high` or `max`. Change `seed` to clone again and get a slightly different voice.\n7. `expressiveness_boost` 0.0 stays close to the original recording, 1.0 adds more emotion. 0.5 is the balanced default.\n8. Queue the prompt; SaveAudioAdvanced writes the audio.\n\n### Writing the script\n\n- **Plain prose**, 1 to 5000 characters. Anything else is rejected.\n- Instant voices ignore `speed` and `pitch`; `expressiveness_boost` (0.0-1.0) is the only delivery control, and `seed` only decides whether the node re-runs.\n\n### Notes\n\n- `heygen-voice-1-turbo` in the model list is faster than `heygen-voice-1`.\n- Official docs: [HeyGen Voice](https://developers.heygen.com/docs/models/heygen-voice) and [Text to Speech](https://developers.heygen.com/docs/voices/speech).\n"
       ],
       "widgets_values_named": {
-        "text": "## HeyGen Voice 1.0\n\nClone a voice from one recording, then speak any script in that voice.\n\n### How to use\n\n1. Sign in with your ComfyUI account before queueing: this node runs on Comfy's servers.\n2. Record or load **one speaker**, at least 10 seconds of clear speech. Only the first 3 minutes are used.\n3. In **Instant Clone**, set `language` to the language spoken in the recording. `similarity` controls how closely the voice follows the recording; change `seed` to clone again and get a slightly different voice.\n4. Connect `voice_id` to **Voice 1.0 Text to Speech**.\n5. Write the script in `text` (up to 5000 characters; about 12 minutes of speech, so split very long Chinese or Japanese text).\n6. Set `language` when auto-detection can confuse closely related languages such as Serbian or Malay.\n7. `expressiveness_boost` 0.0 stays close to the original recording, 1.0 adds more emotion.\n8. Queue the prompt, then save the audio.\n\n### Writing the script\n\n- **Plain prose**, 1 to 5000 characters. Anything else is rejected.\n- Instant voices ignore `seed`, `speed` and `pitch`. `expressiveness_boost` (0.0-1.0) is the only delivery control.\n\n### Notes\n\n- `heygen-voice-1-turbo` in the model list is faster than `heygen-voice-1`.\n- Official docs: [HeyGen Voice](https://developers.heygen.com/docs/models/heygen-voice) and [Text to Speech](https://developers.heygen.com/docs/voices/speech).\n\n### Saving the voice ID\n\nThe **SaveText** node writes the cloned `voice_id` to `output/HeyGen_Voice_id/` as a small text file, so you can reuse the same voice in a later session without cloning again.\n\nIts `filename_prefix` accepts date tokens: `%year%`, `%month%`, `%day%`, `%hour%`, `%minute%`, `%second%`. The default here is `HeyGen_Voice_id/HeyGen_voice1_%year%-%month%-%day%`, which gives one file per day and never overwrites yesterday's clone. Paste the saved ID into a Text to Speech node's `custom_voice_id` (or link it straight to `voice_id`) when you come back to it."
+        "text": "## HeyGen Voice 1.0\n\nClone a voice from one recording and read any script in it, in a single node: the audio goes in, the speech comes out.\n\n### How to use\n\n1. Sign in with your ComfyUI account before queueing: this node runs on Comfy's servers and bills per use.\n2. Record or load **one speaker**, at least 10 seconds of clear speech. Only the first 3 minutes are used, and `remove_background_noise` strips background noise.\n3. Write the script in `text` (up to 5000 characters; about 12 minutes of speech, so split very long Chinese or Japanese text).\n4. `language` is the language of the text. Set it when auto-detection can confuse closely related languages such as Serbian or Malay.\n5. `recording_language` is the language spoken in the recording, `auto` by default.\n6. `similarity` controls how closely the voice follows the recording: `medium`, `high`, `extra_high` or `max`. Change `seed` to clone again and get a slightly different voice.\n7. `expressiveness_boost` 0.0 stays close to the original recording, 1.0 adds more emotion. 0.5 is the balanced default.\n8. Queue the prompt; SaveAudioAdvanced writes the audio.\n\n### Writing the script\n\n- **Plain prose**, 1 to 5000 characters. Anything else is rejected.\n- Instant voices ignore `speed` and `pitch`; `expressiveness_boost` (0.0-1.0) is the only delivery control, and `seed` only decides whether the node re-runs.\n\n### Notes\n\n- `heygen-voice-1-turbo` in the model list is faster than `heygen-voice-1`.\n- Official docs: [HeyGen Voice](https://developers.heygen.com/docs/models/heygen-voice) and [Text to Speech](https://developers.heygen.com/docs/voices/speech).\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -70,50 +70,60 @@
     },
     {
       "id": 3,
-      "type": "HeyGenVoiceCloneNode",
+      "type": "HeyGenVoiceCloneTextToSpeechNode",
       "pos": [
         -300,
         260
       ],
       "size": [
-        320,
-        160
+        430,
+        440
       ],
       "flags": {},
       "order": 2,
       "mode": 0,
       "inputs": [
         {
-          "name": "audio",
+          "name": "model.audio",
           "type": "AUDIO",
           "link": 1
         }
       ],
       "outputs": [
         {
-          "name": "voice_id",
-          "type": "STRING",
+          "name": "AUDIO",
+          "type": "AUDIO",
           "links": [
-            11
+            3
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "HeyGenVoiceCloneNode"
+        "Node name for S&R": "HeyGenVoiceCloneTextToSpeechNode"
       },
       "widgets_values": [
+        "heygen-voice-1",
+        "HeyGen Voice 1.0 turns a ten second recording into a voice you can reuse. Write your script here. Pauses come from punctuation, not tags: full stops, commas and paragraph breaks. Run the prompt once to hear how it lands, then replace this text with your own.",
         "auto",
+        0.5,
+        "English",
         "max",
         true,
         42,
+        "fixed",
         "fixed"
       ],
       "widgets_values_named": {
-        "language": "auto",
-        "similarity": "max",
-        "remove_background_noise": true,
-        "seed": 42,
-        "fixed": "fixed"
+        "model": "heygen-voice-1",
+        "model.text": "HeyGen Voice 1.0 turns a ten second recording into a voice you can reuse. Write your script here. Pauses come from punctuation, not tags: full stops, commas and paragraph breaks. Run the prompt once to hear how it lands, then replace this text with your own.",
+        "model.language": "auto",
+        "model.expressiveness_boost": 0.5,
+        "model.recording_language": "English",
+        "model.similarity": "max",
+        "model.remove_background_noise": true,
+        "model.seed": 42,
+        "control_after_generate#1": "fixed",
+        "control_after_generate": "fixed"
       },
       "color": "#432",
       "bgcolor": "#653"
@@ -122,7 +132,7 @@
       "id": 5,
       "type": "SaveAudioAdvanced",
       "pos": [
-        860,
+        410,
         260
       ],
       "size": [
@@ -130,7 +140,7 @@
         220
       ],
       "flags": {},
-      "order": 5,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
@@ -157,101 +167,6 @@
         "format": "mp3",
         "format.quality": "V0"
       }
-    },
-    {
-      "id": 6,
-      "type": "HeyGenVoiceTextToSpeechNode",
-      "pos": [
-        380,
-        260
-      ],
-      "size": [
-        400,
-        200
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model.voice_id",
-          "type": "STRING",
-          "widget": {
-            "name": "model.voice_id"
-          },
-          "link": 12
-        }
-      ],
-      "outputs": [
-        {
-          "name": "AUDIO",
-          "type": "AUDIO",
-          "links": [
-            3
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "HeyGenVoiceTextToSpeechNode"
-      },
-      "widgets_values": [
-        "heygen-voice-1",
-        "",
-        "HeyGen Voice 1.0 turns a ten second recording into a voice you can reuse. Write your script here. Pauses come from punctuation, not tags: full stops, commas and paragraph breaks. Run the prompt once to hear how it lands, then replace this text with your own.",
-        "auto",
-        0.5
-      ],
-      "widgets_values_named": {
-        "model": "heygen-voice-1",
-        "model.voice_id": "",
-        "model.text": "HeyGen Voice 1.0 turns a ten second recording into a voice you can reuse. Write your script here. Pauses come from punctuation, not tags: full stops, commas and paragraph breaks. Run the prompt once to hear how it lands, then replace this text with your own.",
-        "model.language": "auto",
-        "model.expressiveness_boost": 0.5
-      },
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 7,
-      "type": "SaveText",
-      "pos": [
-        -300,
-        480
-      ],
-      "size": [
-        550,
-        225.88546416437705
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "text",
-          "type": "STRING",
-          "link": 11
-        }
-      ],
-      "outputs": [
-        {
-          "name": "text",
-          "type": "STRING",
-          "links": [
-            12
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "SaveText"
-      },
-      "widgets_values": [
-        "HeyGen_Voice_id/HeyGen_voice_id_%year%-%month%-%day%",
-        "txt"
-      ],
-      "widgets_values_named": {
-        "filename_prefix": "HeyGen_Voice_id/HeyGen_voice_id_%year%-%month%-%day%",
-        "format": "txt"
-      }
     }
   ],
   "links": [
@@ -264,38 +179,22 @@
       "AUDIO"
     ],
     [
-      11,
       3,
-      0,
-      7,
-      0,
-      "STRING"
-    ],
-    [
       3,
-      6,
       0,
       5,
       0,
       "AUDIO"
-    ],
-    [
-      12,
-      7,
-      0,
-      6,
-      0,
-      "STRING"
     ]
   ],
   "groups": [
     {
       "id": 1,
-      "title": "1. Upload your audio and create a clone",
+      "title": "1. Upload your audio and write the script",
       "bounding": [
         -690,
-        180,
-        1000,
+        190,
+        890,
         580
       ],
       "color": "#3f789e",
@@ -303,12 +202,12 @@
     },
     {
       "id": 2,
-      "title": "2. Speak the script",
+      "title": "2. Save the audio",
       "bounding": [
         340,
-        180,
-        1100,
-        440
+        190,
+        680,
+        360
       ],
       "color": "#3f789e",
       "flags": {}
