@@ -59,9 +59,9 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 
 | Workflow | Scripts |
 |----------|---------|
-| `validate-templates.yml` | `validate/validate_templates.py`, `validate/validate_thumbnails.py`, `lib/locale_index_files.py` |
+| `validate-templates.yml` | `validate/validate_templates.py`, `validate/test_validate_templates.py`, `validate/validate_thumbnails.py`, `lib/locale_index_files.py` |
 | `validate-manifests.yml` | `validate/validate_manifests.py`, `validate/list_pip_excluded.py` (SHA/orphan checks only on version-bump/release; always checks `bundles.json` membership) |
-| `validate-blueprints.yml` | `validate/validate_blueprints.py`, `blueprints/import_blueprints.py`, `sync/sync_blueprints.py` |
+| `validate-blueprints.yml` | `validate/validate_blueprints.py`, `validate/slot_index.py`, `blueprints/import_blueprints.py`, `sync/sync_blueprints.py` |
 | `link-checker.yml` | `validate/check_links.py`, `data/whitelist.json` |
 | `model-analysis.yml` | `validate/analyze_models.py`, `data/whitelist.json` |
 | `validate-widget-types.yml` | `validate/check_widget_types.py` (live ComfyUI `master` `/object_info`: PRs fail on changed templates via `--blocking-files`; label **`full-slot-scan`** for library-wide slot failure; push/manual fail coercible types only, slot drift warnings — #1387-class) |

@@ -13,6 +13,10 @@ MCP_FILE = TEMPLATES_DIR / "index.mcp.json"
 
 SCHEMA_VERSION = 1
 
+# io stub the sync infers for a template with no AI cache entry.
+PLACEHOLDER_INPUT = "text: Prompt"
+PLACEHOLDER_OUTPUT = "image: Generated output"
+
 
 def empty_cache() -> dict[str, Any]:
     return {"schema_version": SCHEMA_VERSION, "templates": {}}
@@ -87,22 +91,44 @@ def apply_template_overlay(
     return entry
 
 
+def is_placeholder_io(io: dict | None) -> bool:
+    """True when io is the generic stub emitted for templates with no AI cache.
+
+    Sync infers `["text: Prompt"]` / `["image: Generated output"]` as a fallback.
+    That stub must never replace io that was already curated and published.
+    """
+    if not io:
+        return True
+    return io.get("inputs") == [PLACEHOLDER_INPUT] and io.get("outputs") == [PLACEHOLDER_OUTPUT]
+
+
 def apply_template_cache_to_mcp(
     mcp_data: list[dict[str, Any]],
     cache: dict[str, Any],
 ) -> int:
-    """Overlay cached description/io when source_hash matches workflow JSON."""
+    """Overlay cached description/io when source_hash matches workflow JSON.
+
+    On a hash mismatch (the workflow JSON changed since the cache entry was
+    written) the description is dropped because it describes the old graph, but
+    the cached io is still applied when the freshly inferred io is the generic
+    placeholder: a stale io beats the stub, and `enhance_descriptions.py`
+    refreshes both on its next run.
+    """
     templates_cache = cache.get("templates", {})
     applied = 0
     for group in mcp_data:
         for tpl in group.get("templates", []):
             name = tpl.get("name", "")
             cached = templates_cache.get(name)
-            if not cache_matches_workflow(name, cached):
+            if cache_matches_workflow(name, cached):
+                before = (tpl.get("description"), tpl.get("io"))
+                apply_template_overlay(tpl, cached, name)
+                if (tpl.get("description"), tpl.get("io")) != before:
+                    applied += 1
                 continue
-            before = (tpl.get("description"), tpl.get("io"))
-            apply_template_overlay(tpl, cached, name)
-            if (tpl.get("description"), tpl.get("io")) != before:
+            cached_io = (cached or {}).get("io")
+            if cached_io and is_placeholder_io(tpl.get("io")):
+                tpl["io"] = cached_io
                 applied += 1
     return applied
 
