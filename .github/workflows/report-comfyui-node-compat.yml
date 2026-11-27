@@ -115,8 +115,12 @@ jobs:
             \`python3 scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui\`
           EOF
 
+      # Fork PRs receive a read-only GITHUB_TOKEN even though this workflow declares
+      # pull-requests: write, so posting the report there answers 403. The report is
+      # informational, so a comment that cannot be posted must not fail the check.
       - name: Comment compatibility report on PR
         if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -152,27 +156,33 @@ jobs:
 
             const body = `${marker}\n${report}\n\n---\n*This comment is automatically updated by the ComfyUI Node Compatibility Report workflow.*`;
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const existing = comments.find((comment) => comment.body.includes(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body,
               });
+
+              const existing = comments.find((comment) => comment.body.includes(marker));
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            } catch (error) {
+              // Fork PRs cannot write comments; the report is still uploaded as an artifact.
+              core.warning(`Could not post the compatibility report comment: ${error.message}`);
+              await core.summary.addRaw(report).write();
             }
 
       - name: Upload compatibility report artifact
