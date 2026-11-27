@@ -13,9 +13,16 @@ name: Release Full Scan
 #   - manual run (Actions -> Release Full Scan -> Run workflow)
 #
 # Blocking: frontend zod schema, validate-templates, validate-manifests,
-# check-input-assets, validate-thumbnails, and node-compat *errors* (removed or
-# unknown nodes). Deprecated nodes are reported but never block — the library
-# ships one on purpose inside a bypassed demo group.
+# check-input-assets, validate-thumbnails, and node-compat *errors* — missing
+# inputs or widget-value drift against the current core schema, plus invalid
+# JSON. Deprecated nodes are reported but never block: the library ships one on
+# purpose inside a bypassed demo group.
+#
+# Known limit: `--static-scan` skips node types that are absent from the static
+# baseline (workflow.py `check_node` returns early when `static_baseline`), so a
+# core node *removed* upstream is not reported here. Detecting removals needs a
+# runtime `/object_info` baseline, which validate-widget-types already builds by
+# starting ComfyUI on CPU.
 
 on:
   pull_request:
@@ -26,14 +33,15 @@ permissions:
   contents: read
   pull-requests: write
 
-concurrency:
-  group: release-full-scan-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   full-scan:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'release'
     runs-on: ubuntu-latest
+    # Job-level and keyed on the label: any other `labeled` event opens its own
+    # group instead of canceling a release scan that is already running.
+    concurrency:
+      group: release-full-scan-${{ github.ref }}-${{ github.event.label.name || 'dispatch' }}
+      cancel-in-progress: true
     env:
       FRONTEND_REF: ${{ vars.FRONTEND_SCHEMA_REF || 'main' }}
       PYTHONUNBUFFERED: '1'

@@ -81,6 +81,10 @@ def main() -> None:
 
     total = args.total or 0
     failed = [name for name, code, _ in rows if code != 0 and name in BLOCKING]
+    if not args.compat_json or errors < 0:
+        failed.append("node-compat (no report produced)")
+    elif errors > 0:
+        failed.append(f"node-compat ({errors} error(s))")
     title = "## Release full scan"
     lines = [title, ""]
     if total:
@@ -96,7 +100,9 @@ def main() -> None:
             note = note[:157] + "..."
         lines.append(f"| `{name}` | {mark} | {note} |")
 
-    if errors >= 0:
+    if not args.compat_json or errors < 0:
+        lines.append("| `node-compat` | ❌ fail | compatibility report missing or unreadable |")
+    else:
         compat_mark = "✅ pass" if errors == 0 else "❌ fail"
         detail = f"{errors} error(s), {deprecated} deprecated node warning(s)"
         lines.append(f"| `node-compat` | {compat_mark} | {detail} |")
