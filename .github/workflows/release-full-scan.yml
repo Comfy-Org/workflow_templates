@@ -1,0 +1,226 @@
+name: Release Full Scan
+
+# Library-wide sweep for the PR that will publish the packages.
+#
+# Every gate in this repo either scopes itself to the files a PR touched or is
+# informational. On a release PR that is not enough: the packages are about to
+# ship, so every registered template is re-checked against the live frontend zod
+# schema, ComfyUI master's node inventory, the manifest hashes, the input assets
+# and the thumbnails — and the outcome is posted as one report.
+#
+# Triggers
+#   - label `release` added to a PR (removing and re-adding re-runs it)
+#   - manual run (Actions -> Release Full Scan -> Run workflow)
+#
+# Blocking: frontend zod schema, validate-templates, validate-manifests,
+# check-input-assets, validate-thumbnails, and node-compat *errors* (removed or
+# unknown nodes). Deprecated nodes are reported but never block — the library
+# ships one on purpose inside a bypassed demo group.
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: release-full-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full-scan:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'release'
+    runs-on: ubuntu-latest
+    env:
+      FRONTEND_REF: ${{ vars.FRONTEND_SCHEMA_REF || 'main' }}
+      PYTHONUNBUFFERED: '1'
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v7
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Install Python dependencies
+      run: python -m pip install --upgrade pip && pip install jsonschema
+
+    - name: Count registered templates
+      id: count
+      run: |
+        echo "total=$(python3 -c 'import json;d=json.load(open("templates/index.json"));print(sum(len(m["templates"]) for m in d))')" >> "$GITHUB_OUTPUT"
+
+    # ---------------------------------------------------------------- checks --
+    - name: Check 1/6 - frontend zod schema (library-wide)
+      id: zod
+      continue-on-error: true
+      run: |
+        set -uo pipefail
+        dir="$RUNNER_TEMP/frontend-schema"
+        mkdir -p "$dir/packages/graph-model/src"
+        printf '{"name":"frontend-schema","private":true,"type":"module"}\n' > "$dir/package.json"
+        for file in workflowSchema.ts widgets.ts linkId.ts rerouteId.ts; do
+          curl -sSfL "https://raw.githubusercontent.com/Comfy-Org/ComfyUI_frontend/${FRONTEND_REF}/packages/graph-model/src/${file}" \
+            -o "$dir/packages/graph-model/src/${file}"
+        done
+        (cd "$dir" && npm install --silent --no-audit --no-fund zod zod-validation-error tsx)
+        "$dir/node_modules/.bin/tsx" scripts/validate/frontend_schema.mts --frontend-dir "$dir" 2>&1 | tee zod.log
+        echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+    - name: Check 2/6 - template + index validators
+      id: templates
+      continue-on-error: true
+      run: |
+        set -o pipefail
+        python3 scripts/validate/validate_templates.py 2>&1 | tee templates.log
+        echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+    - name: Check 3/6 - manifest hashes
+      id: manifests
+      continue-on-error: true
+      run: |
+        set -o pipefail
+        python3 scripts/validate/validate_manifests.py 2>&1 | tee manifests.log
+        echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+    - name: Check 4/6 - input assets
+      id: inputs
+      continue-on-error: true
+      run: |
+        set -o pipefail
+        python3 scripts/validate/check_input_assets.py 2>&1 | tee inputs.log
+        echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+    - name: Check 5/6 - thumbnails
+      id: thumbnails
+      continue-on-error: true
+      run: |
+        set -o pipefail
+        python3 scripts/validate/validate_thumbnails.py 2>&1 | tee thumbnails.log
+        echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+    - name: Check 6/6 - ComfyUI node compatibility (library-wide)
+      id: compat
+      continue-on-error: true
+      run: |
+        set -o pipefail
+        python3 scripts/comfyui_node_compat/check.py \
+          --static-scan \
+          --clone-comfyui \
+          --templates-dir templates \
+          --markdown-output compat_report.md \
+          --json-output compat_report.json \
+          --no-log-file \
+          --no-fail 2>&1 | tee compat.log
+        echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+    # --------------------------------------------------------------- report --
+    - name: Assemble the report
+      if: always()
+      run: |
+        set -uo pipefail
+        : > scan_status.tsv
+        add() { printf '%s\t%s\t%s\n' "$1" "$2" "$3" >> scan_status.tsv; }
+        last() { grep -E '✅|❌' "$1" 2>/dev/null | tail -1; }
+        # zod: prefer the summary line, otherwise the first offending template.
+        zod_note() {
+          if grep -E '^[[:space:]]*(All [0-9]+ templates pass|[0-9]+ of [0-9]+ templates fail)' zod.log > /dev/null 2>&1; then
+            grep -E '^[[:space:]]*(All [0-9]+ templates pass|[0-9]+ of [0-9]+ templates fail)' zod.log | tail -1
+          else
+            grep -m1 '^INVALID' zod.log 2>/dev/null || true
+          fi
+        }
+        add frontend-zod-schema "${STEPS_ZOD:-1}" "$(zod_note)"
+        add validate-templates "${STEPS_TEMPLATES:-1}" "$(last templates.log)"
+        add validate-manifests "${STEPS_MANIFESTS:-1}" "$(last manifests.log)"
+        add check-input-assets "${STEPS_INPUTS:-1}" "$(last inputs.log)"
+        add validate-thumbnails "${STEPS_THUMBNAILS:-1}" "$(last thumbnails.log)"
+        python3 scripts/validate/release_scan_summary.py \
+          --status scan_status.tsv \
+          --compat-json compat_report.json \
+          --out release_scan.md \
+          --total "${{ steps.count.outputs.total }}"
+        cat release_scan.md >> "$GITHUB_STEP_SUMMARY"
+      env:
+        STEPS_ZOD: ${{ steps.zod.outputs.code }}
+        STEPS_TEMPLATES: ${{ steps.templates.outputs.code }}
+        STEPS_MANIFESTS: ${{ steps.manifests.outputs.code }}
+        STEPS_INPUTS: ${{ steps.inputs.outputs.code }}
+        STEPS_THUMBNAILS: ${{ steps.thumbnails.outputs.code }}
+
+    - name: Upload scan artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-full-scan
+        path: |
+          release_scan.md
+          scan_status.tsv
+          zod.log
+          templates.log
+          manifests.log
+          inputs.log
+          thumbnails.log
+          compat.log
+          compat_report.md
+          compat_report.json
+
+    - name: Comment the report on the PR
+      if: always() && github.event_name == 'pull_request'
+      continue-on-error: true
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs')
+          const marker = '<!-- release-full-scan -->'
+          const body = `${marker}\n${fs.readFileSync('release_scan.md', 'utf8')}`
+          const { owner, repo } = context.repo
+          const issue_number = context.payload.pull_request.number
+          const comments = await github.paginate(github.rest.issues.listComments, {
+            owner, repo, issue_number, per_page: 100
+          })
+          const existing = comments.find((c) => c.body?.includes(marker))
+          if (existing) {
+            await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body })
+          } else {
+            await github.rest.issues.createComment({ owner, repo, issue_number, body })
+          }
+
+    - name: Fail on a blocking finding
+      if: always()
+      env:
+        STEPS_ZOD: ${{ steps.zod.outputs.code }}
+        STEPS_TEMPLATES: ${{ steps.templates.outputs.code }}
+        STEPS_MANIFESTS: ${{ steps.manifests.outputs.code }}
+        STEPS_INPUTS: ${{ steps.inputs.outputs.code }}
+        STEPS_THUMBNAILS: ${{ steps.thumbnails.outputs.code }}
+      run: |
+        set -uo pipefail
+        failed=()
+        for pair in "frontend-zod-schema:${STEPS_ZOD:-1}" "validate-templates:${STEPS_TEMPLATES:-1}" \
+                    "validate-manifests:${STEPS_MANIFESTS:-1}" "check-input-assets:${STEPS_INPUTS:-1}" \
+                    "validate-thumbnails:${STEPS_THUMBNAILS:-1}"; do
+          name="${pair%%:*}"; code="${pair##*:}"
+          [ "$code" = "0" ] || failed+=("$name")
+        done
+        if [ -f compat_report.json ]; then
+          errors=$(python3 -c 'import json;d=json.load(open("compat_report.json"));print(sum(1 for i in d.get("issues") or [] if i.get("severity")=="error"))')
+          [ "$errors" = "0" ] || failed+=("node-compat ($errors error(s))")
+        else
+          failed+=("node-compat (no report produced)")
+        fi
+        if [ ${#failed[@]} -gt 0 ]; then
+          echo "::error::Release full scan failed: ${failed[*]}"
+          exit 1
+        fi
+        echo "✅ Release full scan passed."
