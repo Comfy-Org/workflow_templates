@@ -32,6 +32,7 @@ import {
   buildWorkflowGraphJsonLd,
 } from '../../lib/structured-data';
 import { getWorkflowEntityGraph } from '../../data/workflow-entity-graphs';
+import { getWorkflowCopy } from '../../data/workflow-copy';
 import { buildToolbarLabels } from '../../lib/toolbar';
 
 import { localizeUrl } from '../../i18n/utils';
@@ -101,6 +102,17 @@ if (!entry) {
 }
 
 const locale = DEFAULT_LOCALE;
+// Client-approved copy for the handful of workflows that carry a curated entity
+// graph. Temporary stopgap until the hub records carry this text (GTM-470): it
+// applies only while the hub still serves the text it replaced, so a hub edit is
+// never masked. Every other workflow renders the hub's own text.
+const copyKey = entry.shareId || entry.name;
+const curatedCopy = getWorkflowCopy(copyKey, entry.extendedDescription || '');
+if (curatedCopy.status === 'retired') {
+  console.warn(
+    `[workflow-copy] hub record for ${copyKey} changed; curated override retired — delete its entry in workflow-copy.ts (GTM-470)`
+  );
+}
 const data = {
   name: entry.name,
   shareId: entry.shareId || '',
@@ -115,7 +127,7 @@ const data = {
   username: entry.profile?.username || entry.username || '',
   date: entry.date || '',
   tutorialUrl: entry.tutorialUrl,
-  extendedDescription: entry.extendedDescription || '',
+  extendedDescription: curatedCopy.extendedDescription || entry.extendedDescription || '',
   metaDescription: entry.metaDescription || entry.description || '',
   howToUse: entry.howToUse || [],
   suggestedUseCases: entry.suggestedUseCases || [],
