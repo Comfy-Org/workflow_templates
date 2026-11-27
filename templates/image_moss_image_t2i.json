@@ -1,22 +1,22 @@
 {
   "id": "e8f30439-267f-45de-b260-db0d114b2c85",
   "revision": 0,
-  "last_node_id": 27,
-  "last_link_id": 60,
+  "last_node_id": 33,
+  "last_link_id": 69,
   "nodes": [
     {
       "id": 9,
       "type": "SaveImage",
       "pos": [
-        840,
-        0
+        1260,
+        -40
       ],
       "size": [
         570,
         700
       ],
       "flags": {},
-      "order": 5,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
@@ -36,25 +36,25 @@
         "Node name for S&R": "SaveImage"
       },
       "widgets_values": [
-        "moss_image_t2i"
+        "moss_image_bboxes"
       ],
       "widgets_values_named": {
-        "filename_prefix": "moss_image_t2i"
+        "filename_prefix": "moss_image_bboxes"
       }
     },
     {
       "id": 18,
       "type": "3301b744-2960-415a-83b0-fe8a89d99fdb",
       "pos": [
-        360,
-        0
+        740,
+        -40
       ],
       "size": [
         430,
         680
       ],
       "flags": {},
-      "order": 4,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -64,7 +64,7 @@
           "widget": {
             "name": "value"
           },
-          "link": null
+          "link": 67
         },
         {
           "label": "enable_prompt_enhancer",
@@ -73,12 +73,6 @@
           "widget": {
             "name": "switch"
           },
-          "link": null
-        },
-        {
-          "label": "prompt_enhancer_seed",
-          "name": "sampling_mode.seed",
-          "type": "INT",
           "link": null
         },
         {
@@ -144,7 +138,7 @@
         },
         {
           "label": "ref_image (for llm)",
-          "name": "image",
+          "name": "video",
           "shape": 7,
           "type": "IMAGE",
           "link": null
@@ -163,35 +157,33 @@
         "previewExposures": []
       },
       "widgets_values": [
-        "Cinematic night street photograph: a model in an exaggerated balloon-sleeve white wool coat walking toward camera under a huge illuminated theatre marquee, the marquee bulbs spelling \"MOSS\" in tall capital letters, wet asphalt with long reflections, warm tungsten glow against cold blue night, 35mm film grain, low angle",
-        true,
-        0,
+        "",
+        false,
         "nsfw, worst quality, bad anatomy, watermark, jpeg artifact",
         1024,
         1024,
-        166322442139145,
+        571710880652220,
         25,
         2.5,
+        true,
         "er_sde",
         "simple",
-        false,
         "moss_image_sft_int8_convrot.safetensors",
         "qwen3.5_9b_w4a8_gptq.safetensors",
         "flux2-vae_small.safetensors"
       ],
       "widgets_values_named": {
-        "value": "Cinematic night street photograph: a model in an exaggerated balloon-sleeve white wool coat walking toward camera under a huge illuminated theatre marquee, the marquee bulbs spelling \"MOSS\" in tall capital letters, wet asphalt with long reflections, warm tungsten glow against cold blue night, 35mm film grain, low angle",
-        "switch": true,
-        "sampling_mode.seed": 0,
+        "value": "",
+        "switch": false,
         "text": "nsfw, worst quality, bad anatomy, watermark, jpeg artifact",
         "width": 1024,
         "height": 1024,
-        "seed": 166322442139145,
+        "seed": 571710880652220,
         "steps": 25,
         "cfg": 2.5,
+        "switch_1": true,
         "sampler_name": "er_sde",
         "scheduler": "simple",
-        "switch_1": false,
         "unet_name": "moss_image_sft_int8_convrot.safetensors",
         "clip_name": "qwen3.5_9b_w4a8_gptq.safetensors",
         "vae_name": "flux2-vae_small.safetensors"
@@ -201,8 +193,8 @@
       "id": 19,
       "type": "ResolutionSelector",
       "pos": [
-        20,
-        320
+        -1190,
+        -30
       ],
       "size": [
         280,
@@ -218,14 +210,18 @@
           "name": "width",
           "type": "INT",
           "links": [
-            40
+            40,
+            49,
+            51
           ]
         },
         {
           "name": "height",
           "type": "INT",
           "links": [
-            41
+            41,
+            50,
+            52
           ]
         }
       ],
@@ -244,15 +240,15 @@
       }
     },
     {
-      "id": 21,
+      "id": 20,
       "type": "MarkdownNote",
       "pos": [
-        -1210,
-        10
+        -2360,
+        -70
       ],
       "size": [
-        560,
-        1000
+        580,
+        630
       ],
       "flags": {},
       "order": 1,
@@ -261,24 +257,24 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n- [ModelScope:Comfy-Org/MOSS-Image](https://modelscope.cn/models/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors)\n\n**Checkpoint variants**: `moss_image_sft_*` is the instruction-tuned checkpoint used here; `moss_image_base_*` runs in the same graph.\n\n**vae**\n\n- [flux2-vae_small.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae_small.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── moss_image_sft_int8_convrot.safetensors\n│   │   └── moss_image_sft_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_w4a8_gptq.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae_small.safetensors\n```\n\n## Prompt upsampler\n\nThe `enable_prompt_upsampler` switch on the **Text to Image (MOSS-Image)** node is **true**, so a short prompt is rewritten into one full\nscene caption before it reaches the model. The upsampler runs on MOSS-Image's own text encoder\n(`qwen3.5_9b_w4a8_gptq.safetensors`, loaded with `type = moss_image`), the same file the model already needs — no second\ntext encoder to download. Set the switch to `false` to send the raw prompt; either way the caption actually used is shown in the\n`PreviewAny` node inside the subgraph.\n\n\n## Prompt skill\n\nThe system prompt driving the upsampler is written from the official [MOSS-Image Prompt Enhancer skill](https://github.com/OpenMOSS/MOSS-Image/blob/main/skills/moss-image-prompt-enhancer/SKILL.md). The same skill turns an idea into a caption or a Layout prompt outside ComfyUI, and it is the reference for the caption style this model was trained on.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n- [ModelScope:Comfy-Org/MOSS-Image](https://modelscope.cn/models/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors) (5.04 GB)\n\n**text_encoders**\n\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors) (9.08 GB)\n\n**vae**\n\n- [flux2-vae_small.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae_small.safetensors) (249.5 MB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── moss_image_sft_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_w4a8_gptq.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae_small.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       ],
       "widgets_values_named": {
-        "text": "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n- [ModelScope:Comfy-Org/MOSS-Image](https://modelscope.cn/models/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors)\n\n**Checkpoint variants**: `moss_image_sft_*` is the instruction-tuned checkpoint used here; `moss_image_base_*` runs in the same graph.\n\n**vae**\n\n- [flux2-vae_small.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae_small.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── moss_image_sft_int8_convrot.safetensors\n│   │   └── moss_image_sft_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_w4a8_gptq.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae_small.safetensors\n```\n\n## Prompt upsampler\n\nThe `enable_prompt_upsampler` switch on the **Text to Image (MOSS-Image)** node is **true**, so a short prompt is rewritten into one full\nscene caption before it reaches the model. The upsampler runs on MOSS-Image's own text encoder\n(`qwen3.5_9b_w4a8_gptq.safetensors`, loaded with `type = moss_image`), the same file the model already needs — no second\ntext encoder to download. Set the switch to `false` to send the raw prompt; either way the caption actually used is shown in the\n`PreviewAny` node inside the subgraph.\n\n\n## Prompt skill\n\nThe system prompt driving the upsampler is written from the official [MOSS-Image Prompt Enhancer skill](https://github.com/OpenMOSS/MOSS-Image/blob/main/skills/moss-image-prompt-enhancer/SKILL.md). The same skill turns an idea into a caption or a Layout prompt outside ComfyUI, and it is the reference for the caption style this model was trained on.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "text": "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n- [ModelScope:Comfy-Org/MOSS-Image](https://modelscope.cn/models/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors) (5.04 GB)\n\n**text_encoders**\n\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors) (9.08 GB)\n\n**vae**\n\n- [flux2-vae_small.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae_small.safetensors) (249.5 MB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── moss_image_sft_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_w4a8_gptq.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae_small.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       },
       "color": "#222",
       "bgcolor": "#000"
     },
     {
-      "id": 23,
+      "id": 24,
       "type": "MarkdownNote",
       "pos": [
-        -600,
-        10
+        -240,
+        390
       ],
       "size": [
-        520,
-        1200
+        420,
+        240
       ],
       "flags": {},
       "order": 2,
@@ -287,37 +283,532 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked against community benchmark notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual English and Chinese text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n\n---\n\n## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22). You can check the detail settings inside the subgraph\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale. You can enter the subgraph to adjust it\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n"
+        "## Layout / bounding-box flow\n\n`CreateBoundingBoxes` is where the layout is drawn: it outputs the boxes as `BOUNDING_BOX` plus an element list → `MOSS-Image Layout Prompt` turns those elements into the Layout prompt → that `prompt` is wired into `positive_prompt` of the **Text to Image (MOSS-Image)** subgraph. Remove the link to fall back to a plain text prompt.\n\nPrompt upsampler is **on** in this template, so it can rewrite the prompt and drop the layout — set `enable_prompt_upsampler` to `false` (inside the subgraph) when the boxes must survive verbatim."
       ],
       "widgets_values_named": {
-        "text": "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked against community benchmark notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual English and Chinese text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n\n---\n\n## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22). You can check the detail settings inside the subgraph\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale. You can enter the subgraph to adjust it\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n"
+        "text": "## Layout / bounding-box flow\n\n`CreateBoundingBoxes` is where the layout is drawn: it outputs the boxes as `BOUNDING_BOX` plus an element list → `MOSS-Image Layout Prompt` turns those elements into the Layout prompt → that `prompt` is wired into `positive_prompt` of the **Text to Image (MOSS-Image)** subgraph. Remove the link to fall back to a plain text prompt.\n\nPrompt upsampler is **on** in this template, so it can rewrite the prompt and drop the layout — set `enable_prompt_upsampler` to `false` (inside the subgraph) when the boxes must survive verbatim."
       },
       "color": "#222",
       "bgcolor": "#000"
     },
     {
       "id": 25,
-      "type": "MarkdownNote",
+      "type": "CreateBoundingBoxes",
       "pos": [
-        80,
-        10
+        -740,
+        0
       ],
       "size": [
-        210,
-        90
+        440,
+        680
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "background",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX,ARRAY,STRING",
+          "link": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 49
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 50
+        }
+      ],
+      "outputs": [
+        {
+          "name": "preview",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": []
+        },
+        {
+          "name": "elements",
+          "type": "ARRAY",
+          "links": [
+            47
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateBoundingBoxes"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        [
+          {
+            "x": 0,
+            "y": 56,
+            "width": 1024,
+            "height": 333,
+            "metadata": {
+              "type": "text",
+              "text": "MOSS",
+              "desc": "Across the top of the poster, enormous cream serif capitals spell , with oversized high-contrast letterforms cropped by both the left and right edges so the word extends beyond the composition. The typography is flat, bold, and sharply defined against a dark background",
+              "palette": []
+            }
+          },
+          {
+            "x": 143,
+            "y": 184,
+            "width": 778,
+            "height": 840,
+            "metadata": {
+              "type": "obj",
+              "text": "",
+              "desc": "A knight in moss-covered steel plate armour strikes a heroic kneeling pose: one knee planted on the ground, the other leg bent forward with the foot braced, torso upright and chest pushed forward, shoulders back, head lifted and facing straight ahead, one gauntleted hand gripping the hilt of a massive greatsword planted point-down beside him, the other forearm resting on his raised knee, the broad blade weathered and rust-streaked, a dense bouquet of white daisies and pink roses bursting from the open helmet instead of a face, ivy, ferns and tumbled stonework behind him",
+              "palette": []
+            }
+          },
+          {
+            "x": 31,
+            "y": 26,
+            "width": 205,
+            "height": 67,
+            "metadata": {
+              "type": "text",
+              "text": "MOSS IMAGE\nPROJECT",
+              "desc": "In the top-left corner, two lines of tiny cream uppercase sans-serif type read , set in a compact left-aligned block with tight line spacing. The surrounding area remains dark and unobstructed",
+              "palette": []
+            }
+          },
+          {
+            "x": 61,
+            "y": 655,
+            "width": 276,
+            "height": 143,
+            "metadata": {
+              "type": "text",
+              "text": "\"ALL THAT FADES\nWAS NEVER MEANT\nTO REMAIN\"",
+              "desc": "A compact three-line text block in the upper-left portion of the specified region, reading in small cream-colored uppercase serif lettering. The words are enclosed by thin cream quotation marks at the beginning and end, with centered line alignment, tight line spacing, and a subtle dark shadow for legibility against the underlying background",
+              "palette": []
+            }
+          },
+          {
+            "x": 666,
+            "y": 440,
+            "width": 358,
+            "height": 174,
+            "metadata": {
+              "type": "text",
+              "text": "EVEN THE ARMOUR CANNOT CARRY EVERYTHING.\nWHAT HAS NO GROUND READS THE DEEPEST.",
+              "desc": "A compact paragraph of tiny cream uppercase serif lettering on the right, arranged across two tightly spaced lines and reading The text sits against a dark background with restrained line spacing and clean margins",
+              "palette": []
+            }
+          },
+          {
+            "x": 492,
+            "y": 768,
+            "width": 543,
+            "height": 225,
+            "metadata": {
+              "type": "text",
+              "text": "\"WITHIN THE HOLLOW,\nSOMETHING ALWAYS\nTAKES ROOT.\"",
+              "desc": "Large cream serif capitals reading are arranged as three centered lines at the bottom right, with generous line spacing and a thin dark quotation mark enclosing the text block",
+              "palette": []
+            }
+          }
+        ],
+        [
+          {
+            "x": 0,
+            "y": 56,
+            "width": 1024,
+            "height": 333,
+            "metadata": {
+              "type": "text",
+              "text": "MOSS",
+              "desc": "Across the top of the poster, enormous cream serif capitals spell , with oversized high-contrast letterforms cropped by both the left and right edges so the word extends beyond the composition. The typography is flat, bold, and sharply defined against a dark background",
+              "palette": []
+            }
+          },
+          {
+            "x": 143,
+            "y": 184,
+            "width": 778,
+            "height": 840,
+            "metadata": {
+              "type": "obj",
+              "text": "",
+              "desc": "A knight in moss-covered steel plate armour strikes a heroic kneeling pose: one knee planted on the ground, the other leg bent forward with the foot braced, torso upright and chest pushed forward, shoulders back, head lifted and facing straight ahead, one gauntleted hand gripping the hilt of a massive greatsword planted point-down beside him, the other forearm resting on his raised knee, the broad blade weathered and rust-streaked, a dense bouquet of white daisies and pink roses bursting from the open helmet instead of a face, ivy, ferns and tumbled stonework behind him",
+              "palette": []
+            }
+          },
+          {
+            "x": 31,
+            "y": 26,
+            "width": 205,
+            "height": 67,
+            "metadata": {
+              "type": "text",
+              "text": "MOSS IMAGE\nPROJECT",
+              "desc": "In the top-left corner, two lines of tiny cream uppercase sans-serif type read , set in a compact left-aligned block with tight line spacing. The surrounding area remains dark and unobstructed",
+              "palette": []
+            }
+          },
+          {
+            "x": 61,
+            "y": 655,
+            "width": 276,
+            "height": 143,
+            "metadata": {
+              "type": "text",
+              "text": "\"ALL THAT FADES\nWAS NEVER MEANT\nTO REMAIN\"",
+              "desc": "A compact three-line text block in the upper-left portion of the specified region, reading in small cream-colored uppercase serif lettering. The words are enclosed by thin cream quotation marks at the beginning and end, with centered line alignment, tight line spacing, and a subtle dark shadow for legibility against the underlying background",
+              "palette": []
+            }
+          },
+          {
+            "x": 666,
+            "y": 440,
+            "width": 358,
+            "height": 174,
+            "metadata": {
+              "type": "text",
+              "text": "EVEN THE ARMOUR CANNOT CARRY EVERYTHING.\nWHAT HAS NO GROUND READS THE DEEPEST.",
+              "desc": "A compact paragraph of tiny cream uppercase serif lettering on the right, arranged across two tightly spaced lines and reading The text sits against a dark background with restrained line spacing and clean margins",
+              "palette": []
+            }
+          },
+          {
+            "x": 492,
+            "y": 768,
+            "width": 543,
+            "height": 225,
+            "metadata": {
+              "type": "text",
+              "text": "\"WITHIN THE HOLLOW,\nSOMETHING ALWAYS\nTAKES ROOT.\"",
+              "desc": "Large cream serif capitals reading are arranged as three centered lines at the bottom right, with generous line spacing and a thin dark quotation mark enclosing the text block",
+              "palette": []
+            }
+          }
+        ]
+      ],
+      "widgets_values_named": {
+        "width": 1024,
+        "height": 1024,
+        "editor_state": [
+          {
+            "x": 0,
+            "y": 56,
+            "width": 1024,
+            "height": 333,
+            "metadata": {
+              "type": "text",
+              "text": "MOSS",
+              "desc": "Across the top of the poster, enormous cream serif capitals spell , with oversized high-contrast letterforms cropped by both the left and right edges so the word extends beyond the composition. The typography is flat, bold, and sharply defined against a dark background",
+              "palette": []
+            }
+          },
+          {
+            "x": 143,
+            "y": 184,
+            "width": 778,
+            "height": 840,
+            "metadata": {
+              "type": "obj",
+              "text": "",
+              "desc": "A knight in moss-covered steel plate armour strikes a heroic kneeling pose: one knee planted on the ground, the other leg bent forward with the foot braced, torso upright and chest pushed forward, shoulders back, head lifted and facing straight ahead, one gauntleted hand gripping the hilt of a massive greatsword planted point-down beside him, the other forearm resting on his raised knee, the broad blade weathered and rust-streaked, a dense bouquet of white daisies and pink roses bursting from the open helmet instead of a face, ivy, ferns and tumbled stonework behind him",
+              "palette": []
+            }
+          },
+          {
+            "x": 31,
+            "y": 26,
+            "width": 205,
+            "height": 67,
+            "metadata": {
+              "type": "text",
+              "text": "MOSS IMAGE\nPROJECT",
+              "desc": "In the top-left corner, two lines of tiny cream uppercase sans-serif type read , set in a compact left-aligned block with tight line spacing. The surrounding area remains dark and unobstructed",
+              "palette": []
+            }
+          },
+          {
+            "x": 61,
+            "y": 655,
+            "width": 276,
+            "height": 143,
+            "metadata": {
+              "type": "text",
+              "text": "\"ALL THAT FADES\nWAS NEVER MEANT\nTO REMAIN\"",
+              "desc": "A compact three-line text block in the upper-left portion of the specified region, reading in small cream-colored uppercase serif lettering. The words are enclosed by thin cream quotation marks at the beginning and end, with centered line alignment, tight line spacing, and a subtle dark shadow for legibility against the underlying background",
+              "palette": []
+            }
+          },
+          {
+            "x": 666,
+            "y": 440,
+            "width": 358,
+            "height": 174,
+            "metadata": {
+              "type": "text",
+              "text": "EVEN THE ARMOUR CANNOT CARRY EVERYTHING.\nWHAT HAS NO GROUND READS THE DEEPEST.",
+              "desc": "A compact paragraph of tiny cream uppercase serif lettering on the right, arranged across two tightly spaced lines and reading The text sits against a dark background with restrained line spacing and clean margins",
+              "palette": []
+            }
+          },
+          {
+            "x": 492,
+            "y": 768,
+            "width": 543,
+            "height": 225,
+            "metadata": {
+              "type": "text",
+              "text": "\"WITHIN THE HOLLOW,\nSOMETHING ALWAYS\nTAKES ROOT.\"",
+              "desc": "Large cream serif capitals reading are arranged as three centered lines at the bottom right, with generous line spacing and a thin dark quotation mark enclosing the text block",
+              "palette": []
+            }
+          }
+        ],
+        "last_incoming": [
+          {
+            "x": 0,
+            "y": 56,
+            "width": 1024,
+            "height": 333,
+            "metadata": {
+              "type": "text",
+              "text": "MOSS",
+              "desc": "Across the top of the poster, enormous cream serif capitals spell , with oversized high-contrast letterforms cropped by both the left and right edges so the word extends beyond the composition. The typography is flat, bold, and sharply defined against a dark background",
+              "palette": []
+            }
+          },
+          {
+            "x": 143,
+            "y": 184,
+            "width": 778,
+            "height": 840,
+            "metadata": {
+              "type": "obj",
+              "text": "",
+              "desc": "A knight in moss-covered steel plate armour strikes a heroic kneeling pose: one knee planted on the ground, the other leg bent forward with the foot braced, torso upright and chest pushed forward, shoulders back, head lifted and facing straight ahead, one gauntleted hand gripping the hilt of a massive greatsword planted point-down beside him, the other forearm resting on his raised knee, the broad blade weathered and rust-streaked, a dense bouquet of white daisies and pink roses bursting from the open helmet instead of a face, ivy, ferns and tumbled stonework behind him",
+              "palette": []
+            }
+          },
+          {
+            "x": 31,
+            "y": 26,
+            "width": 205,
+            "height": 67,
+            "metadata": {
+              "type": "text",
+              "text": "MOSS IMAGE\nPROJECT",
+              "desc": "In the top-left corner, two lines of tiny cream uppercase sans-serif type read , set in a compact left-aligned block with tight line spacing. The surrounding area remains dark and unobstructed",
+              "palette": []
+            }
+          },
+          {
+            "x": 61,
+            "y": 655,
+            "width": 276,
+            "height": 143,
+            "metadata": {
+              "type": "text",
+              "text": "\"ALL THAT FADES\nWAS NEVER MEANT\nTO REMAIN\"",
+              "desc": "A compact three-line text block in the upper-left portion of the specified region, reading in small cream-colored uppercase serif lettering. The words are enclosed by thin cream quotation marks at the beginning and end, with centered line alignment, tight line spacing, and a subtle dark shadow for legibility against the underlying background",
+              "palette": []
+            }
+          },
+          {
+            "x": 666,
+            "y": 440,
+            "width": 358,
+            "height": 174,
+            "metadata": {
+              "type": "text",
+              "text": "EVEN THE ARMOUR CANNOT CARRY EVERYTHING.\nWHAT HAS NO GROUND READS THE DEEPEST.",
+              "desc": "A compact paragraph of tiny cream uppercase serif lettering on the right, arranged across two tightly spaced lines and reading The text sits against a dark background with restrained line spacing and clean margins",
+              "palette": []
+            }
+          },
+          {
+            "x": 492,
+            "y": 768,
+            "width": 543,
+            "height": 225,
+            "metadata": {
+              "type": "text",
+              "text": "\"WITHIN THE HOLLOW,\nSOMETHING ALWAYS\nTAKES ROOT.\"",
+              "desc": "Large cream serif capitals reading are arranged as three centered lines at the bottom right, with generous line spacing and a thin dark quotation mark enclosing the text block",
+              "palette": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "type": "PreviewAny",
+      "pos": [
+        240,
+        20
+      ],
+      "size": [
+        400,
+        260
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 46
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            67
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 27,
+      "type": "MOSSImageLayoutPrompt",
+      "pos": [
+        -240,
+        0
+      ],
+      "size": [
+        420,
+        340
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "element",
+          "type": "ARRAY",
+          "link": 47
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 51
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 52
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            46
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MOSSImageLayoutPrompt"
+      },
+      "widgets_values": [
+        "Dark fantasy editorial poster in a lush overgrown ruin: a knight in moss-covered plate armour in a heroic kneeling pose, torso upright and head lifted, one hand gripping a massive greatsword planted point-down beside him, the other forearm on his raised knee, a dense bouquet of daisies and pink roses growing out of the open helmet instead of a face, ivy and crumbling columns behind, petals drifting in the air, soft volumetric light from above, deep green and moss palette with muted cream type.",
+        1024,
+        1024,
+        "2"
+      ],
+      "widgets_values_named": {
+        "prompt": "Dark fantasy editorial poster in a lush overgrown ruin: a knight in moss-covered plate armour in a heroic kneeling pose, torso upright and head lifted, one hand gripping a massive greatsword planted point-down beside him, the other forearm on his raised knee, a dense bouquet of daisies and pink roses growing out of the open helmet instead of a face, ivy and crumbling columns behind, petals drifting in the air, soft volumetric light from above, deep green and moss palette with muted cream type.",
+        "width": 1024,
+        "height": 1024,
+        "character_boxes": "2"
+      }
+    },
+    {
+      "id": 29,
+      "type": "MarkdownNote",
+      "pos": [
+        -1750,
+        -70
+      ],
+      "size": [
+        520,
+        1200
       ],
       "flags": {},
       "order": 3,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "Note: ref_image",
       "properties": {},
       "widgets_values": [
-        "The `ref_image` is fed to the LLM only for prompt enhancement and cannot be used directly by the model. Enable the prompt enhancer if you wish to use it. The model itself doesn't support ref_image"
+        "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked against community benchmark notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual English and Chinese text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n\n---\n\n## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22). You can check the detail settings inside the subgraph\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale. You can enter the subgraph to adjust it\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n\n\n## Prompt skill\n\nThe system prompt driving the upsampler is written from the official [MOSS-Image Prompt Enhancer skill](https://github.com/OpenMOSS/MOSS-Image/blob/main/skills/moss-image-prompt-enhancer/SKILL.md). The same skill turns an idea into a caption or a Layout prompt outside ComfyUI, and it is the reference for the caption style this model was trained on."
       ],
       "widgets_values_named": {
-        "text": "The `ref_image` is fed to the LLM only for prompt enhancement and cannot be used directly by the model. Enable the prompt enhancer if you wish to use it. The model itself doesn't support ref_image"
+        "text": "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked against community benchmark notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual English and Chinese text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n\n---\n\n## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22). You can check the detail settings inside the subgraph\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale. You can enter the subgraph to adjust it\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n\n\n## Prompt skill\n\nThe system prompt driving the upsampler is written from the official [MOSS-Image Prompt Enhancer skill](https://github.com/OpenMOSS/MOSS-Image/blob/main/skills/moss-image-prompt-enhancer/SKILL.md). The same skill turns an idea into a caption or a Layout prompt outside ComfyUI, and it is the reference for the caption style this model was trained on."
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 33,
+      "type": "MarkdownNote",
+      "pos": [
+        740,
+        -210
+      ],
+      "size": [
+        420,
+        110
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: ref_image and PE",
+      "properties": {},
+      "widgets_values": [
+        "The `ref_image` is fed to the LLM only for prompt enhancement and cannot be used directly by the model. Enable the prompt enhancer if you wish to use it. The model itself doesn't support `ref_image`.\n\nWhen using the bboxes, enabling PE will rewrite the json input totally, so it's disabled by default in the current workflow."
+      ],
+      "widgets_values_named": {
+        "text": "The `ref_image` is fed to the LLM only for prompt enhancement and cannot be used directly by the model. Enable the prompt enhancer if you wish to use it. The model itself doesn't support `ref_image`.\n\nWhen using the bboxes, enabling PE will rewrite the json input totally, so it's disabled by default in the current workflow."
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -337,7 +828,7 @@
       19,
       0,
       18,
-      4,
+      3,
       "INT"
     ],
     [
@@ -345,11 +836,80 @@
       19,
       1,
       18,
-      5,
+      4,
+      "INT"
+    ],
+    [
+      46,
+      27,
+      0,
+      26,
+      0,
+      "STRING"
+    ],
+    [
+      47,
+      25,
+      2,
+      27,
+      0,
+      "ARRAY"
+    ],
+    [
+      49,
+      19,
+      0,
+      25,
+      2,
+      "INT"
+    ],
+    [
+      50,
+      19,
+      1,
+      25,
+      3,
+      "INT"
+    ],
+    [
+      67,
+      26,
+      0,
+      18,
+      0,
+      "STRING"
+    ],
+    [
+      51,
+      19,
+      0,
+      27,
+      1,
+      "INT"
+    ],
+    [
+      52,
+      19,
+      1,
+      27,
+      2,
       "INT"
     ]
   ],
-  "groups": [],
+  "groups": [
+    {
+      "id": 5,
+      "title": "Create bounding boxes for precise control",
+      "bounding": [
+        -790,
+        -100,
+        1490,
+        1080
+      ],
+      "color": "#444",
+      "flags": {}
+    }
+  ],
   "definitions": {
     "subgraphs": [
       {
@@ -357,8 +917,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 5,
-          "lastNodeId": 27,
-          "lastLinkId": 61,
+          "lastNodeId": 33,
+          "lastLinkId": 69,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -367,17 +927,17 @@
         "inputNode": {
           "id": -10,
           "bounding": [
-            -1060,
-            -160,
+            -1020,
+            -120,
             191.44921875,
-            368
+            348
           ]
         },
         "outputNode": {
           "id": -20,
           "bounding": [
-            1620,
-            -40,
+            1790,
+            30,
             128,
             68
           ]
@@ -392,8 +952,8 @@
             ],
             "label": "positive_prompt",
             "pos": [
-              -892.55078125,
-              -136
+              -852.55078125,
+              -96
             ]
           },
           {
@@ -405,21 +965,8 @@
             ],
             "label": "enable_prompt_enhancer",
             "pos": [
-              -892.55078125,
-              -116
-            ]
-          },
-          {
-            "id": "cdc1cc70-bfa9-4ec2-84d7-a99f03c6ec6e",
-            "name": "sampling_mode.seed",
-            "type": "INT",
-            "linkIds": [
-              61
-            ],
-            "label": "prompt_enhancer_seed",
-            "pos": [
-              -892.55078125,
-              -96
+              -852.55078125,
+              -76
             ]
           },
           {
@@ -431,8 +978,8 @@
             ],
             "label": "negative_prompt",
             "pos": [
-              -892.55078125,
-              -76
+              -852.55078125,
+              -56
             ]
           },
           {
@@ -443,8 +990,8 @@
               27
             ],
             "pos": [
-              -892.55078125,
-              -56
+              -852.55078125,
+              -36
             ]
           },
           {
@@ -455,8 +1002,8 @@
               28
             ],
             "pos": [
-              -892.55078125,
-              -36
+              -852.55078125,
+              -16
             ]
           },
           {
@@ -467,8 +1014,8 @@
               30
             ],
             "pos": [
-              -892.55078125,
-              -16
+              -852.55078125,
+              4
             ]
           },
           {
@@ -479,8 +1026,8 @@
               42
             ],
             "pos": [
-              -892.55078125,
-              4
+              -852.55078125,
+              24
             ]
           },
           {
@@ -491,8 +1038,21 @@
               44
             ],
             "pos": [
-              -892.55078125,
-              24
+              -852.55078125,
+              44
+            ]
+          },
+          {
+            "id": "e3037e0e-7d1a-43ce-9585-b255c7017615",
+            "name": "switch_1",
+            "type": "BOOLEAN",
+            "linkIds": [
+              64
+            ],
+            "label": "SLG",
+            "pos": [
+              -852.55078125,
+              64
             ]
           },
           {
@@ -503,8 +1063,8 @@
               33
             ],
             "pos": [
-              -892.55078125,
-              44
+              -852.55078125,
+              84
             ]
           },
           {
@@ -515,21 +1075,8 @@
               34
             ],
             "pos": [
-              -892.55078125,
-              64
-            ]
-          },
-          {
-            "id": "71ffd624-a04e-403f-ae06-300f5896f34c",
-            "name": "switch_1",
-            "type": "BOOLEAN",
-            "linkIds": [
-              52
-            ],
-            "label": "SLG",
-            "pos": [
-              -892.55078125,
-              84
+              -852.55078125,
+              104
             ]
           },
           {
@@ -541,8 +1088,8 @@
             ],
             "label": "unet_model",
             "pos": [
-              -892.55078125,
-              104
+              -852.55078125,
+              124
             ]
           },
           {
@@ -554,8 +1101,8 @@
             ],
             "label": "clip_model",
             "pos": [
-              -892.55078125,
-              124
+              -852.55078125,
+              144
             ]
           },
           {
@@ -567,21 +1114,21 @@
             ],
             "label": "vae_model",
             "pos": [
-              -892.55078125,
-              144
+              -852.55078125,
+              164
             ]
           },
           {
-            "id": "c8c5a578-f3c4-489e-8fdf-f1cde45fa7e7",
-            "name": "image",
+            "id": "85c66e1d-6e18-4e80-a271-8e4f0a44575c",
+            "name": "video",
             "type": "IMAGE",
             "linkIds": [
-              57
+              69
             ],
             "label": "ref_image (for llm)",
             "pos": [
-              -892.55078125,
-              164
+              -852.55078125,
+              184
             ]
           }
         ],
@@ -595,8 +1142,8 @@
             ],
             "localized_name": "IMAGE",
             "pos": [
-              1644,
-              -16
+              1814,
+              54
             ]
           }
         ],
@@ -606,7 +1153,7 @@
             "id": 17,
             "type": "PrimitiveStringMultiline",
             "pos": [
-              -140,
+              -130,
               -780
             ],
             "size": [
@@ -614,7 +1161,7 @@
               280
             ],
             "flags": {},
-            "order": 12,
+            "order": 13,
             "mode": 0,
             "inputs": [
               {
@@ -634,35 +1181,32 @@
                 "type": "STRING",
                 "links": [
                   15,
-                  59
+                  17
                 ]
               }
             ],
-            "title": "Text (User Prompt)",
             "properties": {
               "Node name for S&R": "PrimitiveStringMultiline"
             },
             "widgets_values": [
-              "Cinematic night street photograph: a model in an exaggerated balloon-sleeve white wool coat walking toward camera under a huge illuminated theatre marquee, the marquee bulbs spelling \"MOSS\" in tall capital letters, wet asphalt with long reflections, warm tungsten glow against cold blue night, anamorphic flare, 35mm film grain, low angle"
+              "Dark fantasy editorial poster in a lush overgrown ruin: a knight in moss-covered plate armour in a heroic kneeling pose, torso upright and head lifted, one hand gripping a massive greatsword planted point-down beside him, the other forearm on his raised knee, a dense bouquet of daisies and pink roses growing out of the open helmet instead of a face, ivy and crumbling columns behind, petals drifting in the air, soft volumetric light from above, deep green and moss palette with muted cream type."
             ],
             "widgets_values_named": {
-              "value": "Cinematic night street photograph: a model in an exaggerated balloon-sleeve white wool coat walking toward camera under a huge illuminated theatre marquee, the marquee bulbs spelling \"MOSS\" in tall capital letters, wet asphalt with long reflections, warm tungsten glow against cold blue night, anamorphic flare, 35mm film grain, low angle"
+              "value": "Dark fantasy editorial poster in a lush overgrown ruin: a knight in moss-covered plate armour in a heroic kneeling pose, torso upright and head lifted, one hand gripping a massive greatsword planted point-down beside him, the other forearm on his raised knee, a dense bouquet of daisies and pink roses growing out of the open helmet instead of a face, ivy and crumbling columns behind, petals drifting in the air, soft volumetric light from above, deep green and moss palette with muted cream type."
             }
           },
           {
             "id": 14,
             "type": "PrimitiveStringMultiline",
             "pos": [
-              -140,
+              -130,
               -430
             ],
             "size": [
               470,
               270
             ],
-            "flags": {
-              "collapsed": false
-            },
+            "flags": {},
             "order": 0,
             "mode": 0,
             "inputs": [],
@@ -672,7 +1216,7 @@
                 "name": "STRING",
                 "type": "STRING",
                 "links": [
-                  58
+                  13
                 ]
               }
             ],
@@ -681,18 +1225,148 @@
               "Node name for S&R": "PrimitiveStringMultiline"
             },
             "widgets_values": [
-              "You are a prompt engineer for an image generation model. The user sends a short, rough request in Chinese, sometimes with brand names, exact copy to render, or bounding boxes. Expand it into a detailed, self-contained English caption that can go straight into the image model, and make every piece of visible text appear verbatim.\n\nOutput only the caption. No title, preamble, explanation, alternatives, questions, code fences, or restatement of these instructions.\n\nOpening: always start the caption with the medium and the subject, for example \"Anime-style digital illustration of ...\", \"Studio photograph of ...\", \"Mixed-media poster of ...\". Never start with a verb. If the request is an edit, work out the final scene and open on it directly.\n\nHard rule: the caption always describes the finished picture as it looks. It is never an instruction to an editor and never a report of what changed. Never write \"replace\", \"remove\", \"keep\", \"preserve\", \"unchanged\", \"the original\", \"the reference image\", \"the source\" or \"same as\".\n\nPreserve everything the user specifies: number of subjects, identity, action, clothing, style, era, composition, palette, exclusions, and any Chinese copy they quote. Add only plausible visual detail the user left open. Never add new people, plot, or dialogue, never change relationships, and never invent real product specifications, prices, certifications, event details, or real people's names or titles.\n\nBuild the caption from these eight facets. Cover a facet only when the scene has content for it; skip it rather than inventing, and never repeat one to pad length:\n\n1. Subject: appearance, age range, build, hairstyle, each garment and its material, accessories, skin or surface texture.\n2. Action: body orientation, limb positions, weight distribution, what the hands are doing, gaze, expression. The pose must hold in a single frame and never contradict itself.\n3. Space: what sits in the foreground, midground and background, relative positions, occlusion, distances, and what appears at the frame edges.\n4. Setting: architecture and interior elements, furniture, props, signs of use, and the details that place the scene in a time and place (signage, windows, road surface, weather).\n5. Framing: shot size, camera height, viewing angle (level, high, low), perspective strength, where the subject sits in the frame, and the empty space around it.\n6. Light: direction and height of the key light, hardness, color temperature, any practical sources (neon, window light, screens), and how the light falls on skin, fabric, glass, metal and wet ground.\n7. Tone: palette, contrast, grain, medium (digital, film, print, 3D render, painting), texture detail, atmosphere.\n8. Text: see the next section. This is the most common failure point.\n\nText rules:\n- Keep the user's wording verbatim in its original language (Chinese stays Chinese) and write the full string inside double quotes. Never rewrite, translate, shorten, or paste the same copy twice.\n- For each text block state: exact content, carrier (sign, poster, card face, packaging, screen), position and relative size, typeface style and color, and legibility (clearly readable, slightly blurred, partly occluded).\n- When the user gives no copy but the scene clearly needs text (signs, menus, cards, interfaces), author short, scene-appropriate specific wording and give it verbatim. Never write placeholders such as \"headline here\" or \"some text\".\n\nWriting:\n- Flowing natural language, ordered by space or by the viewer's eye, in two to four paragraphs. No tag soup, no \"masterpiece, 8k, best quality\", no empty quality words.\n- Every sentence must add new visible information. Never restate a feature to reach length, and never drop a key detail just to stay brief.\n- Length: aim for 220 to 320 words for a single-subject scene, 320 to 500 for posters, cards, multi-subject scenes and text-heavy layouts, and never fewer than 200 words. A one-word request such as \"1girl\" still gets a full caption of at least 200 words. Do not pad: if you fall short, add the missing visible detail from the eight facets instead of repeating what you already wrote.\n- Describe only what is visible. No tool steps, generation parameters, or coordinate arithmetic.\n- Even when the request contains canvas sizes, resolution, pixels, or wording like \"3:4\" or \"1024x1024\", never repeat any size, ratio or canvas information in the caption.\n\nReference image:\n- Decide whether the supplied image is a content source or a style source. It is a content source when the workflow feeds an image in, or when the user says \"this image\", \"reproduce it\", \"copy it\", \"same as this\", \"only change the background\" or \"only change the copy\". Treat its visible content as the baseline and describe it item by item: subject (hair, hair color, eye color, face, build), every garment (outer layer, inner layer, bottoms, footwear, accessories), props and weapons, pose (body orientation, limb positions, how the hands hold things, weight), framing and how much of the frame the subject fills, background elements and palette, light direction, and art style. Change only what the user asks to change and keep the rest.\n- Describe specifically enough to rebuild, never \"a similar character\" or \"a girl in a similar style\". Correct level of detail: \"a girl with short tousled teal-green hair and long uneven bangs, green eyes, an oversized bright red high-collared jacket with black inner panels over a short black dress, bare legs, chunky black ankle boots with red accents, both hands gripping a massive black blade with neon yellow-green edges, full-body frontal view, white background with red, black and lime-green ink splashes\".\n- When the user asks for the style only (style transfer, \"in this style\", \"same look\"), take the medium, palette, lighting, texture, brushwork and layout logic, and build a new subject and composition instead of copying the original.\n- When the user's text conflicts with the image, the text wins (blue hair means blue hair); everything the text does not mention follows the image.\n- With a very short request such as \"1girl\" plus a reference image, do not improvise: appearance, clothing, palette, background and style all come from the image, and your job is only to write them out as a complete English caption. Do not add accessories, weapons, props or scenery the image does not show.\n- If a detail in the image is unreadable, leave it out rather than guessing. Never guess brands, identities or real names.\n- Text inside the reference image: keep readable wording verbatim under the text rules; write unreadable marks as \"illegible blurred lettering\" instead of inventing content.\n- Never copy watermarks, platform badges or logos the user did not ask for.\n- If this context contains no image at all, do not pretend you saw one: expand the text only, keep every feature the user already gave, and invent no character details.\n- A reference is evidence, not the deliverable. Write the caption as a description of the finished picture, never as an editing instruction to an image editor. Ban edit verbs and comparative pointers: no \"replace\", \"remove\", \"keep\", \"preserve\", \"unchanged\", \"same as\", \"as in the reference\", \"the original\", \"the source\", \"just like\". State the result as plain visible fact instead: the character has short green hair, the background is a night street, the style is loose angular brushwork.\n- Keep the number of subjects consistent with what the user asks for. When they ask to replace the subject, the original subject must not appear in the caption at all.\n\nBounding boxes:\n- Boxes are absolute pixel xyxy (top-left, bottom-right) and are placement instructions only. Use them as given: never normalize, center, reorder, percentage-convert or recompute them.\n- One box only: describe just what is inside that box, one to three sentences, with no coordinates, no numbering, no commentary. Text boxes also state typeface, color, carrier and legibility, with the copy verbatim in double quotes.\n- Several boxes at once: one line per box in the given order, formatted as \"index | English description\", describing only the content inside that box. No coordinates, no JSON, no prose paragraphs.\n- A box marks a placement, not a border, panel, divider or sticker to draw. Overlap and natural occlusion are allowed.\n- With no boxes, write a normal caption and never invent coordinates."
+              "You are a prompt engineer for an image generation model. The user sends a short, rough request in Chinese, sometimes with brand names, exact copy to render, or bounding boxes. Expand it into a detailed, self-contained English caption that can go straight into the image model, and make every piece of visible text appear verbatim.\n\nOutput only the caption. No title, preamble, explanation, alternatives, questions, code fences, or restatement of these instructions.\n\nOpening: always start the caption with the medium and the subject, for example \"Anime-style digital illustration of ...\", \"Studio photograph of ...\", \"Mixed-media poster of ...\". Never start with a verb. If the request is an edit, work out the final scene and open on it directly.\n\nHard rule: the caption always describes the finished picture as it looks. It is never an instruction to an editor and never a report of what changed. Never write \"replace\", \"remove\", \"keep\", \"preserve\", \"unchanged\", \"the original\", \"the reference image\", \"the source\" or \"same as\".\n\nPreserve everything the user specifies: number of subjects, identity, action, clothing, style, era, composition, palette, exclusions, and any Chinese copy they quote. Add only plausible visual detail the user left open. Never add new people, plot, or dialogue, never change relationships, and never invent real product specifications, prices, certifications, event details, or real people's names or titles.\n\nBuild the caption from these eight facets. Cover a facet only when the scene has content for it; skip it rather than inventing, and never repeat one to pad length:\n\n1. Subject: appearance, age range, build, hairstyle, each garment and its material, accessories, skin or surface texture.\n2. Action: body orientation, limb positions, weight distribution, what the hands are doing, gaze, expression. The pose must hold in a single frame and never contradict itself.\n3. Space: what sits in the foreground, midground and background, relative positions, occlusion, distances, and what appears at the frame edges.\n4. Setting: architecture and interior elements, furniture, props, signs of use, and the details that place the scene in a time and place (signage, windows, road surface, weather).\n5. Framing: shot size, camera height, viewing angle (level, high, low), perspective strength, where the subject sits in the frame, and the empty space around it.\n6. Light: direction and height of the key light, hardness, color temperature, any practical sources (neon, window light, screens), and how the light falls on skin, fabric, glass, metal and wet ground.\n7. Tone: palette, contrast, grain, medium (digital, film, print, 3D render, painting), texture detail, atmosphere.\n8. Text: see the next section. This is the most common failure point.\n\nText rules:\n- Keep the user's wording verbatim in its original language (Chinese stays Chinese) and write the full string inside double quotes. Never rewrite, translate, shorten, or paste the same copy twice.\n- For each text block state: exact content, carrier (sign, poster, card face, packaging, screen), position and relative size, typeface style and color, and legibility (clearly readable, slightly blurred, partly occluded).\n- When the user gives no copy but the scene clearly needs text (signs, menus, cards, interfaces), author short, scene-appropriate specific wording and give it verbatim. Never write placeholders such as \"headline here\" or \"some text\".\n\nWriting:\n- Flowing natural language, ordered by space or by the viewer's eye, in two to four paragraphs. No tag soup, no \"masterpiece, 8k, best quality\", no empty quality words.\n- Every sentence must add new visible information. Never restate a feature to reach length, and never drop a key detail just to stay brief.\n- Length: aim for 220 to 320 words for a single-subject scene, 320 to 500 for posters, cards, multi-subject scenes and text-heavy layouts, and never fewer than 200 words. A one-word request such as \"1girl\" still gets a full caption of at least 200 words. Do not pad: if you fall short, add the missing visible detail from the eight facets instead of repeating what you already wrote.\n- Describe only what is visible. No tool steps, generation parameters, or coordinate arithmetic.\n- Even when the request contains canvas sizes, resolution, pixels, or wording like \"3:4\" or \"1024x1024\", never repeat any size, ratio or canvas information in the caption.\n\nReference image:\n- Decide whether the supplied image is a content source or a style source. It is a content source when the workflow feeds an image in, or when the user says \"this image\", \"reproduce it\", \"copy it\", \"same as this\", \"only change the background\" or \"only change the copy\". Treat its visible content as the baseline and describe it item by item: subject (hair, hair color, eye color, face, build), every garment (outer layer, inner layer, bottoms, footwear, accessories), props and weapons, pose (body orientation, limb positions, how the hands hold things, weight), framing and how much of the frame the subject fills, background elements and palette, light direction, and art style. Change only what the user asks to change and keep the rest.\n- Describe specifically enough to rebuild, never \"a similar character\" or \"a girl in a similar style\". Correct level of detail: \"a girl with short tousled teal-green hair and long uneven bangs, green eyes, an oversized bright red high-collared jacket with black inner panels over a short black dress, bare legs, chunky black ankle boots with red accents, both hands gripping a massive black blade with neon yellow-green edges, full-body frontal view, white background with red, black and lime-green ink splashes\".\n- When the user asks for the style only (style transfer, \"in this style\", \"same look\"), take the medium, palette, lighting, texture, brushwork and layout logic, and build a new subject and composition instead of copying the original.\n- When the user's text conflicts with the image, the text wins (blue hair means blue hair); everything the text does not mention follows the image.\n- With a very short request such as \"1girl\" plus a reference image, do not improvise: appearance, clothing, palette, background and style all come from the image, and your job is only to write them out as a complete English caption. Do not add accessories, weapons, props or scenery the image does not show.\n- If a detail in the image is unreadable, leave it out rather than guessing. Never guess brands, identities or real names.\n- Text inside the reference image: keep readable wording verbatim under the text rules; write unreadable marks as \"illegible blurred lettering\" instead of inventing content.\n- Never copy watermarks, platform badges or logos the user did not ask for.\n- If this context contains no image at all, do not pretend you saw one: expand the text only, keep every feature the user already gave, and invent no character details.\n- A reference is evidence, not the deliverable. Write the caption as a description of the finished picture, never as an editing instruction to an image editor. Ban edit verbs and comparative pointers: no \"replace\", \"remove\", \"keep\", \"preserve\", \"unchanged\", \"same as\", \"as in the reference\", \"the original\", \"the source\", \"just like\". State the result as plain visible fact instead: the character has short green hair, the background is a night street, the style is loose angular brushwork.\n- Keep the number of subjects consistent with what the user asks for. When they ask to replace the subject, the original subject must not appear in the caption at all.\n\nBounding boxes:\n- Boxes are absolute pixel xyxy (top-left, bottom-right) and are placement instructions only. Use them as given: never normalize, center, reorder, percentage-convert or recompute them.\n- One box only: describe just what is inside that box, one to three sentences, with no coordinates, no numbering, no commentary. Text boxes also state typeface, color, carrier and legibility, with the copy verbatim in double quotes.\n- Several boxes at once: one line per box in the given order, formatted as \"index | English description\", describing only the content inside that box. No coordinates, no JSON, no prose paragraphs.\n- A box marks a placement, not a border, panel, divider or sticker to draw. Overlap and natural occlusion are allowed.\n- With no boxes, write a normal caption and never invent coordinates.\n"
             ],
             "widgets_values_named": {
-              "value": "You are a prompt engineer for an image generation model. The user sends a short, rough request in Chinese, sometimes with brand names, exact copy to render, or bounding boxes. Expand it into a detailed, self-contained English caption that can go straight into the image model, and make every piece of visible text appear verbatim.\n\nOutput only the caption. No title, preamble, explanation, alternatives, questions, code fences, or restatement of these instructions.\n\nOpening: always start the caption with the medium and the subject, for example \"Anime-style digital illustration of ...\", \"Studio photograph of ...\", \"Mixed-media poster of ...\". Never start with a verb. If the request is an edit, work out the final scene and open on it directly.\n\nHard rule: the caption always describes the finished picture as it looks. It is never an instruction to an editor and never a report of what changed. Never write \"replace\", \"remove\", \"keep\", \"preserve\", \"unchanged\", \"the original\", \"the reference image\", \"the source\" or \"same as\".\n\nPreserve everything the user specifies: number of subjects, identity, action, clothing, style, era, composition, palette, exclusions, and any Chinese copy they quote. Add only plausible visual detail the user left open. Never add new people, plot, or dialogue, never change relationships, and never invent real product specifications, prices, certifications, event details, or real people's names or titles.\n\nBuild the caption from these eight facets. Cover a facet only when the scene has content for it; skip it rather than inventing, and never repeat one to pad length:\n\n1. Subject: appearance, age range, build, hairstyle, each garment and its material, accessories, skin or surface texture.\n2. Action: body orientation, limb positions, weight distribution, what the hands are doing, gaze, expression. The pose must hold in a single frame and never contradict itself.\n3. Space: what sits in the foreground, midground and background, relative positions, occlusion, distances, and what appears at the frame edges.\n4. Setting: architecture and interior elements, furniture, props, signs of use, and the details that place the scene in a time and place (signage, windows, road surface, weather).\n5. Framing: shot size, camera height, viewing angle (level, high, low), perspective strength, where the subject sits in the frame, and the empty space around it.\n6. Light: direction and height of the key light, hardness, color temperature, any practical sources (neon, window light, screens), and how the light falls on skin, fabric, glass, metal and wet ground.\n7. Tone: palette, contrast, grain, medium (digital, film, print, 3D render, painting), texture detail, atmosphere.\n8. Text: see the next section. This is the most common failure point.\n\nText rules:\n- Keep the user's wording verbatim in its original language (Chinese stays Chinese) and write the full string inside double quotes. Never rewrite, translate, shorten, or paste the same copy twice.\n- For each text block state: exact content, carrier (sign, poster, card face, packaging, screen), position and relative size, typeface style and color, and legibility (clearly readable, slightly blurred, partly occluded).\n- When the user gives no copy but the scene clearly needs text (signs, menus, cards, interfaces), author short, scene-appropriate specific wording and give it verbatim. Never write placeholders such as \"headline here\" or \"some text\".\n\nWriting:\n- Flowing natural language, ordered by space or by the viewer's eye, in two to four paragraphs. No tag soup, no \"masterpiece, 8k, best quality\", no empty quality words.\n- Every sentence must add new visible information. Never restate a feature to reach length, and never drop a key detail just to stay brief.\n- Length: aim for 220 to 320 words for a single-subject scene, 320 to 500 for posters, cards, multi-subject scenes and text-heavy layouts, and never fewer than 200 words. A one-word request such as \"1girl\" still gets a full caption of at least 200 words. Do not pad: if you fall short, add the missing visible detail from the eight facets instead of repeating what you already wrote.\n- Describe only what is visible. No tool steps, generation parameters, or coordinate arithmetic.\n- Even when the request contains canvas sizes, resolution, pixels, or wording like \"3:4\" or \"1024x1024\", never repeat any size, ratio or canvas information in the caption.\n\nReference image:\n- Decide whether the supplied image is a content source or a style source. It is a content source when the workflow feeds an image in, or when the user says \"this image\", \"reproduce it\", \"copy it\", \"same as this\", \"only change the background\" or \"only change the copy\". Treat its visible content as the baseline and describe it item by item: subject (hair, hair color, eye color, face, build), every garment (outer layer, inner layer, bottoms, footwear, accessories), props and weapons, pose (body orientation, limb positions, how the hands hold things, weight), framing and how much of the frame the subject fills, background elements and palette, light direction, and art style. Change only what the user asks to change and keep the rest.\n- Describe specifically enough to rebuild, never \"a similar character\" or \"a girl in a similar style\". Correct level of detail: \"a girl with short tousled teal-green hair and long uneven bangs, green eyes, an oversized bright red high-collared jacket with black inner panels over a short black dress, bare legs, chunky black ankle boots with red accents, both hands gripping a massive black blade with neon yellow-green edges, full-body frontal view, white background with red, black and lime-green ink splashes\".\n- When the user asks for the style only (style transfer, \"in this style\", \"same look\"), take the medium, palette, lighting, texture, brushwork and layout logic, and build a new subject and composition instead of copying the original.\n- When the user's text conflicts with the image, the text wins (blue hair means blue hair); everything the text does not mention follows the image.\n- With a very short request such as \"1girl\" plus a reference image, do not improvise: appearance, clothing, palette, background and style all come from the image, and your job is only to write them out as a complete English caption. Do not add accessories, weapons, props or scenery the image does not show.\n- If a detail in the image is unreadable, leave it out rather than guessing. Never guess brands, identities or real names.\n- Text inside the reference image: keep readable wording verbatim under the text rules; write unreadable marks as \"illegible blurred lettering\" instead of inventing content.\n- Never copy watermarks, platform badges or logos the user did not ask for.\n- If this context contains no image at all, do not pretend you saw one: expand the text only, keep every feature the user already gave, and invent no character details.\n- A reference is evidence, not the deliverable. Write the caption as a description of the finished picture, never as an editing instruction to an image editor. Ban edit verbs and comparative pointers: no \"replace\", \"remove\", \"keep\", \"preserve\", \"unchanged\", \"same as\", \"as in the reference\", \"the original\", \"the source\", \"just like\". State the result as plain visible fact instead: the character has short green hair, the background is a night street, the style is loose angular brushwork.\n- Keep the number of subjects consistent with what the user asks for. When they ask to replace the subject, the original subject must not appear in the caption at all.\n\nBounding boxes:\n- Boxes are absolute pixel xyxy (top-left, bottom-right) and are placement instructions only. Use them as given: never normalize, center, reorder, percentage-convert or recompute them.\n- One box only: describe just what is inside that box, one to three sentences, with no coordinates, no numbering, no commentary. Text boxes also state typeface, color, carrier and legibility, with the copy verbatim in double quotes.\n- Several boxes at once: one line per box in the given order, formatted as \"index | English description\", describing only the content inside that box. No coordinates, no JSON, no prose paragraphs.\n- A box marks a placement, not a border, panel, divider or sticker to draw. Overlap and natural occlusion are allowed.\n- With no boxes, write a normal caption and never invent coordinates."
+              "value": "You are a prompt engineer for an image generation model. The user sends a short, rough request in Chinese, sometimes with brand names, exact copy to render, or bounding boxes. Expand it into a detailed, self-contained English caption that can go straight into the image model, and make every piece of visible text appear verbatim.\n\nOutput only the caption. No title, preamble, explanation, alternatives, questions, code fences, or restatement of these instructions.\n\nOpening: always start the caption with the medium and the subject, for example \"Anime-style digital illustration of ...\", \"Studio photograph of ...\", \"Mixed-media poster of ...\". Never start with a verb. If the request is an edit, work out the final scene and open on it directly.\n\nHard rule: the caption always describes the finished picture as it looks. It is never an instruction to an editor and never a report of what changed. Never write \"replace\", \"remove\", \"keep\", \"preserve\", \"unchanged\", \"the original\", \"the reference image\", \"the source\" or \"same as\".\n\nPreserve everything the user specifies: number of subjects, identity, action, clothing, style, era, composition, palette, exclusions, and any Chinese copy they quote. Add only plausible visual detail the user left open. Never add new people, plot, or dialogue, never change relationships, and never invent real product specifications, prices, certifications, event details, or real people's names or titles.\n\nBuild the caption from these eight facets. Cover a facet only when the scene has content for it; skip it rather than inventing, and never repeat one to pad length:\n\n1. Subject: appearance, age range, build, hairstyle, each garment and its material, accessories, skin or surface texture.\n2. Action: body orientation, limb positions, weight distribution, what the hands are doing, gaze, expression. The pose must hold in a single frame and never contradict itself.\n3. Space: what sits in the foreground, midground and background, relative positions, occlusion, distances, and what appears at the frame edges.\n4. Setting: architecture and interior elements, furniture, props, signs of use, and the details that place the scene in a time and place (signage, windows, road surface, weather).\n5. Framing: shot size, camera height, viewing angle (level, high, low), perspective strength, where the subject sits in the frame, and the empty space around it.\n6. Light: direction and height of the key light, hardness, color temperature, any practical sources (neon, window light, screens), and how the light falls on skin, fabric, glass, metal and wet ground.\n7. Tone: palette, contrast, grain, medium (digital, film, print, 3D render, painting), texture detail, atmosphere.\n8. Text: see the next section. This is the most common failure point.\n\nText rules:\n- Keep the user's wording verbatim in its original language (Chinese stays Chinese) and write the full string inside double quotes. Never rewrite, translate, shorten, or paste the same copy twice.\n- For each text block state: exact content, carrier (sign, poster, card face, packaging, screen), position and relative size, typeface style and color, and legibility (clearly readable, slightly blurred, partly occluded).\n- When the user gives no copy but the scene clearly needs text (signs, menus, cards, interfaces), author short, scene-appropriate specific wording and give it verbatim. Never write placeholders such as \"headline here\" or \"some text\".\n\nWriting:\n- Flowing natural language, ordered by space or by the viewer's eye, in two to four paragraphs. No tag soup, no \"masterpiece, 8k, best quality\", no empty quality words.\n- Every sentence must add new visible information. Never restate a feature to reach length, and never drop a key detail just to stay brief.\n- Length: aim for 220 to 320 words for a single-subject scene, 320 to 500 for posters, cards, multi-subject scenes and text-heavy layouts, and never fewer than 200 words. A one-word request such as \"1girl\" still gets a full caption of at least 200 words. Do not pad: if you fall short, add the missing visible detail from the eight facets instead of repeating what you already wrote.\n- Describe only what is visible. No tool steps, generation parameters, or coordinate arithmetic.\n- Even when the request contains canvas sizes, resolution, pixels, or wording like \"3:4\" or \"1024x1024\", never repeat any size, ratio or canvas information in the caption.\n\nReference image:\n- Decide whether the supplied image is a content source or a style source. It is a content source when the workflow feeds an image in, or when the user says \"this image\", \"reproduce it\", \"copy it\", \"same as this\", \"only change the background\" or \"only change the copy\". Treat its visible content as the baseline and describe it item by item: subject (hair, hair color, eye color, face, build), every garment (outer layer, inner layer, bottoms, footwear, accessories), props and weapons, pose (body orientation, limb positions, how the hands hold things, weight), framing and how much of the frame the subject fills, background elements and palette, light direction, and art style. Change only what the user asks to change and keep the rest.\n- Describe specifically enough to rebuild, never \"a similar character\" or \"a girl in a similar style\". Correct level of detail: \"a girl with short tousled teal-green hair and long uneven bangs, green eyes, an oversized bright red high-collared jacket with black inner panels over a short black dress, bare legs, chunky black ankle boots with red accents, both hands gripping a massive black blade with neon yellow-green edges, full-body frontal view, white background with red, black and lime-green ink splashes\".\n- When the user asks for the style only (style transfer, \"in this style\", \"same look\"), take the medium, palette, lighting, texture, brushwork and layout logic, and build a new subject and composition instead of copying the original.\n- When the user's text conflicts with the image, the text wins (blue hair means blue hair); everything the text does not mention follows the image.\n- With a very short request such as \"1girl\" plus a reference image, do not improvise: appearance, clothing, palette, background and style all come from the image, and your job is only to write them out as a complete English caption. Do not add accessories, weapons, props or scenery the image does not show.\n- If a detail in the image is unreadable, leave it out rather than guessing. Never guess brands, identities or real names.\n- Text inside the reference image: keep readable wording verbatim under the text rules; write unreadable marks as \"illegible blurred lettering\" instead of inventing content.\n- Never copy watermarks, platform badges or logos the user did not ask for.\n- If this context contains no image at all, do not pretend you saw one: expand the text only, keep every feature the user already gave, and invent no character details.\n- A reference is evidence, not the deliverable. Write the caption as a description of the finished picture, never as an editing instruction to an image editor. Ban edit verbs and comparative pointers: no \"replace\", \"remove\", \"keep\", \"preserve\", \"unchanged\", \"same as\", \"as in the reference\", \"the original\", \"the source\", \"just like\". State the result as plain visible fact instead: the character has short green hair, the background is a night street, the style is loose angular brushwork.\n- Keep the number of subjects consistent with what the user asks for. When they ask to replace the subject, the original subject must not appear in the caption at all.\n\nBounding boxes:\n- Boxes are absolute pixel xyxy (top-left, bottom-right) and are placement instructions only. Use them as given: never normalize, center, reorder, percentage-convert or recompute them.\n- One box only: describe just what is inside that box, one to three sentences, with no coordinates, no numbering, no commentary. Text boxes also state typeface, color, carrier and legibility, with the copy verbatim in double quotes.\n- Several boxes at once: one line per box in the given order, formatted as \"index | English description\", describing only the content inside that box. No coordinates, no JSON, no prose paragraphs.\n- A box marks a placement, not a border, panel, divider or sticker to draw. Overlap and natural occlusion are allowed.\n- With no boxes, write a normal caption and never invent coordinates.\n"
+            }
+          },
+          {
+            "id": 11,
+            "type": "TextGenerateV2",
+            "pos": [
+              470,
+              -780
+            ],
+            "size": [
+              400,
+              516
+            ],
+            "flags": {},
+            "order": 9,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip",
+                "name": "clip",
+                "type": "CLIP",
+                "link": 10
+              },
+              {
+                "localized_name": "image1",
+                "name": "images.image1",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 69
+              },
+              {
+                "localized_name": "image2",
+                "name": "images.image2",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "localized_name": "video1",
+                "name": "videos.video1",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "localized_name": "audio1",
+                "name": "audios.audio1",
+                "shape": 7,
+                "type": "AUDIO",
+                "link": null
+              },
+              {
+                "localized_name": "audio2",
+                "name": "audios.audio2",
+                "shape": 7,
+                "type": "AUDIO",
+                "link": null
+              },
+              {
+                "localized_name": "audio3",
+                "name": "audios.audio3",
+                "shape": 7,
+                "type": "AUDIO",
+                "link": null
+              },
+              {
+                "localized_name": "system_prompt",
+                "name": "system_prompt",
+                "shape": 7,
+                "type": "STRING",
+                "link": 13
+              },
+              {
+                "localized_name": "prompt",
+                "name": "prompt",
+                "type": "STRING",
+                "widget": {
+                  "name": "prompt"
+                },
+                "link": 17
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "generated_text",
+                "name": "generated_text",
+                "type": "STRING",
+                "links": [
+                  19
+                ]
+              },
+              {
+                "localized_name": "thinking",
+                "name": "thinking",
+                "type": "STRING",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "TextGenerateV2"
+            },
+            "widgets_values": [
+              "",
+              4096,
+              "on",
+              0.7,
+              64,
+              0.95,
+              0.05,
+              1,
+              0,
+              0,
+              false,
+              true,
+              "auto"
+            ],
+            "widgets_values_named": {
+              "prompt": "",
+              "max_length": 4096,
+              "sampling_mode": "on",
+              "sampling_mode.temperature": 0.7,
+              "sampling_mode.top_k": 64,
+              "sampling_mode.top_p": 0.95,
+              "sampling_mode.min_p": 0.05,
+              "sampling_mode.repetition_penalty": 1,
+              "sampling_mode.presence_penalty": 0,
+              "sampling_mode.seed": 0,
+              "thinking": false,
+              "use_default_template": true,
+              "mtp": "auto"
             }
           },
           {
             "id": 1,
             "type": "UNETLoader",
             "pos": [
-              -160,
-              -10
+              -150,
+              80
             ],
             "size": [
               350,
@@ -720,7 +1394,7 @@
                 "slot_index": 0,
                 "links": [
                   1,
-                  51
+                  63
                 ]
               }
             ],
@@ -749,8 +1423,8 @@
             "id": 4,
             "type": "CLIPTextEncode",
             "pos": [
-              330,
-              0
+              380,
+              80
             ],
             "size": [
               450,
@@ -792,10 +1466,10 @@
               "Node name for S&R": "CLIPTextEncode"
             },
             "widgets_values": [
-              "Cinematic night street photograph: a model in an exaggerated balloon-sleeve white wool coat walking toward camera under a huge illuminated theatre marquee, the marquee bulbs spelling \"MOSS\" in tall capital letters, wet asphalt with long reflections, warm tungsten glow against cold blue night, anamorphic flare, 35mm film grain, low angle"
+              "Editorial studio photograph of a model in a structured ivory wool coat standing against a seamless warm grey backdrop, single softbox from the left carving sculpted shadows, 85mm lens, muted cream and charcoal palette, subtle film grain"
             ],
             "widgets_values_named": {
-              "text": "Cinematic night street photograph: a model in an exaggerated balloon-sleeve white wool coat walking toward camera under a huge illuminated theatre marquee, the marquee bulbs spelling \"MOSS\" in tall capital letters, wet asphalt with long reflections, warm tungsten glow against cold blue night, anamorphic flare, 35mm film grain, low angle"
+              "text": "Editorial studio photograph of a model in a structured ivory wool coat standing against a seamless warm grey backdrop, single softbox from the left carving sculpted shadows, 85mm lens, muted cream and charcoal palette, subtle film grain"
             },
             "color": "#232",
             "bgcolor": "#353"
@@ -804,8 +1478,8 @@
             "id": 2,
             "type": "CLIPLoader",
             "pos": [
-              -160,
-              600
+              -150,
+              690
             ],
             "size": [
               350,
@@ -814,7 +1488,6 @@
             "flags": {},
             "order": 2,
             "mode": 0,
-            "showAdvanced": false,
             "inputs": [
               {
                 "localized_name": "clip_name",
@@ -835,7 +1508,7 @@
                 "links": [
                   2,
                   3,
-                  56
+                  10
                 ]
               }
             ],
@@ -866,8 +1539,8 @@
             "id": 7,
             "type": "KSampler",
             "pos": [
-              920,
-              -30
+              930,
+              50
             ],
             "size": [
               290,
@@ -881,7 +1554,7 @@
                 "localized_name": "model",
                 "name": "model",
                 "type": "MODEL",
-                "link": 49
+                "link": 61
               },
               {
                 "localized_name": "positive",
@@ -984,8 +1657,8 @@
             "id": 3,
             "type": "VAELoader",
             "pos": [
-              -160,
-              790
+              -150,
+              910
             ],
             "size": [
               350,
@@ -1039,7 +1712,7 @@
             "id": 13,
             "type": "PreviewAny",
             "pos": [
-              1260,
+              1270,
               -780
             ],
             "size": [
@@ -1047,7 +1720,7 @@
               600
             ],
             "flags": {},
-            "order": 9,
+            "order": 10,
             "mode": 0,
             "inputs": [
               {
@@ -1067,7 +1740,6 @@
                 ]
               }
             ],
-            "title": "Preview as Text (final prompt)",
             "properties": {
               "Node name for S&R": "PreviewAny"
             },
@@ -1078,7 +1750,7 @@
             "id": 16,
             "type": "ComfySwitchNode",
             "pos": [
-              920,
+              930,
               -780
             ],
             "size": [
@@ -1086,7 +1758,7 @@
               110
             ],
             "flags": {},
-            "order": 11,
+            "order": 12,
             "mode": 0,
             "inputs": [
               {
@@ -1101,7 +1773,7 @@
                 "name": "on_true",
                 "shape": 7,
                 "type": "STRING",
-                "link": 60
+                "link": 19
               },
               {
                 "localized_name": "switch",
@@ -1138,7 +1810,7 @@
             "type": "EmptyFlux2LatentImage",
             "pos": [
               -140,
-              1040
+              1140
             ],
             "size": [
               300,
@@ -1198,8 +1870,8 @@
             "id": 5,
             "type": "CLIPTextEncode",
             "pos": [
-              330,
-              580
+              380,
+              660
             ],
             "size": [
               460,
@@ -1253,8 +1925,8 @@
             "id": 8,
             "type": "VAEDecode",
             "pos": [
-              1260,
-              -30
+              1270,
+              50
             ],
             "size": [
               230,
@@ -1297,14 +1969,14 @@
             "type": "SkipLayerGuidanceDiTSimple",
             "pos": [
               -160,
-              300
+              230
             ],
             "size": [
               350,
-              220
+              210
             ],
             "flags": {},
-            "order": 10,
+            "order": 11,
             "mode": 0,
             "showAdvanced": true,
             "inputs": [
@@ -1321,7 +1993,7 @@
                 "name": "MODEL",
                 "type": "MODEL",
                 "links": [
-                  50
+                  62
                 ]
               }
             ],
@@ -1342,18 +2014,18 @@
             }
           },
           {
-            "id": 24,
+            "id": 32,
             "type": "ComfySwitchNode",
             "pos": [
-              -160,
-              160
+              -150,
+              500
             ],
             "size": [
-              350,
-              101.9617941402193
+              340,
+              110
             ],
             "flags": {},
-            "order": 13,
+            "order": 14,
             "mode": 0,
             "inputs": [
               {
@@ -1361,14 +2033,14 @@
                 "name": "on_false",
                 "shape": 7,
                 "type": "MODEL",
-                "link": 51
+                "link": 63
               },
               {
                 "localized_name": "on_true",
                 "name": "on_true",
                 "shape": 7,
                 "type": "MODEL",
-                "link": 50
+                "link": 62
               },
               {
                 "localized_name": "switch",
@@ -1377,7 +2049,7 @@
                 "widget": {
                   "name": "switch"
                 },
-                "link": 52
+                "link": 64
               }
             ],
             "outputs": [
@@ -1386,7 +2058,7 @@
                 "name": "output",
                 "type": "MODEL",
                 "links": [
-                  49
+                  61
                 ]
               }
             ],
@@ -1399,131 +2071,6 @@
             "widgets_values_named": {
               "switch": false
             }
-          },
-          {
-            "id": 27,
-            "type": "TextGenerateV2",
-            "pos": [
-              440,
-              -760
-            ],
-            "size": [
-              400,
-              476
-            ],
-            "flags": {},
-            "order": 14,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "clip",
-                "name": "clip",
-                "type": "CLIP",
-                "link": 56
-              },
-              {
-                "localized_name": "image1",
-                "name": "images.image1",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": 57
-              },
-              {
-                "localized_name": "image2",
-                "name": "images.image2",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": null
-              },
-              {
-                "localized_name": "video1",
-                "name": "videos.video1",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": null
-              },
-              {
-                "localized_name": "audio1",
-                "name": "audios.audio1",
-                "shape": 7,
-                "type": "AUDIO",
-                "link": null
-              },
-              {
-                "localized_name": "system_prompt",
-                "name": "system_prompt",
-                "shape": 7,
-                "type": "STRING",
-                "link": 58
-              },
-              {
-                "localized_name": "prompt",
-                "name": "prompt",
-                "type": "STRING",
-                "widget": {
-                  "name": "prompt"
-                },
-                "link": 59
-              },
-              {
-                "localized_name": "seed",
-                "name": "sampling_mode.seed",
-                "type": "INT",
-                "widget": {
-                  "name": "sampling_mode.seed"
-                },
-                "link": 61
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "generated_text",
-                "name": "generated_text",
-                "type": "STRING",
-                "links": [
-                  60
-                ]
-              },
-              {
-                "localized_name": "thinking",
-                "name": "thinking",
-                "type": "STRING",
-                "links": null
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "TextGenerateV2"
-            },
-            "widgets_values": [
-              "",
-              4096,
-              "on",
-              0.7,
-              64,
-              0.95,
-              0.05,
-              1,
-              0,
-              0,
-              false,
-              true,
-              "auto"
-            ],
-            "widgets_values_named": {
-              "prompt": "",
-              "max_length": 4096,
-              "sampling_mode": "on",
-              "sampling_mode.temperature": 0.7,
-              "sampling_mode.top_k": 64,
-              "sampling_mode.top_p": 0.95,
-              "sampling_mode.min_p": 0.05,
-              "sampling_mode.repetition_penalty": 1,
-              "sampling_mode.presence_penalty": 0,
-              "sampling_mode.seed": 0,
-              "thinking": false,
-              "use_default_template": true,
-              "mtp": "auto"
-            }
           }
         ],
         "groups": [
@@ -1531,10 +2078,10 @@
             "id": 1,
             "title": "Models",
             "bounding": [
-              -220,
-              -90,
-              460,
-              990
+              -210,
+              -10,
+              480,
+              1010
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1543,10 +2090,10 @@
             "id": 2,
             "title": "Prompt",
             "bounding": [
-              270,
-              -90,
+              300,
+              -10,
               580,
-              990
+              880
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1556,9 +2103,9 @@
             "title": "Image Size",
             "bounding": [
               -220,
-              930,
-              460,
-              300
+              1030,
+              490,
+              290
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1567,10 +2114,10 @@
             "id": 4,
             "title": "Prompt Enhancer",
             "bounding": [
-              -220,
+              -210,
               -880,
               1900,
-              760
+              840
             ],
             "color": "#444",
             "flags": {}
@@ -1634,6 +2181,14 @@
             "type": "STRING"
           },
           {
+            "id": 19,
+            "origin_id": 11,
+            "origin_slot": 0,
+            "target_id": 16,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
             "id": 3,
             "origin_id": 2,
             "origin_slot": 0,
@@ -1674,26 +2229,26 @@
             "type": "LATENT"
           },
           {
-            "id": 49,
-            "origin_id": 24,
+            "id": 61,
+            "origin_id": 32,
             "origin_slot": 0,
             "target_id": 7,
             "target_slot": 0,
             "type": "MODEL"
           },
           {
-            "id": 50,
+            "id": 62,
             "origin_id": 15,
             "origin_slot": 0,
-            "target_id": 24,
+            "target_id": 32,
             "target_slot": 1,
             "type": "MODEL"
           },
           {
-            "id": 51,
+            "id": 63,
             "origin_id": 1,
             "origin_slot": 0,
-            "target_id": 24,
+            "target_id": 32,
             "target_slot": 0,
             "type": "MODEL"
           },
@@ -1716,7 +2271,7 @@
           {
             "id": 43,
             "origin_id": -10,
-            "origin_slot": 3,
+            "origin_slot": 2,
             "target_id": 5,
             "target_slot": 1,
             "type": "STRING"
@@ -1724,7 +2279,7 @@
           {
             "id": 27,
             "origin_id": -10,
-            "origin_slot": 4,
+            "origin_slot": 3,
             "target_id": 6,
             "target_slot": 0,
             "type": "INT"
@@ -1732,7 +2287,7 @@
           {
             "id": 28,
             "origin_id": -10,
-            "origin_slot": 5,
+            "origin_slot": 4,
             "target_id": 6,
             "target_slot": 1,
             "type": "INT"
@@ -1740,7 +2295,7 @@
           {
             "id": 30,
             "origin_id": -10,
-            "origin_slot": 6,
+            "origin_slot": 5,
             "target_id": 7,
             "target_slot": 4,
             "type": "INT"
@@ -1748,7 +2303,7 @@
           {
             "id": 42,
             "origin_id": -10,
-            "origin_slot": 7,
+            "origin_slot": 6,
             "target_id": 7,
             "target_slot": 5,
             "type": "INT"
@@ -1756,10 +2311,18 @@
           {
             "id": 44,
             "origin_id": -10,
-            "origin_slot": 8,
+            "origin_slot": 7,
             "target_id": 7,
             "target_slot": 6,
             "type": "FLOAT"
+          },
+          {
+            "id": 64,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 32,
+            "target_slot": 2,
+            "type": "BOOLEAN"
           },
           {
             "id": 33,
@@ -1778,17 +2341,9 @@
             "type": "COMBO"
           },
           {
-            "id": 52,
-            "origin_id": -10,
-            "origin_slot": 11,
-            "target_id": 24,
-            "target_slot": 2,
-            "type": "BOOLEAN"
-          },
-          {
             "id": 35,
             "origin_id": -10,
-            "origin_slot": 12,
+            "origin_slot": 11,
             "target_id": 1,
             "target_slot": 0,
             "type": "COMBO"
@@ -1796,7 +2351,7 @@
           {
             "id": 36,
             "origin_id": -10,
-            "origin_slot": 13,
+            "origin_slot": 12,
             "target_id": 2,
             "target_slot": 0,
             "type": "COMBO"
@@ -1804,58 +2359,42 @@
           {
             "id": 37,
             "origin_id": -10,
-            "origin_slot": 14,
+            "origin_slot": 13,
             "target_id": 3,
             "target_slot": 0,
             "type": "COMBO"
           },
           {
-            "id": 56,
+            "id": 10,
             "origin_id": 2,
             "origin_slot": 0,
-            "target_id": 27,
+            "target_id": 11,
             "target_slot": 0,
             "type": "CLIP"
           },
           {
-            "id": 57,
+            "id": 69,
             "origin_id": -10,
-            "origin_slot": 15,
-            "target_id": 27,
+            "origin_slot": 14,
+            "target_id": 11,
             "target_slot": 1,
             "type": "IMAGE"
           },
           {
-            "id": 58,
+            "id": 13,
             "origin_id": 14,
             "origin_slot": 0,
-            "target_id": 27,
-            "target_slot": 5,
+            "target_id": 11,
+            "target_slot": 7,
             "type": "STRING"
           },
           {
-            "id": 59,
+            "id": 17,
             "origin_id": 17,
             "origin_slot": 0,
-            "target_id": 27,
-            "target_slot": 6,
+            "target_id": 11,
+            "target_slot": 8,
             "type": "STRING"
-          },
-          {
-            "id": 60,
-            "origin_id": 27,
-            "origin_slot": 0,
-            "target_id": 16,
-            "target_slot": 1,
-            "type": "STRING"
-          },
-          {
-            "id": 61,
-            "origin_id": -10,
-            "origin_slot": 2,
-            "target_id": 27,
-            "target_slot": 7,
-            "type": "INT"
           }
         ],
         "extra": {}
@@ -1864,18 +2403,18 @@
   },
   "config": {},
   "extra": {
-    "ds": {
-      "scale": 0.39904086954518475,
-      "offset": [
-        2443.5361788324662,
-        904.049656437338
-      ]
-    },
-    "frontendVersion": "1.59.6",
+    "frontendVersion": "1.59.15",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
-    "VHS_KeepIntermediate": true
+    "VHS_KeepIntermediate": true,
+    "ds": {
+      "scale": 0.5644739300537773,
+      "offset": [
+        1274.474811554511,
+        1489.9702738455694
+      ]
+    }
   },
   "version": 0.4
 }
