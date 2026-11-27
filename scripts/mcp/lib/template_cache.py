@@ -17,6 +17,24 @@ SCHEMA_VERSION = 1
 PLACEHOLDER_INPUT = "text: Prompt"
 PLACEHOLDER_OUTPUT = "image: Generated output"
 
+# Stub io the sync emits for templates nobody has written a cache entry for.
+# Older syncs produced wording variants of the same stub ("text: Input prompt",
+# "video: Generated output", "image: Generated output image", "text: Model
+# response"); all of them are machine filler and must be replaceable.
+_PLACEHOLDER_INPUT_SLOTS = {
+    PLACEHOLDER_INPUT,
+    "text: Input prompt",
+    "text: User prompt",
+}
+_PLACEHOLDER_OUTPUT_SLOTS = {
+    PLACEHOLDER_OUTPUT,
+    "image: Generated output image",
+    "video: Generated output",
+    "audio: Generated output",
+    "model: Generated output",
+    "text: Model response",
+}
+
 
 def empty_cache() -> dict[str, Any]:
     return {"schema_version": SCHEMA_VERSION, "templates": {}}
@@ -86,20 +104,32 @@ def apply_template_overlay(
         return entry
     if cached.get("description"):
         entry["description"] = cached["description"]
-    if cached.get("io"):
-        entry["io"] = cached["io"]
+    cached_io = cached.get("io")
+    # A cache entry whose io is the generic stub carries no information — an AI
+    # pass filled it without looking at the graph — so it must not replace the
+    # media slots inferred from the graph's loaders and savers.
+    if cached_io and not is_placeholder_io(cached_io):
+        entry["io"] = cached_io
     return entry
 
 
 def is_placeholder_io(io: dict | None) -> bool:
     """True when io is the generic stub emitted for templates with no AI cache.
 
-    Sync infers `["text: Prompt"]` / `["image: Generated output"]` as a fallback.
-    That stub must never replace io that was already curated and published.
+    Sync infers `["text: Prompt"]` / `["image: Generated output"]` — or one of the
+    wording variants older syncs wrote — whenever the AI cache entry is missing
+    or stale. Those slots are machine filler, so they may be replaced by a better
+    guess; curated io may not.
     """
     if not io:
         return True
-    return io.get("inputs") == [PLACEHOLDER_INPUT] and io.get("outputs") == [PLACEHOLDER_OUTPUT]
+    inputs = io.get("inputs") or []
+    outputs = io.get("outputs") or []
+    if not inputs and not outputs:
+        return True
+    inputs_stub = all(slot in _PLACEHOLDER_INPUT_SLOTS for slot in inputs)
+    outputs_stub = all(slot in _PLACEHOLDER_OUTPUT_SLOTS for slot in outputs)
+    return inputs_stub and outputs_stub
 
 
 def apply_template_cache_to_mcp(
