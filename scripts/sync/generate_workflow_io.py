@@ -30,6 +30,7 @@ OUTPUT_NODE_TYPES = [
     "SaveImage",
     "SaveVideo",
     "SaveAudio",
+    "SaveAudioAdvanced",
     "VHS_SaveVideo",
     "Save3DModel",
     "Save3DAdvanced",
@@ -39,6 +40,10 @@ OUTPUT_NODE_TYPES = [
     "PreviewAudio"
     # Note: PreviewImage is excluded as it's for debugging only
 ]
+
+# Node modes that still produce output. 2 = never/muted, 4 = bypassed: their
+# outputs never reach a file, so they must not be listed as template outputs.
+ACTIVE_NODE_MODES = (0, None)
 
 
 def find_workflow_files(templates_dir: Path) -> List[Path]:
@@ -213,7 +218,7 @@ def extract_output_nodes(workflow_file: Path) -> List[Dict]:
             continue
 
         node_type = node.get("type")
-        if node_type in OUTPUT_NODE_TYPES:
+        if node_type in OUTPUT_NODE_TYPES and node.get("mode") in ACTIVE_NODE_MODES:
             node_id = node.get("id")
 
             # Determine media type from node type

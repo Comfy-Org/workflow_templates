@@ -1,8 +1,8 @@
 {
   "id": "de6314a0-6d88-47aa-9d79-fc683cf283e8",
   "revision": 0,
-  "last_node_id": 34,
-  "last_link_id": 30,
+  "last_node_id": 35,
+  "last_link_id": 33,
   "nodes": [
     {
       "id": 1,
@@ -74,10 +74,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "### Case 2 · two candidates, one winner\n\nEach image gets its own 1–10 score against the same question; `Math Expression` compares the two floats and\n`If/Else Switch` passes the winner to `Preview Image`.\n\nRules you can drop into the expression: `a > b` (current) · `a < b` · `abs(a - b) > 1` (only when clearly\nbetter) · `a > 6 && a > b` (good in absolute terms *and* better). Both calls are billed — this is \"best of two\",\nworth it when the next step is far more expensive.\n"
+        "### Case 2 · two candidates, one winner\n\nEach image gets its own 1–10 score against the same question; `Math Expression` compares the two floats and\n`If/Else Switch` passes the winner to `Preview Image`.\n\nRules you can drop into the expression: `a > b` (current) · `a < b` · `a - b > 1` (only when clearly\nbetter) · `a > 6 and a > b` (good in absolute terms *and* better). Both calls are billed — this is \"best of two\",\nworth it when the next step is far more expensive.\n"
       ],
       "widgets_values_named": {
-        "text": "### Case 2 · two candidates, one winner\n\nEach image gets its own 1–10 score against the same question; `Math Expression` compares the two floats and\n`If/Else Switch` passes the winner to `Preview Image`.\n\nRules you can drop into the expression: `a > b` (current) · `a < b` · `abs(a - b) > 1` (only when clearly\nbetter) · `a > 6 && a > b` (good in absolute terms *and* better). Both calls are billed — this is \"best of two\",\nworth it when the next step is far more expensive.\n"
+        "text": "### Case 2 · two candidates, one winner\n\nEach image gets its own 1–10 score against the same question; `Math Expression` compares the two floats and\n`If/Else Switch` passes the winner to `Preview Image`.\n\nRules you can drop into the expression: `a > b` (current) · `a < b` · `a - b > 1` (only when clearly\nbetter) · `a > 6 and a > b` (good in absolute terms *and* better). Both calls are billed — this is \"best of two\",\nworth it when the next step is far more expensive.\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -100,10 +100,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "### Case 3 · classify into your own options\n\n`options` is one option per line, used exactly as typed (2 to 255 options, max 128 characters each). Add a catch-all such as `other` so an\ninput that fits nothing still lands somewhere. `choice` is the text, `option_index` its position from 0 — feed\nthat into a switch or a prompt selector.\n\nSwap the list for your own taxonomy: camera angle, shot size, product category, tone of voice, moderation label.\n"
+        "### Case 3 · classify into your own options\n\n`options` is one option per line (2 to 255 options, max 128 characters each); blank lines are skipped\nand outer whitespace is trimmed, so `option_index` counts the parsed options, not the raw input lines. Add a catch-all such as `other` so an\ninput that fits nothing still lands somewhere. `choice` is the text, `option_index` its position from 0 — feed\nthat into a switch or a prompt selector.\n\nSwap the list for your own taxonomy: camera angle, shot size, product category, tone of voice, moderation label.\n"
       ],
       "widgets_values_named": {
-        "text": "### Case 3 · classify into your own options\n\n`options` is one option per line, used exactly as typed (2 to 255 options, max 128 characters each). Add a catch-all such as `other` so an\ninput that fits nothing still lands somewhere. `choice` is the text, `option_index` its position from 0 — feed\nthat into a switch or a prompt selector.\n\nSwap the list for your own taxonomy: camera angle, shot size, product category, tone of voice, moderation label.\n"
+        "text": "### Case 3 · classify into your own options\n\n`options` is one option per line (2 to 255 options, max 128 characters each); blank lines are skipped\nand outer whitespace is trimmed, so `option_index` counts the parsed options, not the raw input lines. Add a catch-all such as `other` so an\ninput that fits nothing still lands somewhere. `choice` is the text, `option_index` its position from 0 — feed\nthat into a switch or a prompt selector.\n\nSwap the list for your own taxonomy: camera angle, shot size, product category, tone of voice, moderation label.\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -126,10 +126,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "### Case 4 · pick the winner from a batch\n\n`Load Image ×2 → Image Batch → Gemini (Pick Image)` — the node sees the batch, `text` carries what you asked for,\nand `index` says which image won (from 0). `Math Expression` turns that index into a boolean and `If/Else Switch`\nreturns the picked image, so the rest of the graph works on one image instead of a batch.\n\n2 to 64 images. Leave `text` empty to ask \"which is best\" instead of \"which matches\".\n"
+        "### Case 4 · pick the winner from a batch\n\n`Load Image ×2 → Image Batch → Gemini (Pick Image)` — the node sees the batch, `text` carries what you asked for,\nand `index` says which image won (from 0). `Get Image from Batch` takes the same batch plus that `index` (`length` 1) and\nreturns the picked image, so the rest of the graph works on one image instead of a batch.\n\n2 to 64 images. Leave `text` empty to ask \"which is best\" instead of \"which matches\".\n"
       ],
       "widgets_values_named": {
-        "text": "### Case 4 · pick the winner from a batch\n\n`Load Image ×2 → Image Batch → Gemini (Pick Image)` — the node sees the batch, `text` carries what you asked for,\nand `index` says which image won (from 0). `Math Expression` turns that index into a boolean and `If/Else Switch`\nreturns the picked image, so the rest of the graph works on one image instead of a batch.\n\n2 to 64 images. Leave `text` empty to ask \"which is best\" instead of \"which matches\".\n"
+        "text": "### Case 4 · pick the winner from a batch\n\n`Load Image ×2 → Image Batch → Gemini (Pick Image)` — the node sees the batch, `text` carries what you asked for,\nand `index` says which image won (from 0). `Get Image from Batch` takes the same batch plus that `index` (`length` 1) and\nreturns the picked image, so the rest of the graph works on one image instead of a batch.\n\n2 to 64 images. Leave `text` empty to ask \"which is best\" instead of \"which matches\".\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -997,7 +997,6 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            23,
             27
           ]
         },
@@ -1039,7 +1038,6 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            24,
             28
           ]
         },
@@ -1093,7 +1091,7 @@
           "name": "index",
           "type": "INT",
           "links": [
-            21
+            32
           ]
         },
         {
@@ -1107,127 +1105,14 @@
       },
       "widgets_values": [
         "gemini-decision-1",
-        "Which image best matches the prompt in text?"
+        "Which image best matches the prompt in text? If there is no text, which image has the best quality?"
       ],
       "widgets_values_named": {
         "model": "gemini-decision-1",
-        "question": "Which image best matches the prompt in text?"
+        "question": "Which image best matches the prompt in text? If there is no text, which image has the best quality?"
       },
       "color": "#432",
       "bgcolor": "#653"
-    },
-    {
-      "id": 27,
-      "type": "ComfyMathExpression",
-      "pos": [
-        2340,
-        2820
-      ],
-      "size": [
-        400,
-        130
-      ],
-      "flags": {},
-      "order": 26,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "values.a",
-          "type": "FLOAT,INT,BOOLEAN",
-          "link": 21
-        },
-        {
-          "name": "values.b",
-          "shape": 7,
-          "type": "FLOAT,INT,BOOLEAN",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "FLOAT",
-          "type": "FLOAT",
-          "links": null
-        },
-        {
-          "name": "INT",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "name": "BOOL",
-          "type": "BOOLEAN",
-          "links": [
-            22
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ComfyMathExpression"
-      },
-      "widgets_values": [
-        "a == 0"
-      ],
-      "widgets_values_named": {
-        "expression": "a == 0"
-      }
-    },
-    {
-      "id": 28,
-      "type": "ComfySwitchNode",
-      "pos": [
-        2410,
-        3090
-      ],
-      "size": [
-        250,
-        80
-      ],
-      "flags": {},
-      "order": 28,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "on_false",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 24
-        },
-        {
-          "name": "on_true",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 23
-        },
-        {
-          "name": "switch",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "switch"
-          },
-          "link": 22
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output",
-          "type": "IMAGE",
-          "links": [
-            25
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ComfySwitchNode"
-      },
-      "widgets_values": [
-        false
-      ],
-      "widgets_values_named": {
-        "switch": false
-      },
-      "color": "#322",
-      "bgcolor": "#533"
     },
     {
       "id": 29,
@@ -1247,7 +1132,7 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 25
+          "link": 33
         }
       ],
       "outputs": [
@@ -1333,13 +1218,60 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            29
+            29,
+            31
           ]
         }
       ],
       "properties": {
         "Node name for S&R": "BatchImagesNode"
       }
+    },
+    {
+      "id": 35,
+      "type": "ImageFromBatch",
+      "pos": [
+        2340,
+        2860
+      ],
+      "size": [
+        400,
+        110
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 31
+        },
+        {
+          "name": "batch_index",
+          "type": "INT",
+          "widget": {
+            "name": "batch_index"
+          },
+          "link": 32
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageFromBatch"
+      },
+      "widgets_values": [
+        0,
+        1
+      ]
     }
   ],
   "links": [
@@ -1424,38 +1356,6 @@
       "FLOAT"
     ],
     [
-      22,
-      27,
-      2,
-      28,
-      2,
-      "BOOLEAN"
-    ],
-    [
-      23,
-      22,
-      0,
-      28,
-      1,
-      "IMAGE"
-    ],
-    [
-      24,
-      23,
-      0,
-      28,
-      0,
-      "IMAGE"
-    ],
-    [
-      25,
-      28,
-      0,
-      29,
-      0,
-      "IMAGE"
-    ],
-    [
       1,
       2,
       0,
@@ -1504,14 +1404,6 @@
       "IMAGE"
     ],
     [
-      21,
-      25,
-      0,
-      27,
-      0,
-      "INT"
-    ],
-    [
       26,
       31,
       0,
@@ -1540,6 +1432,30 @@
       33,
       0,
       25,
+      0,
+      "IMAGE"
+    ],
+    [
+      31,
+      33,
+      0,
+      35,
+      0,
+      "IMAGE"
+    ],
+    [
+      32,
+      25,
+      0,
+      35,
+      1,
+      "INT"
+    ],
+    [
+      33,
+      35,
+      0,
+      29,
       0,
       "IMAGE"
     ]
